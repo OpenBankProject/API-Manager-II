@@ -1,7 +1,7 @@
 import { createLogger } from '$lib/utils/logger';
 const logger = createLogger('OAuth2Client');
 import { OAuth2Client } from "arctic";
-import type { OpenIdConnectConfiguration, OAuth2AccessTokenPayload, OAuth2TokenResponse } from "$lib/oauth/types";
+import type { OpenIdConnectConfiguration, OAuth2AccessTokenPayload } from "$lib/oauth/types";
 import { jwtDecode } from "jwt-decode";
 
 export class OAuth2ClientWithConfig extends OAuth2Client {
@@ -9,6 +9,8 @@ export class OAuth2ClientWithConfig extends OAuth2Client {
 
     constructor(clientId: string, clientSecret: string, redirectUri: string) {
         super(clientId, clientSecret, redirectUri);
+
+        // get the OIDC configuration from the well-known URL if provided
     }
 
 	async initOIDCConfig(OIDCConfigUrl: string): Promise<void> {
@@ -24,8 +26,7 @@ export class OAuth2ClientWithConfig extends OAuth2Client {
 			config = await response.json();
 			logger.debug('Raw OIDC config received:', JSON.stringify(config, null, 2));
 		} catch (error) {
-			logger.error('Error fetching OIDC config:', error);
-			return;
+			throw new Error(`Error fetching OIDC config: ${error}`);
 		}
 
 		// Validate required endpoints outside of try/catch to avoid local-catch warnings
@@ -107,79 +108,5 @@ export class OAuth2ClientWithConfig extends OAuth2Client {
 			refreshToken: () => tokens.refresh_token,
 			accessTokenExpiresAt: () => tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000) : null
 		};
-	}
-
-	async refreshAccessToken(refreshEndpoint: string, refreshToken: string, scopes: string[]): Promise<any> {
-		logger.debug('Refreshing access token...');
-		
-		const body = new URLSearchParams();
-		body.set('grant_type', 'refresh_token');
-		body.set('refresh_token', refreshToken);
-		body.set('client_id', this.clientId);
-		
-		if (this.clientSecret) {
-			body.set('client_secret', this.clientSecret);
-		}
-		
-		if (scopes && scopes.length > 0) {
-			body.set('scope', scopes.join(' '));
-		}
-
-		const response = await fetch(refreshEndpoint, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
-				'Accept': 'application/json'
-			},
-			body: body.toString()
-		});
-
-		if (!response.ok) {
-			const errorData = await response.json().catch(() => ({}));
-			logger.error(`Token refresh error - Status: ${response.status}, Data:`, errorData);
-			throw new Error(`Token refresh failed: ${response.status} ${response.statusText}`);
-		}
-
-		const tokens = await response.json();
-		logger.debug('Token refresh successful');
-		
-		return {
-			accessToken: () => tokens.access_token,
-			refreshToken: () => tokens.refresh_token || refreshToken, // Keep existing refresh token if not provided
-			accessTokenExpiresAt: () => tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000) : null
-		};
-	}
-
-	async getUserInfo(userinfoEndpoint: string, accessToken: string): Promise<OAuth2AccessTokenPayload> {
-		logger.debug('Fetching user info from userinfo endpoint...');
-		
-		const response = await fetch(userinfoEndpoint, {
-			method: 'GET',
-			headers: {
-				'Authorization': `Bearer ${accessToken}`,
-				'Accept': 'application/json'
-			}
-		});
-
-		if (!response.ok) {
-			logger.error(`Userinfo endpoint error - Status: ${response.status}`);
-			throw new Error(`Userinfo request failed: ${response.status} ${response.statusText}`);
-		}
-
-		const userInfo = await response.json();
-		logger.debug('User info retrieved successfully');
-		
-		return userInfo as OAuth2AccessTokenPayload;
-	}
-
-	extractUserFromToken(accessToken: string): OAuth2AccessTokenPayload | null {
-		try {
-			const payload = jwtDecode(accessToken) as OAuth2AccessTokenPayload;
-			logger.debug('User extracted from access token successfully');
-			return payload;
-		} catch (error) {
-			logger.error('Error extracting user from access token:', error);
-			return null;
-		}
 	}
 }

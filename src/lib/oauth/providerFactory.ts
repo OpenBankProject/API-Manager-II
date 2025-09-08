@@ -1,7 +1,7 @@
 import { createLogger } from '$lib/utils/logger';
 const logger = createLogger('OAuthProviderFactory');
 import { OAuth2ClientWithConfig } from "./client";
-import { dev } from '$app/environment';
+import { env } from "$env/dynamic/private";
 
 export interface WellKnownUri {
     provider: string;
@@ -29,24 +29,10 @@ class KeyCloakStrategy implements OAuth2ProviderStrategy {
 	}
 
 	async initialize(config: WellKnownUri): Promise<OAuth2ClientWithConfig> {
-		const clientId = dev ? 
-			process.env.KEYCLOAK_OAUTH_CLIENT_ID : 
-			import.meta.env.KEYCLOAK_OAUTH_CLIENT_ID;
-		const clientSecret = dev ? 
-			process.env.KEYCLOAK_OAUTH_CLIENT_SECRET : 
-			import.meta.env.KEYCLOAK_OAUTH_CLIENT_SECRET;
-		const callbackUrl = dev ? 
-			process.env.APP_CALLBACK_URL : 
-			import.meta.env.APP_CALLBACK_URL;
-
-		if (!clientId || !clientSecret || !callbackUrl) {
-			throw new Error(`Missing Keycloak OAuth configuration`);
-		}
-
 		const client = new OAuth2ClientWithConfig(
-			clientId,
-			clientSecret,
-			callbackUrl
+			env.KEYCLOAK_OAUTH_CLIENT_ID,
+			env.KEYCLOAK_OAUTH_CLIENT_SECRET,
+			env.APP_CALLBACK_URL
 		);
 
 		await client.initOIDCConfig(config.url);
@@ -67,31 +53,17 @@ class OBPOIDCStrategy implements OAuth2ProviderStrategy {
 	}
 
 	async initialize(config: WellKnownUri): Promise<OAuth2ClientWithConfig> {
-		const clientId = dev ? 
-			process.env.OBP_OAUTH_CLIENT_ID : 
-			import.meta.env.OBP_OAUTH_CLIENT_ID;
-		const clientSecret = dev ? 
-			process.env.OBP_OAUTH_CLIENT_SECRET : 
-			import.meta.env.OBP_OAUTH_CLIENT_SECRET;
-		const callbackUrl = dev ? 
-			process.env.APP_CALLBACK_URL : 
-			import.meta.env.APP_CALLBACK_URL;
-
 		logger.debug(`Initializing OAuth client with:`, {
-			clientId: clientId ? '[SET]' : '[MISSING]',
-			clientSecret: clientSecret ? '[SET]' : '[MISSING]',
-			callbackUrl: callbackUrl ? callbackUrl : '[MISSING]',
+			clientId: env.OBP_OAUTH_CLIENT_ID ? '[SET]' : '[MISSING]',
+			clientSecret: env.OBP_OAUTH_CLIENT_SECRET ? '[SET]' : '[MISSING]',
+			callbackUrl: env.APP_CALLBACK_URL ? env.APP_CALLBACK_URL : '[MISSING]',
 			configUrl: config.url
 		});
 
-		if (!clientId || !clientSecret || !callbackUrl) {
-			throw new Error(`Missing OBP OIDC OAuth configuration`);
-		}
-
 		const client = new OAuth2ClientWithConfig(
-			clientId,
-			clientSecret,
-			callbackUrl
+			env.OBP_OAUTH_CLIENT_ID,
+			env.OBP_OAUTH_CLIENT_SECRET,
+			env.APP_CALLBACK_URL
 		);
 
 		await client.initOIDCConfig(config.url);
