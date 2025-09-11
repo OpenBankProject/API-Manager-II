@@ -107,13 +107,13 @@
 
 <svelte:head>
   <title>Management Metrics - API Manager II</title>
-  <link rel="stylesheet" href="/obp-portal.css" />
+  <link rel="stylesheet" href="/obp-manager.css" />
 </svelte:head>
 
-<div class="obp-portal">
+<div class="obp-manager">
   <!-- Header Section -->
-  <div class="obp-portal-header">
-    <div class="obp-portal-container">
+  <div class="obp-manager-header">
+    <div class="obp-manager-container">
       <h1>Management Metrics</h1>
       <p class="subtitle">
         Real-time monitoring and analytics for Open Bank Project API
@@ -121,9 +121,9 @@
     </div>
   </div>
 
-  <div class="obp-portal-container">
+  <div class="obp-manager-container">
     <!-- Breadcrumb Navigation -->
-    <nav class="obp-portal-breadcrumb">
+    <nav class="obp-manager-breadcrumb">
       <a href="/">Home</a>
       <span class="separator">›</span>
       <a href="/management">Management</a>
@@ -133,7 +133,7 @@
 
     <!-- Error Alert -->
     {#if error && !hasApiAccess}
-      <div class="obp-portal-alert error">
+      <div class="obp-manager-alert error">
         <strong>API Access Limited:</strong>
         {error}. Showing cached or default metrics only.
       </div>
@@ -141,101 +141,101 @@
 
     <!-- Success Alert -->
     {#if hasApiAccess}
-      <div class="obp-portal-alert success">
+      <div class="obp-manager-alert success">
         <strong>Live Data:</strong> Connected to OBP API server. Metrics updated
         at {lastUpdated ? new Date(lastUpdated).toLocaleString() : currentTime}.
       </div>
     {/if}
 
     <!-- Key Metrics Cards -->
-    <div class="obp-portal-grid obp-portal-grid-4">
-      <div class="obp-portal-metric-card">
-        <div class="obp-portal-metric-value">{metrics.totalBanks}</div>
-        <div class="obp-portal-metric-label">Total Banks</div>
-        <div class="obp-portal-metric-change neutral">Active institutions</div>
+    <div class="obp-manager-grid obp-manager-grid-4">
+      <div class="obp-manager-metric-card">
+        <div class="obp-manager-metric-value">{metrics.totalBanks}</div>
+        <div class="obp-manager-metric-label">Total Banks</div>
+        <div class="obp-manager-metric-change neutral">Active institutions</div>
       </div>
 
-      <div class="obp-portal-metric-card">
-        <div class="obp-portal-metric-value">{metrics.totalUsers}</div>
-        <div class="obp-portal-metric-label">Active Users</div>
-        <div class="obp-portal-metric-change positive">+12% this month</div>
+      <div class="obp-manager-metric-card">
+        <div class="obp-manager-metric-value">{metrics.totalUsers}</div>
+        <div class="obp-manager-metric-label">Active Users</div>
+        <div class="obp-manager-metric-change positive">+12% this month</div>
       </div>
 
-      <div class="obp-portal-metric-card">
-        <div class="obp-portal-metric-value">
+      <div class="obp-manager-metric-card">
+        <div class="obp-manager-metric-value">
           {metrics.apiCalls.toLocaleString()}
         </div>
-        <div class="obp-portal-metric-label">API Calls Today</div>
-        <div class="obp-portal-metric-change positive">+8% vs yesterday</div>
+        <div class="obp-manager-metric-label">API Calls Today</div>
+        <div class="obp-manager-metric-change positive">+8% vs yesterday</div>
       </div>
 
-      <div class="obp-portal-metric-card">
-        <div class="obp-portal-metric-value">
+      <div class="obp-manager-metric-card">
+        <div class="obp-manager-metric-value">
           {apiMetrics?.availability?.toFixed(1) || "99.9"}%
         </div>
-        <div class="obp-portal-metric-label">API Availability</div>
-        <div class="obp-portal-metric-change {getChangeClass(0.2)}">
+        <div class="obp-manager-metric-label">API Availability</div>
+        <div class="obp-manager-metric-change {getChangeClass(0.2)}">
           +0.2% this week
         </div>
       </div>
     </div>
 
     <!-- Performance Metrics -->
-    <div class="obp-portal-grid obp-portal-grid-3">
-      <div class="obp-portal-card">
-        <div class="obp-portal-card-header">
-          <h3 class="obp-portal-card-title">Response Time</h3>
-          <span class="obp-portal-status online">Healthy</span>
+    <div class="obp-manager-grid obp-manager-grid-3">
+      <div class="obp-manager-card">
+        <div class="obp-manager-card-header">
+          <h3 class="obp-manager-card-title">Response Time</h3>
+          <span class="obp-manager-status online">Healthy</span>
         </div>
-        <div class="obp-portal-metric-value" style="font-size: 1.8rem;">
+        <div class="obp-manager-metric-value" style="font-size: 1.8rem;">
           {apiMetrics?.responseTime || 125}ms
         </div>
-        <div class="obp-portal-metric-change {getChangeClass(-5)}">
+        <div class="obp-manager-metric-change {getChangeClass(-5)}">
           -5ms from last hour
         </div>
       </div>
 
-      <div class="obp-portal-card">
-        <div class="obp-portal-card-header">
-          <h3 class="obp-portal-card-title">Error Rate</h3>
+      <div class="obp-manager-card">
+        <div class="obp-manager-card-header">
+          <h3 class="obp-manager-card-title">Error Rate</h3>
           <span
-            class="obp-portal-status {(apiMetrics?.errorRate || 0) < 1
+            class="obp-manager-status {(apiMetrics?.errorRate || 0) < 1
               ? 'online'
               : 'warning'}"
           >
             {(apiMetrics?.errorRate || 0) < 1 ? "Normal" : "Elevated"}
           </span>
         </div>
-        <div class="obp-portal-metric-value" style="font-size: 1.8rem;">
+        <div class="obp-manager-metric-value" style="font-size: 1.8rem;">
           {(apiMetrics?.errorRate || 0).toFixed(2)}%
         </div>
-        <div class="obp-portal-metric-change {getChangeClass(-0.1)}">
+        <div class="obp-manager-metric-change {getChangeClass(-0.1)}">
           -0.1% from yesterday
         </div>
       </div>
 
-      <div class="obp-portal-card">
-        <div class="obp-portal-card-header">
-          <h3 class="obp-portal-card-title">Throughput</h3>
-          <span class="obp-portal-status online">Optimal</span>
+      <div class="obp-manager-card">
+        <div class="obp-manager-card-header">
+          <h3 class="obp-manager-card-title">Throughput</h3>
+          <span class="obp-manager-status online">Optimal</span>
         </div>
-        <div class="obp-portal-metric-value" style="font-size: 1.8rem;">
+        <div class="obp-manager-metric-value" style="font-size: 1.8rem;">
           {apiMetrics?.throughput || 450}
         </div>
-        <div class="obp-portal-metric-label">requests/min</div>
-        <div class="obp-portal-metric-change {getChangeClass(15)}">
+        <div class="obp-manager-metric-label">requests/min</div>
+        <div class="obp-manager-metric-change {getChangeClass(15)}">
           +15 req/min from last hour
         </div>
       </div>
     </div>
 
     <!-- Charts Section -->
-    <div class="obp-portal-grid obp-portal-grid-2">
-      <div class="obp-portal-chart-container">
-        <div class="obp-portal-card-header">
-          <h3 class="obp-portal-card-title">API Calls (24h)</h3>
+    <div class="obp-manager-grid obp-manager-grid-2">
+      <div class="obp-manager-chart-container">
+        <div class="obp-manager-card-header">
+          <h3 class="obp-manager-card-title">API Calls (24h)</h3>
           <button
-            class="obp-portal-btn obp-portal-btn-ghost"
+            class="obp-manager-btn obp-manager-btn-ghost"
             on:click={refreshMetrics}
           >
             Refresh
@@ -267,9 +267,9 @@
         </div>
       </div>
 
-      <div class="obp-portal-chart-container">
-        <div class="obp-portal-card-header">
-          <h3 class="obp-portal-card-title">Response Time (24h)</h3>
+      <div class="obp-manager-chart-container">
+        <div class="obp-manager-card-header">
+          <h3 class="obp-manager-card-title">Response Time (24h)</h3>
         </div>
 
         <!-- Simple ASCII Chart -->
@@ -303,13 +303,13 @@
     </div>
 
     <!-- Recent API Calls Table -->
-    <div class="obp-portal-card" style="margin-top: 2rem;">
-      <div class="obp-portal-card-header">
-        <h3 class="obp-portal-card-title">Recent API Calls</h3>
-        <p class="obp-portal-card-subtitle">Last 5 API requests</p>
+    <div class="obp-manager-card" style="margin-top: 2rem;">
+      <div class="obp-manager-card-header">
+        <h3 class="obp-manager-card-title">Recent API Calls</h3>
+        <p class="obp-manager-card-subtitle">Last 5 API requests</p>
       </div>
 
-      <table class="obp-portal-table">
+      <table class="obp-manager-table">
         <thead>
           <tr>
             <th>Endpoint</th>
@@ -348,11 +348,13 @@
     </div>
 
     <!-- System Status Cards -->
-    <div class="obp-portal-grid obp-portal-grid-3" style="margin-top: 2rem;">
-      <div class="obp-portal-card">
-        <div class="obp-portal-card-header">
-          <h3 class="obp-portal-card-title">API Server</h3>
-          <span class="obp-portal-status {hasApiAccess ? 'online' : 'offline'}">
+    <div class="obp-manager-grid obp-manager-grid-3" style="margin-top: 2rem;">
+      <div class="obp-manager-card">
+        <div class="obp-manager-card-header">
+          <h3 class="obp-manager-card-title">API Server</h3>
+          <span
+            class="obp-manager-status {hasApiAccess ? 'online' : 'offline'}"
+          >
             {hasApiAccess ? "Online" : "Offline"}
           </span>
         </div>
@@ -366,10 +368,10 @@
         </p>
       </div>
 
-      <div class="obp-portal-card">
-        <div class="obp-portal-card-header">
-          <h3 class="obp-portal-card-title">OIDC Provider</h3>
-          <span class="obp-portal-status online">Online</span>
+      <div class="obp-manager-card">
+        <div class="obp-manager-card-header">
+          <h3 class="obp-manager-card-title">OIDC Provider</h3>
+          <span class="obp-manager-status online">Online</span>
         </div>
         <p style="color: #718096; font-size: 0.875rem; margin: 0;">
           Authentication server operational
@@ -379,10 +381,10 @@
         </p>
       </div>
 
-      <div class="obp-portal-card">
-        <div class="obp-portal-card-header">
-          <h3 class="obp-portal-card-title">Database</h3>
-          <span class="obp-portal-status online">Healthy</span>
+      <div class="obp-manager-card">
+        <div class="obp-manager-card-header">
+          <h3 class="obp-manager-card-title">Database</h3>
+          <span class="obp-manager-status online">Healthy</span>
         </div>
         <p style="color: #718096; font-size: 0.875rem; margin: 0;">
           Session store active
@@ -394,30 +396,30 @@
     </div>
 
     <!-- Actions Section -->
-    <div class="obp-portal-card" style="margin-top: 2rem; text-align: center;">
-      <div class="obp-portal-card-header" style="justify-content: center;">
-        <h3 class="obp-portal-card-title">Management Actions</h3>
+    <div class="obp-manager-card" style="margin-top: 2rem; text-align: center;">
+      <div class="obp-manager-card-header" style="justify-content: center;">
+        <h3 class="obp-manager-card-title">Management Actions</h3>
       </div>
 
       <div
         style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;"
       >
         <button
-          class="obp-portal-btn obp-portal-btn-primary"
+          class="obp-manager-btn obp-manager-btn-primary"
           on:click={refreshMetrics}
         >
           🔄 Refresh Metrics
         </button>
 
-        <button class="obp-portal-btn obp-portal-btn-secondary">
+        <button class="obp-manager-btn obp-manager-btn-secondary">
           📊 Export Report
         </button>
 
-        <button class="obp-portal-btn obp-portal-btn-ghost">
+        <button class="obp-manager-btn obp-manager-btn-ghost">
           ⚙️ Configure Alerts
         </button>
 
-        <a href="/management" class="obp-portal-btn obp-portal-btn-ghost">
+        <a href="/management" class="obp-manager-btn obp-manager-btn-ghost">
           ← Back to Management
         </a>
       </div>
