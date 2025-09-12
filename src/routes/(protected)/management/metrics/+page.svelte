@@ -58,7 +58,46 @@
   });
 
   function refreshRecentMetrics() {
-    // Trigger a data refresh without navigation
+    // Update URL with Query Metrics form parameters without navigation
+    const params = new URLSearchParams();
+
+    // Add date filters only if they have values
+    if (queryForm.from_date && queryForm.from_date.trim() !== "") {
+      params.set("from_date", queryForm.from_date);
+    }
+    if (queryForm.to_date && queryForm.to_date.trim() !== "") {
+      params.set("to_date", queryForm.to_date);
+    }
+
+    // Add other filters if they have values
+    if (queryForm.verb && queryForm.verb.trim() !== "") {
+      params.set("verb", queryForm.verb);
+    }
+    if (queryForm.app_name && queryForm.app_name.trim() !== "") {
+      params.set("app_name", queryForm.app_name);
+    }
+    if (queryForm.user_name && queryForm.user_name.trim() !== "") {
+      params.set("user_name", queryForm.user_name);
+    }
+    if (queryForm.url && queryForm.url.trim() !== "") {
+      params.set("url", queryForm.url);
+    }
+    if (queryForm.consumer_id && queryForm.consumer_id.trim() !== "") {
+      params.set("consumer_id", queryForm.consumer_id);
+    }
+    if (queryForm.anon && queryForm.anon.trim() !== "") {
+      params.set("anon", queryForm.anon);
+    }
+
+    // Always include pagination and sorting for Recent API Calls
+    params.set("limit", queryForm.limit);
+    params.set("offset", queryForm.offset);
+    params.set("sort_by", queryForm.sort_by);
+    params.set("direction", queryForm.direction);
+
+    // Update URL without navigation and trigger data refresh
+    const newUrl = window.location.pathname + "?" + params.toString();
+    window.history.replaceState({}, "", newUrl);
     invalidate("app:metrics");
   }
 

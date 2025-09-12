@@ -48,19 +48,74 @@ export const load: PageServerLoad = async ({ locals, url }) => {
   }
 
   try {
-    // Fetch recent metrics for real-time panel (last 50 records)
+    // Build parameters for Recent API Calls from query string or defaults
+    const recentParams: Record<string, string> = {
+      limit: url.searchParams.get("limit") || "50",
+      sort_by: url.searchParams.get("sort_by") || "date",
+      direction: url.searchParams.get("direction") || "desc",
+    };
+
+    // Add offset if provided
+    if (
+      url.searchParams.has("offset") &&
+      url.searchParams.get("offset")?.trim()
+    ) {
+      recentParams.offset = url.searchParams.get("offset")!;
+    }
+
+    // Add date filters only if provided in query params
+    if (
+      url.searchParams.has("from_date") &&
+      url.searchParams.get("from_date")?.trim()
+    ) {
+      recentParams.from_date = url.searchParams.get("from_date")!;
+    }
+    if (
+      url.searchParams.has("to_date") &&
+      url.searchParams.get("to_date")?.trim()
+    ) {
+      recentParams.to_date = url.searchParams.get("to_date")!;
+    }
+
+    // Add other filters if provided
+    if (url.searchParams.has("verb") && url.searchParams.get("verb")?.trim()) {
+      recentParams.verb = url.searchParams.get("verb")!;
+    }
+    if (
+      url.searchParams.has("app_name") &&
+      url.searchParams.get("app_name")?.trim()
+    ) {
+      recentParams.app_name = url.searchParams.get("app_name")!;
+    }
+    if (
+      url.searchParams.has("user_name") &&
+      url.searchParams.get("user_name")?.trim()
+    ) {
+      recentParams.user_name = url.searchParams.get("user_name")!;
+    }
+    if (url.searchParams.has("url") && url.searchParams.get("url")?.trim()) {
+      recentParams.url = url.searchParams.get("url")!;
+    }
+    if (
+      url.searchParams.has("consumer_id") &&
+      url.searchParams.get("consumer_id")?.trim()
+    ) {
+      recentParams.consumer_id = url.searchParams.get("consumer_id")!;
+    }
+    if (url.searchParams.has("anon") && url.searchParams.get("anon")?.trim()) {
+      recentParams.anon = url.searchParams.get("anon")!;
+    }
+
+    // Fetch recent metrics for real-time panel
     logger.info("=== RECENT API CALLS DEBUG ===");
-    logger.info(`Fetching recent metrics (last 50 records):`);
+    logger.info(`Fetching recent metrics with parameters:`);
+    logger.info(`  Parameters: ${JSON.stringify(recentParams, null, 2)}`);
     logger.info(`  Access token available: ${!!accessToken}`);
     logger.info(
       `  Access token length: ${accessToken ? accessToken.length : 0}`,
     );
 
-    const recentMetricsData = await fetchMetrics(accessToken, {
-      limit: 50,
-      sort_by: "date",
-      direction: "desc",
-    });
+    const recentMetricsData = await fetchMetrics(accessToken, recentParams);
 
     logger.info(`Recent metrics result:`);
     logger.info(`  Metrics count: ${recentMetricsData?.count || 0}`);
