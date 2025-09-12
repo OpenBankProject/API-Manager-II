@@ -468,6 +468,7 @@
                     <th>App</th>
                     <th>Duration</th>
                     <th>Version</th>
+                    <th>Correlation ID</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -497,6 +498,11 @@
                       </td>
                       <td class="version-cell">
                         {metric.implemented_in_version || "N/A"}
+                      </td>
+                      <td class="correlation-cell">
+                        <code class="correlation-id"
+                          >{metric.correlation_id || "N/A"}</code
+                        >
                       </td>
                     </tr>
                   {/each}
@@ -551,6 +557,7 @@
                 <th>Method</th>
                 <th>Endpoint</th>
                 <th>Duration</th>
+                <th>Correlation ID</th>
               </tr>
             </thead>
             <tbody>
@@ -585,6 +592,11 @@
                     >
                       {metric.duration}ms
                     </span>
+                  </td>
+                  <td class="correlation-cell">
+                    <code class="correlation-id"
+                      >{metric.correlation_id || "N/A"}</code
+                    >
                   </td>
                 </tr>
               {/each}
@@ -884,6 +896,24 @@
   .duration-slow {
     background-color: #fee2e2;
     color: #991b1b;
+  }
+
+  .correlation-cell {
+    font-family: monospace;
+    font-size: 0.75rem;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .correlation-id {
+    background: #f0f4ff;
+    color: #1e40af;
+    padding: 0.125rem 0.375rem;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-weight: 500;
   }
 
   .table-wrapper {
