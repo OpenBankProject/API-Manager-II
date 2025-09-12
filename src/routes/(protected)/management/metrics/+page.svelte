@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from "svelte";
   import { goto } from "$app/navigation";
   import type { PageData } from "./$types";
+  import { configHelpers } from "$lib/config";
 
   export let data: PageData;
 
@@ -12,6 +13,9 @@
 
   let refreshInterval: NodeJS.Timeout;
   let currentTime = new Date().toLocaleString();
+
+  // Configuration information
+  $: obpInfo = configHelpers.getObpConnectionInfo();
 
   // Form data for query panel
   let queryForm = {
@@ -168,7 +172,8 @@
       <div class="panel-header">
         <h2 class="panel-title">Recent API Calls</h2>
         <div class="panel-subtitle">
-          Auto-refreshes every 5 seconds • Last updated: {currentTime}
+          Auto-refreshes every 5 seconds • Target: {obpInfo.displayName} • Last updated:
+          {currentTime}
         </div>
         <button
           class="refresh-btn"
@@ -224,15 +229,70 @@
             </table>
           </div>
           <div class="metrics-summary">
-            Showing {recentMetrics.count} recent API calls (last 5 minutes)
+            Showing {recentMetrics.count} recent API calls (last 5 minutes) from
+            {obpInfo.displayName}
           </div>
         {:else if hasApiAccess}
           <div class="empty-state">
-            <p>No recent API calls found in the last 5 minutes.</p>
+            <div
+              style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; text-align: center;"
+            >
+              📡
+            </div>
+            <h4
+              style="color: #4a5568; margin-bottom: 0.5rem; font-size: 1.125rem; text-align: center;"
+            >
+              No Recent API Calls
+            </h4>
+            <p style="text-align: center; margin-bottom: 1.5rem;">
+              No API requests have been made to <strong
+                >{obpInfo.displayName}</strong
+              > in the last 5 minutes.
+            </p>
+            <div
+              style="background: #f7fafc; padding: 1rem; border-radius: 6px; margin-bottom: 1rem; text-align: left;"
+            >
+              <h5
+                style="color: #2d3748; margin-bottom: 0.5rem; font-size: 0.875rem;"
+              >
+                Server Configuration:
+              </h5>
+              <div
+                style="font-family: monospace; font-size: 0.75rem; color: #4a5568;"
+              >
+                <div>• Base URL: {obpInfo.baseUrl}</div>
+                <div>• API URL: {obpInfo.apiUrl}</div>
+                <div>• OIDC URL: {obpInfo.oidcUrl}</div>
+              </div>
+            </div>
+            <button
+              class="refresh-btn"
+              on:click={refreshRecentMetrics}
+              style="display: block; margin: 0 auto;"
+            >
+              🔄 Refresh Data
+            </button>
           </div>
         {:else}
           <div class="empty-state">
-            <p>API access not available. Please check your authentication.</p>
+            <div
+              style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; text-align: center;"
+            >
+              🔒
+            </div>
+            <h4
+              style="color: #e53e3e; margin-bottom: 0.5rem; font-size: 1.125rem; text-align: center;"
+            >
+              API Access Unavailable
+            </h4>
+            <p style="text-align: center; margin-bottom: 1rem;">
+              Cannot connect to OBP server at <strong
+                >{obpInfo.displayName}</strong
+              >
+            </p>
+            <p style="text-align: center; font-size: 0.875rem; color: #718096;">
+              Please check your authentication or server configuration.
+            </p>
           </div>
         {/if}
       </div>

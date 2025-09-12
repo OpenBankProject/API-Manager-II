@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
+  import { configHelpers } from "$lib/config";
 
   // Props from layout with better typing
   export let user: {
@@ -17,6 +18,7 @@
   $: isAuthenticated = !!user;
   $: isLimitedAccess = authInfo?.source === "oidc_fallback";
   $: userDisplayName = user?.username || user?.email || "User";
+  $: obpInfo = configHelpers.getObpConnectionInfo();
 
   let isMobileMenuOpen = false;
 
@@ -96,7 +98,10 @@
       {#if isAuthenticated}
         <!-- User Info -->
         <div class="user-info desktop-only">
-          <span class="user-name">{userDisplayName}</span>
+          <div class="user-details">
+            <span class="user-name">{userDisplayName}</span>
+            <span class="obp-host">→ {obpInfo.displayName}</span>
+          </div>
           <span
             class="auth-status"
             class:limited={isLimitedAccess}
@@ -138,6 +143,7 @@
         <!-- User Info in Mobile -->
         <div class="mobile-user-info">
           <div class="mobile-user-name">{userDisplayName}</div>
+          <div class="mobile-obp-host">Connected to: {obpInfo.displayName}</div>
           <div class="mobile-auth-status">
             <span
               class="auth-status"
@@ -259,13 +265,27 @@
   .user-info {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.75rem;
+  }
+
+  .user-details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
   }
 
   .user-name {
     color: #374151;
     font-weight: 500;
     font-size: 0.875rem;
+    line-height: 1.2;
+  }
+
+  .obp-host {
+    color: #6b7280;
+    font-size: 0.75rem;
+    font-family: monospace;
+    line-height: 1.2;
   }
 
   .auth-status {
@@ -371,6 +391,13 @@
   .mobile-user-name {
     font-weight: 600;
     color: #1f2937;
+    margin-bottom: 0.25rem;
+  }
+
+  .mobile-obp-host {
+    color: #6b7280;
+    font-size: 0.75rem;
+    font-family: monospace;
     margin-bottom: 0.5rem;
   }
 

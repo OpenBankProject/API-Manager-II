@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { page } from "$app/stores";
   import type { PageData } from "./$types";
+  import { configHelpers } from "$lib/config";
 
   export let data: PageData;
 
@@ -12,6 +13,10 @@
   $: lastUpdated = data.lastUpdated;
 
   let currentTime = new Date().toLocaleString();
+
+  // Configuration information
+  $: obpInfo = configHelpers.getObpConnectionInfo();
+  $: configDisplay = configHelpers.formatForDisplay();
 
   // Sample chart data for demonstration
   let chartData = [
@@ -308,45 +313,92 @@
     <div class="obp-manager-card" style="margin-top: 2rem;">
       <div class="obp-manager-card-header">
         <h3 class="obp-manager-card-title">Recent API Calls</h3>
-        <p class="obp-manager-card-subtitle">Last 5 API requests</p>
+        <p class="obp-manager-card-subtitle">
+          Last 5 API requests • Target: {obpInfo.displayName}
+        </p>
       </div>
 
-      <table class="obp-manager-table">
-        <thead>
-          <tr>
-            <th>Endpoint</th>
-            <th>Method</th>
-            <th>Status</th>
-            <th>Response Time</th>
-            <th>Timestamp</th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each recentApiCalls as call}
+      {#if recentApiCalls && recentApiCalls.length > 0}
+        <table class="obp-manager-table">
+          <thead>
             <tr>
-              <td style="font-family: monospace; font-size: 0.8rem;"
-                >{call.endpoint}</td
-              >
-              <td>
-                <span
-                  style="background: #edf2f7; color: #4a5568; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;"
-                >
-                  {call.method}
-                </span>
-              </td>
-              <td>
-                <span class={getStatusClass(call.status)}>
-                  {call.status}
-                </span>
-              </td>
-              <td>{call.responseTime}</td>
-              <td style="color: #718096; font-size: 0.875rem;">
-                {new Date(call.timestamp).toLocaleString()}
-              </td>
+              <th>Endpoint</th>
+              <th>Method</th>
+              <th>Status</th>
+              <th>Response Time</th>
+              <th>Timestamp</th>
             </tr>
-          {/each}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {#each recentApiCalls as call}
+              <tr>
+                <td style="font-family: monospace; font-size: 0.8rem;"
+                  >{call.endpoint}</td
+                >
+                <td>
+                  <span
+                    style="background: #edf2f7; color: #4a5568; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;"
+                  >
+                    {call.method}
+                  </span>
+                </td>
+                <td>
+                  <span class={getStatusClass(call.status)}>
+                    {call.status}
+                  </span>
+                </td>
+                <td>{call.responseTime}</td>
+                <td style="color: #718096; font-size: 0.875rem;">
+                  {new Date(call.timestamp).toLocaleString()}
+                </td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      {:else}
+        <div
+          style="padding: 3rem; text-align: center; border: 2px dashed #e2e8f0; border-radius: 8px; margin: 1rem 0;"
+        >
+          <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">
+            📡
+          </div>
+          <h4
+            style="color: #4a5568; margin-bottom: 0.5rem; font-size: 1.125rem;"
+          >
+            No Recent API Calls
+          </h4>
+          <p
+            style="color: #718096; margin-bottom: 1.5rem; font-size: 0.875rem;"
+          >
+            No API requests have been made to <strong
+              >{obpInfo.displayName}</strong
+            > in the last 5 minutes.
+          </p>
+          <div
+            style="background: #f7fafc; padding: 1rem; border-radius: 6px; margin-bottom: 1rem; text-align: left;"
+          >
+            <h5
+              style="color: #2d3748; margin-bottom: 0.5rem; font-size: 0.875rem;"
+            >
+              Server Configuration:
+            </h5>
+            <div
+              style="font-family: monospace; font-size: 0.75rem; color: #4a5568;"
+            >
+              <div>• Base URL: {obpInfo.baseUrl}</div>
+              <div>• API URL: {obpInfo.apiUrl}</div>
+              <div>• OIDC URL: {obpInfo.oidcUrl}</div>
+            </div>
+          </div>
+          <button
+            class="obp-manager-btn obp-manager-btn-ghost"
+            on:click={refreshMetrics}
+            style="font-size: 0.875rem;"
+          >
+            🔄 Refresh Data
+          </button>
+        </div>
+      {/if}
     </div>
 
     <!-- System Status Cards -->
@@ -362,10 +414,13 @@
         </div>
         <p style="color: #718096; font-size: 0.875rem; margin: 0;">
           {hasApiAccess
-            ? "Connected to OBP API server"
-            : "API server not accessible"}
+            ? `Connected to ${obpInfo.displayName}`
+            : `Cannot reach ${obpInfo.displayName}`}
         </p>
         <p style="color: #718096; font-size: 0.75rem; margin: 0.5rem 0 0 0;">
+          Target: {obpInfo.baseUrl}
+        </p>
+        <p style="color: #718096; font-size: 0.75rem; margin: 0.25rem 0 0 0;">
           Last check: {currentTime}
         </p>
       </div>
@@ -379,6 +434,9 @@
           Authentication server operational
         </p>
         <p style="color: #718096; font-size: 0.75rem; margin: 0.5rem 0 0 0;">
+          URL: {obpInfo.oidcUrl}
+        </p>
+        <p style="color: #718096; font-size: 0.75rem; margin: 0.25rem 0 0 0;">
           Response time: 45ms
         </p>
       </div>
@@ -394,6 +452,50 @@
         <p style="color: #718096; font-size: 0.75rem; margin: 0.5rem 0 0 0;">
           Active sessions: {metrics.activeConnections}
         </p>
+      </div>
+    </div>
+
+    <!-- Configuration Information -->
+    <div class="obp-manager-card" style="margin-top: 2rem;">
+      <div class="obp-manager-card-header">
+        <h3 class="obp-manager-card-title">Configuration</h3>
+        <p class="obp-manager-card-subtitle">Current system configuration</p>
+      </div>
+      <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; padding: 0;"
+      >
+        {#each Object.entries(configDisplay) as [section, config]}
+          <div
+            style="background: #f8fafc; padding: 1rem; border-radius: 6px; border: 1px solid #e2e8f0;"
+          >
+            <h4
+              style="color: #2d3748; margin-bottom: 0.75rem; font-size: 0.875rem; font-weight: 600;"
+            >
+              {section}
+            </h4>
+            <div style="space-y: 0.5rem;">
+              {#each Object.entries(config) as [key, value]}
+                <div
+                  style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;"
+                >
+                  <span
+                    style="color: #4a5568; font-size: 0.75rem; font-weight: 500;"
+                    >{key}:</span
+                  >
+                  <span
+                    style="color: #2d3748; font-size: 0.75rem; font-family: {key.includes(
+                      'URL',
+                    ) || key.includes('ID')
+                      ? 'monospace'
+                      : 'inherit'}; background: white; padding: 0.125rem 0.375rem; border-radius: 3px; border: 1px solid #e2e8f0;"
+                  >
+                    {value}
+                  </span>
+                </div>
+              {/each}
+            </div>
+          </div>
+        {/each}
       </div>
     </div>
 
