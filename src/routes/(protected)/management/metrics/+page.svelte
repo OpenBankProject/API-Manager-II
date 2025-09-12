@@ -113,6 +113,46 @@
     goto(`/management/metrics?${params.toString()}`);
   }
 
+  function getCurrentQueryString() {
+    const params = new URLSearchParams();
+
+    // Add date filters only if they have values
+    if (queryForm.from_date && queryForm.from_date.trim() !== "") {
+      params.set("from_date", queryForm.from_date);
+    }
+    if (queryForm.to_date && queryForm.to_date.trim() !== "") {
+      params.set("to_date", queryForm.to_date);
+    }
+
+    // Add other filters if they have values
+    if (queryForm.verb && queryForm.verb.trim() !== "") {
+      params.set("verb", queryForm.verb);
+    }
+    if (queryForm.app_name && queryForm.app_name.trim() !== "") {
+      params.set("app_name", queryForm.app_name);
+    }
+    if (queryForm.user_name && queryForm.user_name.trim() !== "") {
+      params.set("user_name", queryForm.user_name);
+    }
+    if (queryForm.url && queryForm.url.trim() !== "") {
+      params.set("url", queryForm.url);
+    }
+    if (queryForm.consumer_id && queryForm.consumer_id.trim() !== "") {
+      params.set("consumer_id", queryForm.consumer_id);
+    }
+    if (queryForm.anon && queryForm.anon.trim() !== "") {
+      params.set("anon", queryForm.anon);
+    }
+
+    // Always include pagination and sorting
+    params.set("limit", queryForm.limit);
+    params.set("offset", queryForm.offset);
+    params.set("sort_by", queryForm.sort_by);
+    params.set("direction", queryForm.direction);
+
+    return params.toString();
+  }
+
   function clearQuery() {
     queryForm = {
       from_date: "",
@@ -134,10 +174,6 @@
     };
 
     // Reset default date range
-    const now = new Date();
-    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-    queryForm.from_date = oneHourAgo.toISOString().slice(0, 19);
-    queryForm.to_date = now.toISOString().slice(0, 19);
   }
 
   function formatDuration(duration: number): string {
@@ -421,7 +457,8 @@
     <div class="panel-header">
       <h2 class="panel-title">Recent API Calls</h2>
       <div class="panel-subtitle">
-        Last 50 API calls • Target: {obpInfo.displayName} • Last updated:
+        URL: {obpInfo.apiUrl}/management/metrics?{getCurrentQueryString()} • Last
+        updated:
         {currentTime}
       </div>
       <button
