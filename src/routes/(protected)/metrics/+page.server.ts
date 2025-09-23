@@ -26,7 +26,8 @@ interface MetricsResponse {
   error?: string;
 }
 
-export const load: PageServerLoad = async ({ locals, url }) => {
+export const load: PageServerLoad = async ({ locals, url, depends }) => {
+  depends("app:metrics");
   const session = locals.session;
 
   if (!session?.data?.user) {
@@ -108,8 +109,11 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 
     // Fetch recent metrics for real-time panel
     logger.info("=== RECENT API CALLS DEBUG ===");
+    logger.info(`🔍 INVALIDATION DETECTED - Server load function called`);
+    logger.info(`🌐 Current URL: ${url.pathname}${url.search}`);
     logger.info(`Fetching recent metrics with parameters:`);
     logger.info(`  Parameters: ${JSON.stringify(recentParams, null, 2)}`);
+    logger.info(`  🎯 LIMIT VALUE: ${recentParams.limit}`);
     logger.info(`  Access token available: ${!!accessToken}`);
     logger.info(
       `  Access token length: ${accessToken ? accessToken.length : 0}`,
@@ -118,8 +122,11 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     const recentMetricsData = await fetchMetrics(accessToken, recentParams);
 
     logger.info(`Recent metrics result:`);
-    logger.info(`  Metrics count: ${recentMetricsData?.count || 0}`);
-    logger.info(`  Has error: ${!!recentMetricsData?.error}`);
+    logger.info(`  📊 Metrics count: ${recentMetricsData?.count || 0}`);
+    logger.info(`  ❌ Has error: ${!!recentMetricsData?.error}`);
+    logger.info(
+      `  🎯 Expected ${recentParams.limit} records, got ${recentMetricsData?.count || 0}`,
+    );
     if (recentMetricsData?.error) {
       logger.error(`  Error details: ${recentMetricsData.error}`);
     }
@@ -233,12 +240,15 @@ async function fetchMetrics(
     logger.info(`📡 METRICS API RESPONSE`);
     logger.info(`  Response type: ${typeof response}`);
     logger.info(
-      `  Response keys: ${response ? Object.keys(response) : "null/undefined"}`,
+      `  Response keys: ${response ? Object.keys(response).join(", ") : "none"}`,
     );
     logger.info(
       `  Has metrics property: ${response?.hasOwnProperty("metrics")}`,
     );
     logger.info(`  Metrics is array: ${Array.isArray(response?.metrics)}`);
+    logger.info(
+      `  🎯 LIMIT TEST: Requested ${params.limit}, got ${response?.metrics?.length || 0} records`,
+    );
     logger.info(`  Raw response: ${JSON.stringify(response, null, 2)}`);
 
     if (response?.metrics) {

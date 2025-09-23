@@ -12,6 +12,17 @@
   $: hasApiAccess = data.hasApiAccess;
   $: error = data.error;
 
+  // Debug reactive statements
+  $: {
+    if (recentMetrics) {
+      console.log("📊 recentMetrics updated:", {
+        count: recentMetrics.count,
+        metricsLength: recentMetrics.metrics?.length,
+        timestamp: new Date().toLocaleTimeString(),
+      });
+    }
+  }
+
   let refreshInterval: NodeJS.Timeout;
   let countdownInterval: NodeJS.Timeout;
   let currentTime = new Date().toLocaleString();
@@ -44,6 +55,28 @@
   };
 
   onMount(() => {
+    // Initialize form values from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    queryForm = {
+      from_date: urlParams.get("from_date") || "",
+      to_date: urlParams.get("to_date") || "",
+      limit: urlParams.get("limit") || "100",
+      offset: urlParams.get("offset") || "0",
+      sort_by: urlParams.get("sort_by") || "date",
+      direction: urlParams.get("direction") || "desc",
+      consumer_id: urlParams.get("consumer_id") || "",
+      user_id: urlParams.get("user_id") || "",
+      anon: urlParams.get("anon") || "",
+      url: urlParams.get("url") || "",
+      app_name: urlParams.get("app_name") || "",
+      implemented_by_partial_function:
+        urlParams.get("implemented_by_partial_function") || "",
+      implemented_in_version: urlParams.get("implemented_in_version") || "",
+      verb: urlParams.get("verb") || "",
+      correlation_id: urlParams.get("correlation_id") || "",
+      duration: urlParams.get("duration") || "",
+    };
+
     startAutoRefresh();
 
     // Update current time every second
@@ -62,6 +95,9 @@
   });
 
   function refreshRecentMetrics() {
+    console.log("🔄 refreshRecentMetrics called");
+    console.log("Current queryForm.limit:", queryForm.limit);
+
     // Update last refresh timestamp and alternate color
     lastRefreshTime = new Date().toLocaleString();
     timestampColorIndex = (timestampColorIndex + 1) % 2;
@@ -105,7 +141,10 @@
 
     // Update URL without navigation and trigger data refresh
     const newUrl = window.location.pathname + "?" + params.toString();
+    console.log("🌐 Updating URL to:", newUrl);
+    console.log("📋 Params being sent:", params.toString());
     window.history.replaceState({}, "", newUrl);
+    console.log("🔄 Calling invalidate('app:metrics')");
     invalidate("app:metrics");
   }
 
