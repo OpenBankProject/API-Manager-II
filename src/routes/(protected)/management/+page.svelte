@@ -3,19 +3,6 @@
 
   const managementModules = [
     {
-      title: "API Dashboard",
-      description: "Real-time monitoring and analytics for OBP API performance",
-      icon: "📊",
-      path: "/management/api/dashboard",
-      status: "available",
-      features: [
-        "API Performance",
-        "System Health",
-        "Usage Analytics",
-        "Error Monitoring",
-      ],
-    },
-    {
       title: "API Metrics",
       description:
         "Detailed metrics and analytics for API usage and performance",
@@ -41,13 +28,7 @@
 </svelte:head>
 
 <div class="container mx-auto px-4 py-8">
-  <header class="text-center mb-12">
-    <h1 class="text-4xl font-bold text-gray-800 mb-4">Management Console</h1>
-    <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-      Comprehensive management interface for Open Bank Project API monitoring,
-      configuration, and administration
-    </p>
-  </header>
+  <header class="text-center mb-8"></header>
 
   <!-- Navigation Breadcrumb -->
   <nav class="breadcrumb mb-8">
@@ -88,28 +69,6 @@
         </div>
       </div>
     {/each}
-  </section>
-
-  <!-- Quick Actions -->
-  <section class="quick-actions">
-    <h2 class="section-title">Quick Actions</h2>
-    <div class="actions-grid">
-      <button
-        class="action-btn primary"
-        on:click={() => goto("/management/api/dashboard")}
-      >
-        📊 View API Dashboard
-      </button>
-      <button
-        class="action-btn primary"
-        on:click={() => goto("/management/metrics")}
-      >
-        📈 View API Metrics
-      </button>
-      <button class="action-btn secondary" on:click={() => goto("/")}>
-        ← Back to Home
-      </button>
-    </div>
   </section>
 
   <!-- System Status Summary -->
@@ -282,44 +241,6 @@
     margin-bottom: 1rem;
   }
 
-  .quick-actions {
-    margin-bottom: 3rem;
-  }
-
-  .actions-grid {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-
-  .action-btn {
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .action-btn.primary {
-    background-color: #3b82f6;
-    color: white;
-  }
-
-  .action-btn.primary:hover {
-    background-color: #2563eb;
-  }
-
-  .action-btn.secondary {
-    background-color: #f3f4f6;
-    color: #374151;
-  }
-
-  .action-btn.secondary:hover {
-    background-color: #e5e7eb;
-  }
-
   .system-status {
     background: #f9fafb;
     border: 1px solid #e5e7eb;
@@ -373,10 +294,6 @@
   @media (max-width: 768px) {
     .modules-grid {
       grid-template-columns: 1fr;
-    }
-
-    .actions-grid {
-      flex-direction: column;
     }
 
     .status-grid {

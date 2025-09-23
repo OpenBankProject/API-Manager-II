@@ -103,13 +103,6 @@
             <span class="user-name">{userDisplayName}</span>
             <span class="obp-host">→ {obpInfo.displayName}</span>
           </div>
-          <span
-            class="auth-status"
-            class:limited={isLimitedAccess}
-            class:full={!isLimitedAccess}
-          >
-            {isLimitedAccess ? "Limited" : "Full Access"}
-          </span>
         </div>
 
         <!-- Logout Button -->
@@ -145,15 +138,6 @@
         <div class="mobile-user-info">
           <div class="mobile-user-name">{userDisplayName}</div>
           <div class="mobile-obp-host">Connected to: {obpInfo.displayName}</div>
-          <div class="mobile-auth-status">
-            <span
-              class="auth-status"
-              class:limited={isLimitedAccess}
-              class:full={!isLimitedAccess}
-            >
-              {isLimitedAccess ? "Limited Access" : "Full Access"}
-            </span>
-          </div>
         </div>
 
         <!-- Navigation Links -->
@@ -296,24 +280,6 @@
     line-height: 1.2;
   }
 
-  .auth-status {
-    padding: 0.125rem 0.5rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    border-radius: 9999px;
-    text-transform: uppercase;
-  }
-
-  .auth-status.full {
-    background-color: #d1fae5;
-    color: #065f46;
-  }
-
-  .auth-status.limited {
-    background-color: #fef3c7;
-    color: #92400e;
-  }
-
   /* Buttons */
   .btn {
     padding: 0.5rem 1rem;
@@ -407,10 +373,6 @@
     font-size: 0.75rem;
     font-family: monospace;
     margin-bottom: 0.5rem;
-  }
-
-  .mobile-auth-status {
-    display: flex;
   }
 
   .mobile-nav-links {

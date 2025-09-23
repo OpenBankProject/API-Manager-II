@@ -1,7 +1,7 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
-  import AuthStatus from "$lib/components/AuthStatus.svelte";
+
   import AuthNotification from "$lib/components/AuthNotification.svelte";
 
   // Check if user is logged in (this will be set by the layout)
@@ -53,16 +53,6 @@
           duration={4000}
         />
       {/if}
-
-      <AuthStatus {user} {authInfo} />
-      <div class="mt-4 text-center">
-        <button
-          class="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
-          on:click={() => goto("/logout")}
-        >
-          Logout
-        </button>
-      </div>
     {:else}
       <div class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
         <p class="text-blue-800 mb-2">
