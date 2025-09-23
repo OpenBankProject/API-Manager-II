@@ -8,27 +8,6 @@
   export let data: any = {};
   $: user = data?.user;
   $: authInfo = data?.authInfo;
-
-  const availablePages = [
-    {
-      path: "/",
-      title: "Home",
-      description: "Main dashboard and overview",
-      status: "active",
-    },
-    {
-      path: "/login",
-      title: "Login",
-      description: "Authentication with Open Bank Project",
-      status: "active",
-    },
-  ];
-
-  function navigateToPage(path: string, status: string) {
-    if (status === "active") {
-      goto(path);
-    }
-  }
 </script>
 
 <div class="container mx-auto px-4 py-8">
@@ -81,14 +60,14 @@
         </h3>
         <p class="text-green-700 text-sm mb-4">
           You have authenticated with the OBP API server and can access the
-          management console.
+          metrics dashboard.
         </p>
         <div class="mt-4">
           <button
             class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
-            on:click={() => goto("/management")}
+            on:click={() => goto("/metrics")}
           >
-            Access Management Console
+            Access Metrics
           </button>
         </div>
       </div>
@@ -107,43 +86,45 @@
           cannot access banking features.
         </p>
         <p class="text-yellow-700 text-sm">
-          Please check your OBP API server connection to access the full
-          management console.
+          Please check your OBP API server connection to access the metrics
+          dashboard.
         </p>
       </div>
     {/if}
 
-    <!-- Current Pages Section -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {#each availablePages as page}
-        <div
-          class="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow cursor-pointer"
-          class:opacity-50={page.status !== "active"}
-          class:cursor-not-allowed={page.status !== "active"}
-          on:click={() => navigateToPage(page.path, page.status)}
-          on:keydown={(e) =>
-            e.key === "Enter" && navigateToPage(page.path, page.status)}
-          role="button"
-          tabindex="0"
-        >
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="text-xl font-semibold text-gray-800">{page.title}</h3>
-            <span
-              class="px-2 py-1 rounded-full text-xs font-medium"
-              class:bg-green-100={page.status === "active"}
-              class:text-green-800={page.status === "active"}
-              class:bg-yellow-100={page.status === "planned"}
-              class:text-yellow-800={page.status === "planned"}
-            >
-              {page.status === "active" ? "Available" : "Coming Soon"}
-            </span>
-          </div>
-          <p class="text-gray-600 text-sm">{page.description}</p>
-          <div class="mt-4 pt-4 border-t border-gray-100">
-            <span class="text-xs text-gray-500">Route: {page.path}</span>
+    <!-- API Metrics Panel -->
+    <div class="modules-grid">
+      <div
+        class="module-card available"
+        on:click={() => goto("/metrics")}
+        on:keydown={(e) => e.key === "Enter" && goto("/metrics")}
+        role="button"
+        tabindex="0"
+      >
+        <div class="module-header">
+          <div class="module-icon">📈</div>
+          <div class="module-status-badge status-available">Available</div>
+        </div>
+
+        <div class="module-content">
+          <h3 class="module-title">API Metrics</h3>
+          <p class="module-description">
+            Detailed metrics and analytics for API usage and performance
+          </p>
+
+          <div class="module-features">
+            <span class="feature-tag">Usage Metrics</span>
+            <span class="feature-tag">Performance Analytics</span>
+            <span class="feature-tag">Request Tracking</span>
+            <span class="feature-tag">Historical Data</span>
           </div>
         </div>
-      {/each}
+
+        <div class="module-footer">
+          <div class="module-path">/metrics</div>
+          <div class="module-action">Click to access →</div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -186,10 +167,117 @@
     max-width: 1200px;
   }
 
+  .modules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+
+  .module-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .module-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    border-color: #3b82f6;
+  }
+
+  .module-card.available {
+    border-left: 4px solid #10b981;
+  }
+
+  .module-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+  }
+
+  .module-icon {
+    font-size: 2rem;
+    line-height: 1;
+  }
+
+  .module-status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .status-available {
+    background-color: #d1fae5;
+    color: #065f46;
+  }
+
+  .module-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+  }
+
+  .module-description {
+    color: #6b7280;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+  }
+
+  .module-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .feature-tag {
+    background-color: #f3f4f6;
+    color: #374151;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .module-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #f3f4f6;
+  }
+
+  .module-path {
+    font-family: monospace;
+    font-size: 0.75rem;
+    color: #9ca3af;
+  }
+
+  .module-action {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #3b82f6;
+  }
+
   @media (max-width: 768px) {
     .container {
       padding-left: 1rem;
       padding-right: 1rem;
+    }
+
+    .modules-grid {
+      grid-template-columns: 1fr;
     }
   }
 </style>

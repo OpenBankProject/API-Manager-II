@@ -26,20 +26,9 @@
   $: navigationItems = isAuthenticated
     ? [
         { href: "/", label: "Home", icon: "🏠", available: true },
+
         {
-          href: "/management",
-          label: "Management",
-          icon: "⚙️",
-          available: !isLimitedAccess,
-        },
-        {
-          href: "/management/api",
-          label: "API",
-          icon: "🔌",
-          available: !isLimitedAccess,
-        },
-        {
-          href: "/management/metrics",
+          href: "/metrics",
           label: "Metrics",
           icon: "📊",
           available: !isLimitedAccess,

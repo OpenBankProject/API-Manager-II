@@ -118,7 +118,7 @@
       }
     });
 
-    goto(`/management/metrics?${params.toString()}`);
+    goto(`/metrics?${params.toString()}`);
   }
 
   function getCurrentQueryString() {
@@ -261,8 +261,6 @@
   <!-- Navigation Breadcrumb -->
   <nav class="breadcrumb mb-8">
     <a href="/" class="breadcrumb-link">Home</a>
-    <span class="breadcrumb-separator">›</span>
-    <a href="/management" class="breadcrumb-link">Management</a>
     <span class="breadcrumb-separator">›</span>
     <span class="breadcrumb-current">Metrics</span>
   </nav>
@@ -524,8 +522,8 @@
     <div class="panel-header">
       <h2 class="panel-title">Recent API Calls</h2>
       <div class="panel-subtitle">
-        URL: {obpInfo.apiUrl}/management/metrics?{getCurrentQueryString()} • Last
-        updated:
+        URL: {obpInfo.apiUrl}/obp/v5.1.0/management/metrics?{getCurrentQueryString()}
+        • Last updated:
         <span class="timestamp-color-{timestampColorIndex}"
           >{lastRefreshTime}</span
         >
