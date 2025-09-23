@@ -91,54 +91,19 @@
     {#if authInfo?.source === "obp_api"}
       <div class="mb-6 p-4 bg-green-50 rounded-lg border-l-4 border-green-400">
         <h3 class="text-lg font-semibold text-green-800 mb-2">
-          🏦 Full Banking Features Available
+          🏦 Full OBP API Access Active
         </h3>
         <p class="text-green-700 text-sm mb-4">
-          You have full access to OBP API features and banking data.
+          You have authenticated with the OBP API server and can access the
+          management console.
         </p>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div class="feature-card available">
-            <div class="feature-icon">💰</div>
-            <h4 class="feature-title">Account Management</h4>
-            <p class="feature-desc">View and manage bank accounts</p>
-            <span class="feature-status available">Available</span>
-          </div>
-
-          <div class="feature-card available">
-            <div class="feature-icon">📊</div>
-            <h4 class="feature-title">Transaction History</h4>
-            <p class="feature-desc">Full transaction data and analytics</p>
-            <span class="feature-status available">Available</span>
-          </div>
-
-          <div class="feature-card available">
-            <div class="feature-icon">🏛️</div>
-            <h4 class="feature-title">Bank Information</h4>
-            <p class="feature-desc">Access to bank and branch data</p>
-            <span class="feature-status available">Available</span>
-          </div>
-
-          <div class="feature-card available">
-            <div class="feature-icon">👥</div>
-            <h4 class="feature-title">User Management</h4>
-            <p class="feature-desc">Complete user profile access</p>
-            <span class="feature-status available">Available</span>
-          </div>
-
-          <div class="feature-card available">
-            <div class="feature-icon">🔒</div>
-            <h4 class="feature-title">API Access</h4>
-            <p class="feature-desc">Full OBP API integration</p>
-            <span class="feature-status available">Available</span>
-          </div>
-
-          <div class="feature-card available">
-            <div class="feature-icon">📈</div>
-            <h4 class="feature-title">Analytics & Reports</h4>
-            <p class="feature-desc">Advanced banking analytics</p>
-            <span class="feature-status available">Available</span>
-          </div>
+        <div class="mt-4">
+          <button
+            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+            on:click={() => goto("/management")}
+          >
+            Access Management Console
+          </button>
         </div>
       </div>
     {/if}
@@ -152,52 +117,13 @@
           ⚠️ Limited Access Mode
         </h3>
         <p class="text-yellow-700 text-sm mb-4">
-          OBP API server is not accessible. Only basic features are available.
+          OBP API server is not accessible. You are authenticated via OIDC but
+          cannot access banking features.
         </p>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div class="feature-card limited">
-            <div class="feature-icon">🔐</div>
-            <h4 class="feature-title">Basic Authentication</h4>
-            <p class="feature-desc">OIDC-based login only</p>
-            <span class="feature-status limited">Limited</span>
-          </div>
-
-          <div class="feature-card limited">
-            <div class="feature-icon">👤</div>
-            <h4 class="feature-title">Basic Profile</h4>
-            <p class="feature-desc">Limited user information</p>
-            <span class="feature-status limited">Limited</span>
-          </div>
-
-          <div class="feature-card unavailable">
-            <div class="feature-icon">💰</div>
-            <h4 class="feature-title">Account Management</h4>
-            <p class="feature-desc">Requires OBP API access</p>
-            <span class="feature-status unavailable">Unavailable</span>
-          </div>
-
-          <div class="feature-card unavailable">
-            <div class="feature-icon">📊</div>
-            <h4 class="feature-title">Transaction History</h4>
-            <p class="feature-desc">Requires OBP API access</p>
-            <span class="feature-status unavailable">Unavailable</span>
-          </div>
-
-          <div class="feature-card unavailable">
-            <div class="feature-icon">🏛️</div>
-            <h4 class="feature-title">Banking Data</h4>
-            <p class="feature-desc">Requires OBP API access</p>
-            <span class="feature-status unavailable">Unavailable</span>
-          </div>
-
-          <div class="feature-card unavailable">
-            <div class="feature-icon">📈</div>
-            <h4 class="feature-title">Analytics</h4>
-            <p class="feature-desc">Requires OBP API access</p>
-            <span class="feature-status unavailable">Unavailable</span>
-          </div>
-        </div>
+        <p class="text-yellow-700 text-sm">
+          Please check your OBP API server connection to access the full
+          management console.
+        </p>
       </div>
     {/if}
 
@@ -278,86 +204,10 @@
     max-width: 1200px;
   }
 
-  .feature-card {
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 1rem;
-    transition:
-      transform 0.2s,
-      box-shadow 0.2s;
-  }
-
-  .feature-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  }
-
-  .feature-card.available {
-    border-left: 4px solid #10b981;
-    background: #f0fdf4;
-  }
-
-  .feature-card.limited {
-    border-left: 4px solid #f59e0b;
-    background: #fffbeb;
-  }
-
-  .feature-card.unavailable {
-    border-left: 4px solid #ef4444;
-    background: #fef2f2;
-    opacity: 0.7;
-  }
-
-  .feature-icon {
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .feature-title {
-    font-weight: 600;
-    color: #1f2937;
-    font-size: 0.875rem;
-    margin-bottom: 0.25rem;
-  }
-
-  .feature-desc {
-    color: #6b7280;
-    font-size: 0.75rem;
-    margin-bottom: 0.75rem;
-    line-height: 1.4;
-  }
-
-  .feature-status {
-    font-size: 0.75rem;
-    font-weight: 500;
-    padding: 0.125rem 0.5rem;
-    border-radius: 9999px;
-    display: inline-block;
-  }
-
-  .feature-status.available {
-    background-color: #d1fae5;
-    color: #065f46;
-  }
-
-  .feature-status.limited {
-    background-color: #fef3c7;
-    color: #92400e;
-  }
-
-  .feature-status.unavailable {
-    background-color: #fee2e2;
-    color: #991b1b;
-  }
-
   @media (max-width: 768px) {
-    .feature-card {
-      padding: 0.75rem;
-    }
-
-    .feature-icon {
-      font-size: 1.25rem;
+    .container {
+      padding-left: 1rem;
+      padding-right: 1rem;
     }
   }
 </style>
