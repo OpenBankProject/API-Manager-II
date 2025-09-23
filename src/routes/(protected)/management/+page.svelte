@@ -16,79 +16,23 @@
       ],
     },
     {
-      title: "User Management",
-      description: "Manage user accounts, permissions, and access controls",
-      icon: "👥",
-      path: "/management/users",
-      status: "planned",
-      features: [
-        "User Accounts",
-        "Role Management",
-        "Access Controls",
-        "Activity Logs",
-      ],
-    },
-    {
-      title: "API Configuration",
+      title: "API Metrics",
       description:
-        "Configure API endpoints, rate limiting, and security settings",
-      icon: "⚙️",
-      path: "/management/config",
-      status: "planned",
+        "Detailed metrics and analytics for API usage and performance",
+      icon: "📈",
+      path: "/management/metrics",
+      status: "available",
       features: [
-        "Endpoint Config",
-        "Rate Limiting",
-        "Security Rules",
-        "API Keys",
-      ],
-    },
-    {
-      title: "System Logs",
-      description:
-        "View and analyze system logs, audit trails, and error reports",
-      icon: "📝",
-      path: "/management/logs",
-      status: "planned",
-      features: [
-        "Error Logs",
-        "Audit Trail",
-        "Performance Logs",
-        "Security Events",
-      ],
-    },
-    {
-      title: "Bank Management",
-      description: "Manage connected banks, accounts, and financial data",
-      icon: "🏦",
-      path: "/management/banks",
-      status: "planned",
-      features: [
-        "Bank Connections",
-        "Account Overview",
-        "Transaction Monitoring",
-        "Compliance",
-      ],
-    },
-    {
-      title: "Security Center",
-      description:
-        "Monitor security events, manage certificates, and review access",
-      icon: "🔒",
-      path: "/management/security",
-      status: "planned",
-      features: [
-        "Security Events",
-        "SSL Certificates",
-        "Access Reviews",
-        "Threat Detection",
+        "Usage Metrics",
+        "Performance Analytics",
+        "Request Tracking",
+        "Historical Data",
       ],
     },
   ];
 
-  function navigateTo(path: string, status: string) {
-    if (status === "available") {
-      goto(path);
-    }
+  function navigateTo(path: string) {
+    goto(path);
   }
 </script>
 
@@ -116,18 +60,15 @@
   <section class="modules-grid">
     {#each managementModules as module}
       <div
-        class="module-card {module.status}"
-        on:click={() => navigateTo(module.path, module.status)}
-        on:keydown={(e) =>
-          e.key === "Enter" && navigateTo(module.path, module.status)}
+        class="module-card available"
+        on:click={() => navigateTo(module.path)}
+        on:keydown={(e) => e.key === "Enter" && navigateTo(module.path)}
         role="button"
         tabindex="0"
       >
         <div class="module-header">
           <div class="module-icon">{module.icon}</div>
-          <div class="module-status-badge status-{module.status}">
-            {module.status === "available" ? "Available" : "Coming Soon"}
-          </div>
+          <div class="module-status-badge status-available">Available</div>
         </div>
 
         <div class="module-content">
@@ -143,11 +84,7 @@
 
         <div class="module-footer">
           <div class="module-path">{module.path}</div>
-          {#if module.status === "available"}
-            <div class="module-action">Click to access →</div>
-          {:else}
-            <div class="module-action coming-soon">Under development</div>
-          {/if}
+          <div class="module-action">Click to access →</div>
         </div>
       </div>
     {/each}
@@ -164,10 +101,10 @@
         📊 View API Dashboard
       </button>
       <button
-        class="action-btn secondary"
-        on:click={() => window.location.reload()}
+        class="action-btn primary"
+        on:click={() => goto("/management/metrics")}
       >
-        🔄 Refresh Dashboard
+        📈 View API Metrics
       </button>
       <button class="action-btn secondary" on:click={() => goto("/")}>
         ← Back to Home
@@ -263,11 +200,6 @@
     border-left: 4px solid #10b981;
   }
 
-  .module-card.planned {
-    border-left: 4px solid #f59e0b;
-    opacity: 0.8;
-  }
-
   .module-header {
     display: flex;
     justify-content: space-between;
@@ -290,11 +222,6 @@
   .status-available {
     background-color: #d1fae5;
     color: #065f46;
-  }
-
-  .status-planned {
-    background-color: #fef3c7;
-    color: #92400e;
   }
 
   .module-title {
@@ -346,10 +273,6 @@
     font-size: 0.75rem;
     font-weight: 500;
     color: #3b82f6;
-  }
-
-  .module-action.coming-soon {
-    color: #f59e0b;
   }
 
   .section-title {
@@ -429,10 +352,6 @@
 
   .status-indicator.warning {
     background-color: #f59e0b;
-  }
-
-  .status-indicator.offline {
-    background-color: #ef4444;
   }
 
   .status-info {
