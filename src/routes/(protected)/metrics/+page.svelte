@@ -1,19 +1,18 @@
 <script lang="ts">
-  import { onMount, onDestroy } from "svelte";
   import { goto } from "$app/navigation";
   import { invalidate } from "$app/navigation";
   import type { PageData } from "./$types";
   import { configHelpers } from "$lib/config";
 
-  export let data: PageData;
+  let { data } = $props<{ data: PageData }>();
 
-  $: recentMetrics = data.recentMetrics;
-  $: queryMetrics = data.queryMetrics;
-  $: hasApiAccess = data.hasApiAccess;
-  $: error = data.error;
+  let recentMetrics = $derived(data.recentMetrics);
+  let queryMetrics = $derived(data.queryMetrics);
+  let hasApiAccess = $derived(data.hasApiAccess);
+  let error = $derived(data.error);
 
   // Debug reactive statements
-  $: {
+  $effect(() => {
     if (recentMetrics) {
       console.log("📊 recentMetrics updated:", {
         count: recentMetrics.count,
@@ -24,31 +23,31 @@
           recentMetrics.metrics?.[recentMetrics.metrics.length - 1]?.date,
       });
     }
-  }
+  });
 
   // Debug data prop changes
-  $: {
+  $effect(() => {
     console.log("📦 data prop updated:", {
       hasRecentMetrics: !!data.recentMetrics,
       recentMetricsCount: data.recentMetrics?.count,
       lastUpdated: data.lastUpdated,
       timestamp: new Date().toLocaleTimeString(),
     });
-  }
+  });
 
-  let refreshInterval: NodeJS.Timeout;
-  let countdownInterval: NodeJS.Timeout;
-  let currentTime = new Date().toLocaleString();
-  let lastRefreshTime = new Date().toLocaleString();
-  let countdown = 5;
-  let isCountingDown = false;
-  let timestampColorIndex = 0;
+  let refreshInterval = $state<NodeJS.Timeout | undefined>(undefined);
+  let countdownInterval = $state<NodeJS.Timeout | undefined>(undefined);
+  let currentTime = $state(new Date().toLocaleString());
+  let lastRefreshTime = $state(new Date().toLocaleString());
+  let countdown = $state(5);
+  let isCountingDown = $state(false);
+  let timestampColorIndex = $state(0);
 
   // Configuration information
-  $: obpInfo = configHelpers.getObpConnectionInfo();
+  let obpInfo = $derived(configHelpers.getObpConnectionInfo());
 
   // Form data for query panel
-  let queryForm = {
+  let queryForm = $state({
     from_date: "",
     to_date: "",
     limit: "100",
@@ -66,46 +65,51 @@
     verb: "",
     correlation_id: "",
     duration: "",
-  };
-
-  onMount(() => {
-    // Initialize form values from URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    queryForm = {
-      from_date: urlParams.get("from_date") || "",
-      to_date: urlParams.get("to_date") || "",
-      limit: urlParams.get("limit") || "100",
-      offset: urlParams.get("offset") || "0",
-      sort_by: urlParams.get("sort_by") || "date",
-      direction: urlParams.get("direction") || "desc",
-      consumer_id: urlParams.get("consumer_id") || "",
-      user_id: urlParams.get("user_id") || "",
-      user_name: urlParams.get("user_name") || "",
-      anon: urlParams.get("anon") || "",
-      url: urlParams.get("url") || "",
-      app_name: urlParams.get("app_name") || "",
-      implemented_by_partial_function:
-        urlParams.get("implemented_by_partial_function") || "",
-      implemented_in_version: urlParams.get("implemented_in_version") || "",
-      verb: urlParams.get("verb") || "",
-      correlation_id: urlParams.get("correlation_id") || "",
-      duration: urlParams.get("duration") || "",
-    };
-
-    startAutoRefresh();
-
-    // Update current time every second
-    setInterval(() => {
-      currentTime = new Date().toLocaleString();
-    }, 1000);
   });
 
-  onDestroy(() => {
-    if (refreshInterval) {
-      clearInterval(refreshInterval);
-    }
-    if (countdownInterval) {
-      clearInterval(countdownInterval);
+  // Initialize on mount
+  $effect(() => {
+    // Initialize form values from URL parameters
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      queryForm = {
+        from_date: urlParams.get("from_date") || "",
+        to_date: urlParams.get("to_date") || "",
+        limit: urlParams.get("limit") || "100",
+        offset: urlParams.get("offset") || "0",
+        sort_by: urlParams.get("sort_by") || "date",
+        direction: urlParams.get("direction") || "desc",
+        consumer_id: urlParams.get("consumer_id") || "",
+        user_id: urlParams.get("user_id") || "",
+        user_name: urlParams.get("user_name") || "",
+        anon: urlParams.get("anon") || "",
+        url: urlParams.get("url") || "",
+        app_name: urlParams.get("app_name") || "",
+        implemented_by_partial_function:
+          urlParams.get("implemented_by_partial_function") || "",
+        implemented_in_version: urlParams.get("implemented_in_version") || "",
+        verb: urlParams.get("verb") || "",
+        correlation_id: urlParams.get("correlation_id") || "",
+        duration: urlParams.get("duration") || "",
+      };
+
+      startAutoRefresh();
+
+      // Update current time every second
+      const timeInterval = setInterval(() => {
+        currentTime = new Date().toLocaleString();
+      }, 1000);
+
+      // Cleanup
+      return () => {
+        if (refreshInterval) {
+          clearInterval(refreshInterval);
+        }
+        if (countdownInterval) {
+          clearInterval(countdownInterval);
+        }
+        clearInterval(timeInterval);
+      };
     }
   });
 
