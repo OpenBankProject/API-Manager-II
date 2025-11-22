@@ -14,7 +14,7 @@
   // Debug reactive statements
   $effect(() => {
     if (recentMetrics) {
-      console.log("📊 recentMetrics updated:", {
+      console.log("recentMetrics updated:", {
         count: recentMetrics.count,
         metricsLength: recentMetrics.metrics?.length,
         timestamp: new Date().toLocaleTimeString(),
@@ -27,7 +27,7 @@
 
   // Debug data prop changes
   $effect(() => {
-    console.log("📦 data prop updated:", {
+    console.log("data prop updated:", {
       hasRecentMetrics: !!data.recentMetrics,
       recentMetricsCount: data.recentMetrics?.count,
       lastUpdated: data.lastUpdated,
@@ -82,8 +82,8 @@
   // Initialize on mount - run only once
   let initialized = $state(false);
 
+  // Initialize on mount - run only once
   $effect(() => {
-    // Initialize form values from URL parameters
     if (typeof window !== "undefined" && !initialized) {
       initialized = true;
 
@@ -118,21 +118,22 @@
       startAutoRefresh();
 
       // Update current time every second
-      const timeInterval = setInterval(() => {
+      setInterval(() => {
         currentTime = new Date().toLocaleString();
       }, 1000);
-
-      // Cleanup
-      return () => {
-        if (refreshInterval) {
-          clearInterval(refreshInterval);
-        }
-        if (countdownInterval) {
-          clearInterval(countdownInterval);
-        }
-        clearInterval(timeInterval);
-      };
     }
+  });
+
+  // Separate cleanup effect
+  $effect(() => {
+    return () => {
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+      }
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+      }
+    };
   });
 
   function refreshRecentMetrics() {
@@ -191,11 +192,11 @@
     // Update URL without navigation and trigger data refresh
     const newUrl = window.location.pathname + "?" + params.toString();
     console.log("🌐 Updating URL to:", newUrl);
-    console.log("📋 Params being sent:", params.toString());
+    console.log("Params being sent:", params.toString());
     window.history.replaceState({}, "", newUrl);
-    console.log("🔄 Calling invalidate('app:metrics')");
+    console.log("Calling invalidate('app:metrics')");
     invalidate("app:metrics").then(() => {
-      console.log("✅ invalidate completed");
+      console.log("invalidate completed");
       console.log("New recentMetrics count:", recentMetrics?.count);
       console.log("New recentMetrics length:", recentMetrics?.metrics?.length);
     });
@@ -261,9 +262,12 @@
     if (refreshInterval) clearInterval(refreshInterval);
     if (countdownInterval) clearInterval(countdownInterval);
 
+    console.log("Starting auto-refresh countdown from 5");
     countdownInterval = setInterval(() => {
       countdown--;
+      console.log("Countdown:", countdown);
       if (countdown <= 0) {
+        console.log("Countdown reached 0, refreshing...");
         refreshRecentMetrics();
         countdown = 5;
       }
@@ -277,9 +281,12 @@
 
     if (countdownInterval) clearInterval(countdownInterval);
 
+    console.log("Field changed, starting 3-second countdown");
     countdownInterval = setInterval(() => {
       countdown--;
+      console.log("Field change countdown:", countdown);
       if (countdown <= 0) {
+        console.log("Field change countdown reached 0, refreshing...");
         refreshRecentMetrics();
         startAutoRefresh(); // Resume normal 5-second cycle
       }
@@ -318,7 +325,15 @@
   }
 
   function formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleString();
+    return new Date(dateString).toLocaleString(undefined, {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
   }
 
   function getVerbColor(verb: string): string {
@@ -602,7 +617,8 @@
       <h2 class="panel-title">Recent API Calls</h2>
       <div class="panel-subtitle">
         URL: {obpInfo.apiUrl}/obp/v5.1.0/management/metrics?{getCurrentQueryString()}
-        • Last updated:
+        <br />
+        Last updated:
         <span class="timestamp-color-{timestampColorIndex}"
           >{lastRefreshTime}</span
         >

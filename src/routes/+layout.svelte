@@ -21,7 +21,8 @@
 		ChevronRight,
 		Settings,
 		CreditCard,
-		BarChart3
+		BarChart3,
+		Globe
 	} from '@lucide/svelte';
 
 	import { env } from '$env/dynamic/public';
@@ -70,6 +71,16 @@
 					}
 				]
 			: []), // unpacks a conditional list so we can add menu items where we want
+		...(data.externalLinks.PORTAL_URL
+			? [
+					{
+						href: data.externalLinks.PORTAL_URL,
+						label: 'Portal',
+						iconComponent: Globe,
+						external: true
+					}
+				]
+			: []),
 		{
 			label: 'Consumers',
 			href: '/consumers',
