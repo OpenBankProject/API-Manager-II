@@ -20,7 +20,8 @@
 		ChevronDown,
 		ChevronRight,
 		Settings,
-		CreditCard
+		CreditCard,
+		BarChart3
 	} from '@lucide/svelte';
 
 	import { env } from '$env/dynamic/public';
@@ -70,9 +71,9 @@
 				]
 			: []), // unpacks a conditional list so we can add menu items where we want
 		{
-			label: 'Get API Key',
-			href: '/consumers/register',
-			iconComponent: KeyRound
+			label: 'Metrics',
+			href: '/metrics',
+			iconComponent: BarChart3
 		},
 		...(data.externalLinks.SUBSCRIPTIONS_URL
 			? [
