@@ -122,7 +122,7 @@
                     class="cursor-pointer"
                     onclick={() => {
                       if (user.provider && user.username) {
-                        window.location.href = `/users/${user.provider}/${user.username}`;
+                        window.location.href = `/users/${encodeURIComponent(user.provider)}/${encodeURIComponent(user.username)}`;
                       }
                     }}
                   >
@@ -173,7 +173,7 @@
                   class="cursor-pointer"
                   onclick={() => {
                     if (user.provider && user.username) {
-                      window.location.href = `/users/${user.provider}/${user.username}`;
+                      window.location.href = `/users/${encodeURIComponent(user.provider)}/${encodeURIComponent(user.username)}`;
                     }
                   }}
                 >
