@@ -227,7 +227,7 @@ async function fetchMetrics(
     });
 
     const endpoint = `/obp/v6.0.0/management/metrics?${queryParams.toString()}`;
-    logger.info(`📡 METRICS API CALL START`);
+    logger.info(`METRICS API CALL START`);
     logger.info(`  Endpoint: ${endpoint}`);
     logger.info(`  Parameters: ${JSON.stringify(params, null, 2)}`);
     logger.info(`  Query string: ${queryParams.toString()}`);
@@ -237,7 +237,7 @@ async function fetchMetrics(
 
     const response = await obp_requests.get(endpoint, accessToken);
 
-    logger.info(`📡 METRICS API RESPONSE`);
+    logger.info(`METRICS API RESPONSE`);
     logger.info(`  Response type: ${typeof response}`);
     logger.info(
       `  Response keys: ${response ? Object.keys(response).join(", ") : "none"}`,
@@ -247,12 +247,12 @@ async function fetchMetrics(
     );
     logger.info(`  Metrics is array: ${Array.isArray(response?.metrics)}`);
     logger.info(
-      `  🎯 LIMIT TEST: Requested ${params.limit}, got ${response?.metrics?.length || 0} records`,
+      `  LIMIT TEST: Requested ${params.limit}, got ${response?.metrics?.length || 0} records`,
     );
     logger.info(`  Raw response: ${JSON.stringify(response, null, 2)}`);
 
     if (response?.metrics) {
-      logger.info(`✅ METRICS FOUND: ${response.metrics.length} records`);
+      logger.info(`METRICS FOUND: ${response.metrics.length} records`);
       if (response.metrics.length > 0) {
         logger.info(
           `  Sample metric: ${JSON.stringify(response.metrics[0], null, 2)}`,
@@ -263,7 +263,7 @@ async function fetchMetrics(
         count: response.metrics.length,
       };
     } else {
-      logger.warn("❌ NO METRICS DATA IN RESPONSE");
+      logger.warn("NO METRICS DATA IN RESPONSE");
       logger.warn(`  Response structure: ${JSON.stringify(response, null, 2)}`);
       return {
         metrics: [],
@@ -272,7 +272,7 @@ async function fetchMetrics(
       };
     }
   } catch (err) {
-    logger.error("🚨 ERROR FETCHING METRICS:");
+    logger.error("ERROR FETCHING METRICS:");
     logger.error(`  Error type: ${err?.constructor?.name}`);
     logger.error(
       `  Error message: ${err instanceof Error ? err.message : String(err)}`,

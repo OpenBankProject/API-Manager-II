@@ -51,11 +51,16 @@
     if (!dateString || dateString.trim() === "") return "";
 
     // If it's already in ISO format with Z, return as is
-    if (dateString.endsWith("Z")) return dateString;
+    if (dateString.endsWith("Z")) {
+      console.log("formatDateForAPI: Date already in ISO format:", dateString);
+      return dateString;
+    }
 
     // Convert datetime-local format (yyyy-MM-ddTHH:mm) to OBP format
     const date = new Date(dateString);
-    return date.toISOString(); // Returns yyyy-MM-ddTHH:mm:ss.sssZ
+    const isoString = date.toISOString(); // Returns yyyy-MM-ddTHH:mm:ss.sssZ
+    console.log("formatDateForAPI: Input:", dateString, "Output:", isoString);
+    return isoString;
   }
 
   // Form data for query panel
@@ -364,6 +369,22 @@
     <div class="alert alert-error mb-6">
       <strong>Error:</strong>
       {error} - Unable to fetch metrics data.
+    </div>
+  {/if}
+
+  <!-- API Error Alert for Recent Metrics -->
+  {#if recentMetrics?.error}
+    <div class="alert alert-error mb-6">
+      <strong>Recent API Calls Error:</strong>
+      {recentMetrics.error}
+    </div>
+  {/if}
+
+  <!-- API Error Alert for Query Metrics -->
+  {#if queryMetrics?.error}
+    <div class="alert alert-error mb-6">
+      <strong>Query Results Error:</strong>
+      {queryMetrics.error}
     </div>
   {/if}
 
