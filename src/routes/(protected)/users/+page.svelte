@@ -113,7 +113,6 @@
                   <th>Email</th>
                   <th>User ID</th>
                   <th>Provider</th>
-                  <th>Created</th>
                 </tr>
               </thead>
               <tbody>
@@ -130,7 +129,6 @@
                     <td>{user.email || "N/A"}</td>
                     <td class="font-mono text-sm">{user.user_id || "N/A"}</td>
                     <td>{user.provider || "N/A"}</td>
-                    <td>{formatDate(user.created_date)}</td>
                   </tr>
                 {/each}
               </tbody>
@@ -163,8 +161,6 @@
                 <th>Email</th>
                 <th>User ID</th>
                 <th>Provider</th>
-                <th>Entitlements</th>
-                <th>Created</th>
               </tr>
             </thead>
             <tbody>
@@ -181,20 +177,6 @@
                   <td>{user.email || "N/A"}</td>
                   <td class="font-mono text-sm">{user.user_id || "N/A"}</td>
                   <td>{user.provider || "N/A"}</td>
-                  <td>
-                    {#if user.entitlements?.list && user.entitlements.list.length > 0}
-                      <div class="flex flex-wrap gap-1">
-                        {#each user.entitlements.list as entitlement}
-                          <span class="entitlement-badge"
-                            >{entitlement.role_name || entitlement}</span
-                          >
-                        {/each}
-                      </div>
-                    {:else}
-                      <span class="text-gray-500">No entitlements</span>
-                    {/if}
-                  </td>
-                  <td>{formatDate(user.created_date)}</td>
                 </tr>
               {/each}
             </tbody>
