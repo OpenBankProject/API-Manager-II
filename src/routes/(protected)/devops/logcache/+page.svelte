@@ -9,11 +9,11 @@
   let refreshInterval: NodeJS.Timeout | null = null;
 
   const logLevels = [
-    { value: "", label: "All Levels" },
-    { value: "ERROR", label: "Error" },
-    { value: "WARN", label: "Warning" },
-    { value: "INFO", label: "Info" },
-    { value: "DEBUG", label: "Debug" },
+    { value: "", label: "ALL" },
+    { value: "ERROR", label: "ERROR" },
+    { value: "WARN", label: "WARN" },
+    { value: "INFO", label: "INFO" },
+    { value: "DEBUG", label: "DEBUG" },
   ];
 
   async function fetchLogs() {
@@ -30,16 +30,29 @@
       const response = await fetch(url);
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch logs: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        const errorMsg = errorData.error || response.statusText;
+        throw new Error(
+          `Failed to fetch logs (${response.status}): ${errorMsg}`,
+        );
       }
 
       const data = await response.json();
+
+      console.log("=== LOG-CACHE DATA RECEIVED ===");
+      console.log("Data type:", typeof data);
+      console.log("Is array:", Array.isArray(data));
+      console.log("Data keys:", data ? Object.keys(data) : "null");
+      console.log("Full data:", data);
 
       if (data.error) {
         throw new Error(data.error);
       }
 
-      logs = data.logs || [];
+      // Handle both array response and object with entries property
+      logs = Array.isArray(data) ? data : data.entries || [];
+      console.log("Parsed logs count:", logs.length);
+      console.log("First log entry:", logs[0]);
       lastUpdated = new Date().toLocaleString(undefined, {
         hour: "2-digit",
         minute: "2-digit",
@@ -49,6 +62,11 @@
     } catch (err) {
       error = err instanceof Error ? err.message : "Failed to fetch logs";
       console.error("Error fetching logs:", err);
+      console.error("Full error details:", {
+        logLevel,
+        url: `/api/devops/log-cache`,
+        timestamp: new Date().toISOString(),
+      });
     } finally {
       isLoading = false;
     }
@@ -306,9 +324,19 @@
     cursor: pointer;
   }
 
+  .filter-select option {
+    background: white;
+    color: #111827;
+  }
+
   :global([data-mode="dark"]) .filter-select {
     background: rgb(var(--color-surface-700));
     border-color: rgb(var(--color-surface-600));
+    color: var(--color-surface-100);
+  }
+
+  :global([data-mode="dark"]) .filter-select option {
+    background: rgb(var(--color-surface-700));
     color: var(--color-surface-100);
   }
 

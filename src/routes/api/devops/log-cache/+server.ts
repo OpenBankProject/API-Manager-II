@@ -9,27 +9,36 @@ const logger = createLogger("LogCacheAPI");
 export const GET: RequestHandler = async ({ url, locals }) => {
   const session = locals.session;
 
+  logger.info("=== LOG-CACHE AUTH DEBUG ===");
+  logger.info(`Session exists: ${!!session}`);
+  logger.info(`Session data exists: ${!!session?.data}`);
+  logger.info(`User exists: ${!!session?.data?.user}`);
+
   if (!session?.data?.user) {
-    return json({ error: "Unauthorized" }, { status: 401 });
+    logger.error("No user in session - returning 401");
+    return json(
+      { error: "Unauthorized - No user in session" },
+      { status: 401 },
+    );
   }
 
   const sessionOAuth = SessionOAuthHelper.getSessionOAuth(session);
+  logger.info(`SessionOAuth exists: ${!!sessionOAuth}`);
+
   const accessToken = sessionOAuth?.accessToken;
+  logger.info(`Access token exists: ${!!accessToken}`);
+  logger.info(`Access token length: ${accessToken?.length || 0}`);
 
   if (!accessToken) {
-    logger.warn("No access token available for log-cache API call");
+    logger.error("No access token available for log-cache API call");
     return json({ error: "No API access token available" }, { status: 401 });
   }
 
   try {
-    const logLevel = url.searchParams.get("log_level");
+    const logLevel = url.searchParams.get("log_level") || "ALL";
 
     logger.info("=== LOG-CACHE API CALL ===");
-    let endpoint = `/obp/v6.0.0/management/log-cache`;
-
-    if (logLevel) {
-      endpoint += `?log_level=${encodeURIComponent(logLevel)}`;
-    }
+    const endpoint = `/obp/v6.0.0/devops/log-cache/${encodeURIComponent(logLevel)}`;
 
     logger.info(`Request: ${endpoint}`);
 
