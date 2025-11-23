@@ -6,21 +6,19 @@
 
   let { data } = $props<{ data: PageData }>();
 
-  let recentMetrics = $derived(data.recentMetrics);
-  let queryMetrics = $derived(data.queryMetrics);
+  let metrics = $derived(data.metrics);
   let hasApiAccess = $derived(data.hasApiAccess);
   let error = $derived(data.error);
 
   // Debug reactive statements
   $effect(() => {
-    if (recentMetrics) {
-      console.log("recentMetrics updated:", {
-        count: recentMetrics.count,
-        metricsLength: recentMetrics.metrics?.length,
+    if (metrics) {
+      console.log("metrics updated:", {
+        count: metrics.count,
+        metricsLength: metrics.metrics?.length,
         timestamp: new Date().toLocaleTimeString(),
-        firstMetricDate: recentMetrics.metrics?.[0]?.date,
-        lastMetricDate:
-          recentMetrics.metrics?.[recentMetrics.metrics.length - 1]?.date,
+        firstMetricDate: metrics.metrics?.[0]?.date,
+        lastMetricDate: metrics.metrics?.[metrics.metrics.length - 1]?.date,
       });
     }
   });
@@ -28,8 +26,8 @@
   // Debug data prop changes
   $effect(() => {
     console.log("data prop updated:", {
-      hasRecentMetrics: !!data.recentMetrics,
-      recentMetricsCount: data.recentMetrics?.count,
+      hasMetrics: !!data.metrics,
+      metricsCount: data.metrics?.count,
       lastUpdated: data.lastUpdated,
       timestamp: new Date().toLocaleTimeString(),
     });
@@ -120,6 +118,8 @@
         duration: urlParams.get("duration") || "",
       };
 
+      // Sync URL with form values and start auto-refresh
+      refreshMetrics();
       startAutoRefresh();
 
       // Update current time every second
@@ -141,85 +141,45 @@
     };
   });
 
-  function refreshRecentMetrics() {
-    console.log(
-      "🔄 refreshRecentMetrics called at",
-      new Date().toLocaleTimeString(),
-    );
+  function refreshMetrics() {
+    console.log("refreshMetrics called at", new Date().toLocaleTimeString());
     console.log("Current queryForm.limit:", queryForm.limit);
-    console.log("Current recentMetrics count:", recentMetrics?.count);
-    console.log(
-      "Current recentMetrics length:",
-      recentMetrics?.metrics?.length,
-    );
 
     // Update last refresh timestamp and alternate color
     lastRefreshTime = new Date().toLocaleString();
     timestampColorIndex = (timestampColorIndex + 1) % 2;
 
-    // Update URL with Query Metrics form parameters without navigation
-    const params = new URLSearchParams();
+    // Use currentQueryString - this is the ON_PAGE_METRICS_REQUEST_URL query params
+    console.log("ON_PAGE_METRICS_REQUEST_URL params:", currentQueryString);
 
-    // Add date filters only if they have values
-    if (queryForm.from_date && queryForm.from_date.trim() !== "") {
-      params.set("from_date", formatDateForAPI(queryForm.from_date));
-    }
-    if (queryForm.to_date && queryForm.to_date.trim() !== "") {
-      params.set("to_date", formatDateForAPI(queryForm.to_date));
-    }
-
-    // Add other filters if they have values
-    if (queryForm.verb && queryForm.verb.trim() !== "") {
-      params.set("verb", queryForm.verb);
-    }
-    if (queryForm.app_name && queryForm.app_name.trim() !== "") {
-      params.set("app_name", queryForm.app_name);
-    }
-    if (queryForm.user_name && queryForm.user_name.trim() !== "") {
-      params.set("user_name", queryForm.user_name);
-    }
-    if (queryForm.url && queryForm.url.trim() !== "") {
-      params.set("url", queryForm.url);
-    }
-    if (queryForm.consumer_id && queryForm.consumer_id.trim() !== "") {
-      params.set("consumer_id", queryForm.consumer_id);
-    }
-    if (queryForm.anon && queryForm.anon.trim() !== "") {
-      params.set("anon", queryForm.anon);
-    }
-
-    // Always include pagination and sorting for Recent API Calls
-    params.set("limit", queryForm.limit);
-    params.set("offset", queryForm.offset);
-    params.set("sort_by", queryForm.sort_by);
-    params.set("direction", queryForm.direction);
-
-    // Update URL without navigation and trigger data refresh
-    const newUrl = window.location.pathname + "?" + params.toString();
-    console.log("🌐 Updating URL to:", newUrl);
-    console.log("Params being sent:", params.toString());
-    window.history.replaceState({}, "", newUrl);
-    console.log("Calling invalidate('app:metrics')");
-    invalidate("app:metrics").then(() => {
-      console.log("invalidate completed");
-      console.log("New recentMetrics count:", recentMetrics?.count);
-      console.log("New recentMetrics length:", recentMetrics?.metrics?.length);
-    });
+    // Call API endpoint directly with the ON_PAGE_METRICS_REQUEST_URL params
+    fetch(`/api/metrics?${currentQueryString}`)
+      .then((response) => response.json())
+      .then((result) => {
+        if (result.error) {
+          console.error("API error:", result.error);
+          metrics = { metrics: [], count: 0, error: result.error };
+        } else if (result.metrics) {
+          metrics = {
+            metrics: result.metrics,
+            count: result.count,
+          };
+          console.log("Metrics fetched, count:", result.count);
+        }
+      })
+      .catch((err) => {
+        console.error("Fetch error:", err);
+        metrics = { metrics: [], count: 0, error: "Failed to fetch metrics" };
+      });
   }
 
   function submitQuery() {
-    const params = new URLSearchParams();
-
-    Object.entries(queryForm).forEach(([key, value]) => {
-      if (value && value.trim() !== "") {
-        params.append(key, value);
-      }
-    });
-
-    goto(`/metrics?${params.toString()}`);
+    // Just call refreshMetrics since it already handles the form data
+    refreshMetrics();
   }
 
-  function getCurrentQueryString() {
+  // Reactive derived value that updates whenever queryForm changes
+  let currentQueryString = $derived.by(() => {
     const params = new URLSearchParams();
 
     // Add date filters only if they have values
@@ -257,7 +217,7 @@
     params.set("direction", queryForm.direction);
 
     return params.toString();
-  }
+  });
 
   function startAutoRefresh() {
     // Start 5-second auto-refresh cycle
@@ -273,29 +233,18 @@
       console.log("Countdown:", countdown);
       if (countdown <= 0) {
         console.log("Countdown reached 0, refreshing...");
-        refreshRecentMetrics();
+        refreshMetrics();
         countdown = 5;
       }
     }, 1000);
   }
 
   function handleFieldChange() {
-    // Reset countdown to 3 seconds when field changes
-    countdown = 3;
-    isCountingDown = true;
-
-    if (countdownInterval) clearInterval(countdownInterval);
-
-    console.log("Field changed, starting 3-second countdown");
-    countdownInterval = setInterval(() => {
-      countdown--;
-      console.log("Field change countdown:", countdown);
-      if (countdown <= 0) {
-        console.log("Field change countdown reached 0, refreshing...");
-        refreshRecentMetrics();
-        startAutoRefresh(); // Resume normal 5-second cycle
-      }
-    }, 1000);
+    // Immediately refresh when field changes
+    console.log("Field changed, refreshing immediately");
+    refreshMetrics();
+    // Restart the normal 5-second auto-refresh cycle
+    startAutoRefresh();
   }
 
   function clearQuery() {
@@ -372,19 +321,11 @@
     </div>
   {/if}
 
-  <!-- API Error Alert for Recent Metrics -->
-  {#if recentMetrics?.error}
+  <!-- API Error Alert -->
+  {#if metrics?.error}
     <div class="alert alert-error mb-6">
-      <strong>Recent API Calls Error:</strong>
-      {recentMetrics.error}
-    </div>
-  {/if}
-
-  <!-- API Error Alert for Query Metrics -->
-  {#if queryMetrics?.error}
-    <div class="alert alert-error mb-6">
-      <strong>Query Results Error:</strong>
-      {queryMetrics.error}
+      <strong>API Error:</strong>
+      {metrics.error}
     </div>
   {/if}
 
@@ -558,86 +499,15 @@
           </button>
         </div>
       </form>
-
-      <!-- Query Results -->
-      {#if queryMetrics}
-        <div class="query-results">
-          <div class="results-header">
-            <h3>Query Results</h3>
-            <span class="results-count">
-              {queryMetrics.count} results found
-            </span>
-          </div>
-
-          {#if queryMetrics.metrics && queryMetrics.metrics.length > 0}
-            <div class="metrics-table-container">
-              <table class="metrics-table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Method</th>
-                    <th>URL</th>
-                    <th>User</th>
-                    <th>App</th>
-                    <th>Duration</th>
-                    <th>Version</th>
-                    <th>Correlation ID</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {#each queryMetrics.metrics as metric}
-                    <tr>
-                      <td class="time-cell">
-                        {formatDate(metric.date)}
-                      </td>
-                      <td>
-                        <span class="verb-badge {getVerbColor(metric.verb)}">
-                          {metric.verb}
-                        </span>
-                      </td>
-                      <td class="url-cell" title={metric.url}>
-                        {metric.url.length > 50
-                          ? metric.url.substring(0, 50) + "..."
-                          : metric.url}
-                      </td>
-                      <td class="user-cell">
-                        {metric.user_name || "Anonymous"}
-                      </td>
-                      <td class="app-cell">
-                        {metric.app_name || "N/A"}
-                      </td>
-                      <td class="duration-cell">
-                        {formatDuration(metric.duration)}
-                      </td>
-                      <td class="version-cell">
-                        {metric.implemented_in_version || "N/A"}
-                      </td>
-                      <td class="correlation-cell">
-                        <code class="correlation-id"
-                          >{metric.correlation_id || "N/A"}</code
-                        >
-                      </td>
-                    </tr>
-                  {/each}
-                </tbody>
-              </table>
-            </div>
-          {:else}
-            <div class="empty-state">
-              <p>No results found for your query. Try adjusting the filters.</p>
-            </div>
-          {/if}
-        </div>
-      {/if}
     </div>
   </div>
 
-  <!-- Panel 2: Real-time Recent API Calls -->
+  <!-- Panel 2: API Metrics Results -->
   <div class="panel full-width-panel">
     <div class="panel-header">
-      <h2 class="panel-title">Recent API Calls</h2>
+      <h2 class="panel-title">API Metrics Results</h2>
       <div class="panel-subtitle">
-        URL: {obpInfo.apiUrl}/obp/v6.0.0/management/metrics?{getCurrentQueryString()}
+        URL: {obpInfo.baseUrl}/obp/v6.0.0/management/metrics?{currentQueryString}
         <br />
         Last updated:
         <span class="timestamp-color-{timestampColorIndex}"
@@ -652,7 +522,7 @@
       </div>
       <button
         class="refresh-btn"
-        on:click={refreshRecentMetrics}
+        on:click={refreshMetrics}
         title="Manual refresh"
       >
         🔄
@@ -660,7 +530,10 @@
     </div>
 
     <div class="panel-content">
-      {#if recentMetrics?.metrics && recentMetrics.metrics.length > 0}
+      {#if metrics?.metrics && metrics.metrics.length > 0}
+        <div class="metrics-summary">
+          Showing {metrics.count} API calls from {obpInfo.displayName}
+        </div>
         <div class="table-wrapper">
           {#key data.lastUpdated}
             <table class="metrics-table">
@@ -676,10 +549,10 @@
                 </tr>
               </thead>
               <tbody>
-                {#each recentMetrics.metrics as metric}
+                {#each metrics.metrics as metric}
                   <tr>
                     <td class="date-cell">
-                      {new Date(metric.date).toLocaleString()}
+                      {formatDate(metric.date)}
                     </td>
                     <td class="user-cell">
                       {metric.user_name || "Anonymous"}
@@ -720,7 +593,7 @@
           {/key}
         </div>
         <div class="metrics-summary">
-          Showing {recentMetrics.count} recent API calls (last 50 records) from
+          Showing {metrics.count} API calls from
           {obpInfo.displayName}
         </div>
       {:else if hasApiAccess}
@@ -733,7 +606,7 @@
           <h4
             style="color: #4a5568; margin-bottom: 0.5rem; font-size: 1.125rem; text-align: center;"
           >
-            No Recent API Calls
+            No API Metrics Found
           </h4>
           <p style="text-align: center; margin-bottom: 1.5rem;">
             No recent API requests found for <strong
@@ -758,7 +631,7 @@
           </div>
           <button
             class="refresh-btn"
-            on:click={refreshRecentMetrics}
+            on:click={refreshMetrics}
             style="display: block; margin: 0 auto;"
           >
             🔄 Refresh Data

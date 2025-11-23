@@ -67,7 +67,7 @@ function getConfiguration(): AppConfiguration {
   const obpInfo = parseUrlInfo(obpBaseUrl);
 
   // Construct URLs based on base URL
-  const apiUrl = `${obpBaseUrl}/obp/v5.1.0`;
+  const apiUrl = `${obpBaseUrl}/obp/v6.0.0`;
   const oidcUrl = `${obpBaseUrl}/obp-oidc`;
 
   // App configuration - use safe defaults on client side

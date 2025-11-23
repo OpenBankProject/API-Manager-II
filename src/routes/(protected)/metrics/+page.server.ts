@@ -49,8 +49,8 @@ export const load: PageServerLoad = async ({ locals, url, depends }) => {
   }
 
   try {
-    // Build parameters for Recent API Calls from query string or defaults
-    const recentParams: Record<string, string> = {
+    // Build parameters from query string or defaults
+    const params: Record<string, string> = {
       limit: url.searchParams.get("limit") || "50",
       sort_by: url.searchParams.get("sort_by") || "date",
       direction: url.searchParams.get("direction") || "desc",
@@ -61,7 +61,7 @@ export const load: PageServerLoad = async ({ locals, url, depends }) => {
       url.searchParams.has("offset") &&
       url.searchParams.get("offset")?.trim()
     ) {
-      recentParams.offset = url.searchParams.get("offset")!;
+      params.offset = url.searchParams.get("offset")!;
     }
 
     // Add date filters only if provided in query params
@@ -69,135 +69,91 @@ export const load: PageServerLoad = async ({ locals, url, depends }) => {
       url.searchParams.has("from_date") &&
       url.searchParams.get("from_date")?.trim()
     ) {
-      recentParams.from_date = url.searchParams.get("from_date")!;
+      params.from_date = url.searchParams.get("from_date")!;
     }
     if (
       url.searchParams.has("to_date") &&
       url.searchParams.get("to_date")?.trim()
     ) {
-      recentParams.to_date = url.searchParams.get("to_date")!;
+      params.to_date = url.searchParams.get("to_date")!;
     }
 
-    // Add other filters if provided
+    // Add all filter parameters if provided
     if (url.searchParams.has("verb") && url.searchParams.get("verb")?.trim()) {
-      recentParams.verb = url.searchParams.get("verb")!;
+      params.verb = url.searchParams.get("verb")!;
     }
     if (
       url.searchParams.has("app_name") &&
       url.searchParams.get("app_name")?.trim()
     ) {
-      recentParams.app_name = url.searchParams.get("app_name")!;
+      params.app_name = url.searchParams.get("app_name")!;
     }
     if (
       url.searchParams.has("user_name") &&
       url.searchParams.get("user_name")?.trim()
     ) {
-      recentParams.user_name = url.searchParams.get("user_name")!;
+      params.user_name = url.searchParams.get("user_name")!;
     }
     if (url.searchParams.has("url") && url.searchParams.get("url")?.trim()) {
-      recentParams.url = url.searchParams.get("url")!;
+      params.url = url.searchParams.get("url")!;
     }
     if (
       url.searchParams.has("consumer_id") &&
       url.searchParams.get("consumer_id")?.trim()
     ) {
-      recentParams.consumer_id = url.searchParams.get("consumer_id")!;
+      params.consumer_id = url.searchParams.get("consumer_id")!;
+    }
+    if (
+      url.searchParams.has("user_id") &&
+      url.searchParams.get("user_id")?.trim()
+    ) {
+      params.user_id = url.searchParams.get("user_id")!;
     }
     if (url.searchParams.has("anon") && url.searchParams.get("anon")?.trim()) {
-      recentParams.anon = url.searchParams.get("anon")!;
+      params.anon = url.searchParams.get("anon")!;
     }
-
-    // Fetch recent metrics for real-time panel
-    logger.info("=== RECENT API CALLS DEBUG ===");
-    logger.info(`🔍 INVALIDATION DETECTED - Server load function called`);
-    logger.info(`🌐 Current URL: ${url.pathname}${url.search}`);
-    logger.info(`Fetching recent metrics with parameters:`);
-    logger.info(`  Parameters: ${JSON.stringify(recentParams, null, 2)}`);
-    logger.info(`  🎯 LIMIT VALUE: ${recentParams.limit}`);
-    logger.info(`  Access token available: ${!!accessToken}`);
-    logger.info(
-      `  Access token length: ${accessToken ? accessToken.length : 0}`,
-    );
-
-    const recentMetricsData = await fetchMetrics(accessToken, recentParams);
-
-    logger.info(`Recent metrics result:`);
-    logger.info(`  📊 Metrics count: ${recentMetricsData?.count || 0}`);
-    logger.info(`  ❌ Has error: ${!!recentMetricsData?.error}`);
-    logger.info(
-      `  🎯 Expected ${recentParams.limit} records, got ${recentMetricsData?.count || 0}`,
-    );
-    if (recentMetricsData?.error) {
-      logger.error(`  Error details: ${recentMetricsData.error}`);
-    }
-    if (recentMetricsData?.metrics && recentMetricsData.metrics.length > 0) {
-      logger.info(
-        `  First metric: ${JSON.stringify(recentMetricsData.metrics[0], null, 2)}`,
-      );
-    }
-    logger.info("=== END RECENT API CALLS DEBUG ===");
-
-    // If there are query parameters, also fetch filtered metrics
-    let queryMetricsData = null;
-    const searchParams = url.searchParams;
-
     if (
-      searchParams.has("from_date") ||
-      searchParams.has("to_date") ||
-      searchParams.has("user_name") ||
-      searchParams.has("app_name") ||
-      searchParams.has("verb") ||
-      searchParams.has("url")
+      url.searchParams.has("implemented_by_partial_function") &&
+      url.searchParams.get("implemented_by_partial_function")?.trim()
     ) {
-      const queryParams: Record<string, string> = {};
+      params.implemented_by_partial_function = url.searchParams.get(
+        "implemented_by_partial_function",
+      )!;
+    }
+    if (
+      url.searchParams.has("implemented_in_version") &&
+      url.searchParams.get("implemented_in_version")?.trim()
+    ) {
+      params.implemented_in_version = url.searchParams.get(
+        "implemented_in_version",
+      )!;
+    }
+    if (
+      url.searchParams.has("correlation_id") &&
+      url.searchParams.get("correlation_id")?.trim()
+    ) {
+      params.correlation_id = url.searchParams.get("correlation_id")!;
+    }
+    if (
+      url.searchParams.has("duration") &&
+      url.searchParams.get("duration")?.trim()
+    ) {
+      params.duration = url.searchParams.get("duration")!;
+    }
 
-      // Date filters
-      if (searchParams.has("from_date"))
-        queryParams.from_date = searchParams.get("from_date")!;
-      if (searchParams.has("to_date"))
-        queryParams.to_date = searchParams.get("to_date")!;
+    // Fetch metrics with the constructed parameters
+    logger.info("=== METRICS API CALL ===");
+    logger.info(`Request: ${JSON.stringify(params, null, 2)}`);
 
-      // Pagination
-      queryParams.limit = searchParams.get("limit") || "100";
-      queryParams.offset = searchParams.get("offset") || "0";
+    const metricsData = await fetchMetrics(accessToken, params);
 
-      // Sorting
-      queryParams.sort_by = searchParams.get("sort_by") || "date";
-      queryParams.direction = searchParams.get("direction") || "desc";
-
-      // Filters
-      if (searchParams.has("consumer_id"))
-        queryParams.consumer_id = searchParams.get("consumer_id")!;
-      if (searchParams.has("user_id"))
-        queryParams.user_id = searchParams.get("user_id")!;
-      if (searchParams.has("anon"))
-        queryParams.anon = searchParams.get("anon")!;
-      if (searchParams.has("url")) queryParams.url = searchParams.get("url")!;
-      if (searchParams.has("app_name"))
-        queryParams.app_name = searchParams.get("app_name")!;
-      if (searchParams.has("implemented_by_partial_function")) {
-        queryParams.implemented_by_partial_function = searchParams.get(
-          "implemented_by_partial_function",
-        )!;
-      }
-      if (searchParams.has("implemented_in_version")) {
-        queryParams.implemented_in_version = searchParams.get(
-          "implemented_in_version",
-        )!;
-      }
-      if (searchParams.has("verb"))
-        queryParams.verb = searchParams.get("verb")!;
-      if (searchParams.has("correlation_id"))
-        queryParams.correlation_id = searchParams.get("correlation_id")!;
-      if (searchParams.has("duration"))
-        queryParams.duration = searchParams.get("duration")!;
-
-      queryMetricsData = await fetchMetrics(accessToken, queryParams);
+    logger.info(`Response: ${metricsData?.count || 0} records`);
+    if (metricsData?.error) {
+      logger.error(`Error: ${metricsData.error}`);
     }
 
     return {
-      recentMetrics: recentMetricsData,
-      queryMetrics: queryMetricsData,
+      metrics: metricsData,
       hasApiAccess: true,
       lastUpdated: new Date().toISOString(),
     };
@@ -205,8 +161,7 @@ export const load: PageServerLoad = async ({ locals, url, depends }) => {
     logger.error("Error loading metrics:", err);
 
     return {
-      recentMetrics: null,
-      queryMetrics: null,
+      metrics: null,
       hasApiAccess: false,
       error: err instanceof Error ? err.message : "Failed to load metrics",
     };
@@ -249,22 +204,13 @@ async function fetchMetrics(
     logger.info(
       `  LIMIT TEST: Requested ${params.limit}, got ${response?.metrics?.length || 0} records`,
     );
-    logger.info(`  Raw response: ${JSON.stringify(response, null, 2)}`);
-
     if (response?.metrics) {
-      logger.info(`METRICS FOUND: ${response.metrics.length} records`);
-      if (response.metrics.length > 0) {
-        logger.info(
-          `  Sample metric: ${JSON.stringify(response.metrics[0], null, 2)}`,
-        );
-      }
       return {
         metrics: response.metrics,
         count: response.metrics.length,
       };
     } else {
       logger.warn("NO METRICS DATA IN RESPONSE");
-      logger.warn(`  Response structure: ${JSON.stringify(response, null, 2)}`);
       return {
         metrics: [],
         count: 0,
