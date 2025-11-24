@@ -7,6 +7,7 @@ import {
   Server,
   Database,
   GitBranch,
+  Route,
 } from "@lucide/svelte";
 import { env } from "$env/dynamic/public";
 
@@ -85,4 +86,31 @@ export function getActiveDevOpsMenuItem(pathname: string) {
   });
 
   return found || devOpsItems[0]; // fallback to first item
+}
+
+// Integration navigation items
+function buildIntegrationItems(): NavigationItem[] {
+  const items: NavigationItem[] = [
+    {
+      href: "/integration/method-routings",
+      label: "Method Routings",
+      iconComponent: Route,
+    },
+  ];
+
+  return items;
+}
+
+export const integrationItems = buildIntegrationItems();
+
+export function getActiveIntegrationMenuItem(pathname: string) {
+  const found = integrationItems.find((item) => {
+    // Skip external links for active menu detection
+    if (item.external) {
+      return false;
+    }
+    return pathname.startsWith(item.href);
+  });
+
+  return found || integrationItems[0]; // fallback to first item
 }

@@ -39,24 +39,12 @@
 
       const data = await response.json();
 
-      console.log("=== LOG-CACHE DATA RECEIVED ===");
-      console.log("Data type:", typeof data);
-      console.log("Is array:", Array.isArray(data));
-      console.log("Data keys:", data ? Object.keys(data) : "null");
-      console.log("Full data:", data);
-      if (data.entries && data.entries.length > 0) {
-        console.log("First entry keys:", Object.keys(data.entries[0]));
-        console.log("First entry sample:", data.entries[0]);
-      }
-
       if (data.error) {
         throw new Error(data.error);
       }
 
       // Handle both array response and object with entries property
       logs = Array.isArray(data) ? data : data.entries || [];
-      console.log("Parsed logs count:", logs.length);
-      console.log("First log entry:", logs[0]);
       lastUpdated = new Date().toLocaleString(undefined, {
         hour: "2-digit",
         minute: "2-digit",
@@ -65,12 +53,6 @@
       });
     } catch (err) {
       error = err instanceof Error ? err.message : "Failed to fetch logs";
-      console.error("Error fetching logs:", err);
-      console.error("Full error details:", {
-        logLevel,
-        url: `/api/devops/log-cache`,
-        timestamp: new Date().toISOString(),
-      });
     } finally {
       isLoading = false;
     }

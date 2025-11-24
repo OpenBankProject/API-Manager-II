@@ -2,7 +2,7 @@
 	import '../app.css';
 	import { Navigation } from '@skeletonlabs/skeleton-svelte';
 	import { page } from '$app/state';
-	import { myAccountItems, devOpsItems } from '$lib/config/navigation';
+	import { myAccountItems, devOpsItems, integrationItems } from '$lib/config/navigation';
 	import Toast from '$lib/components/Toast.svelte';
 
 	// Lucide Icons
@@ -24,7 +24,8 @@
 		CreditCard,
 		BarChart3,
 		Globe,
-		Server
+		Server,
+		Plug
 	} from '@lucide/svelte';
 
 	import { env } from '$env/dynamic/public';
@@ -36,6 +37,7 @@
 	let isMobileMenuOpen = $state(false);
 	let isMyAccountExpanded = $state(false);
 	let isDevOpsExpanded = $state(false);
+	let isIntegrationExpanded = $state(false);
 	let displayMode: 'dark' | 'light' = $state('dark');
 
 	if (data.email) {
@@ -46,6 +48,7 @@
 
 	let isMyAccountActive = $derived(page.url.pathname.startsWith('/user'));
 	let isDevOpsActive = $derived(page.url.pathname.startsWith('/devops'));
+	let isIntegrationActive = $derived(page.url.pathname.startsWith('/integration'));
 
 	// Watch for route changes to auto-expand sections
 	$effect(() => {
@@ -54,6 +57,9 @@
 		}
 		if (isDevOpsActive) {
 			isDevOpsExpanded = true;
+		}
+		if (isIntegrationActive) {
+			isIntegrationExpanded = true;
 		}
 	});
 
@@ -67,6 +73,10 @@
 
 	function toggleDevOps() {
 		isDevOpsExpanded = !isDevOpsExpanded;
+	}
+
+	function toggleIntegration() {
+		isIntegrationExpanded = !isIntegrationExpanded;
 	}
 
 	// Some items in the menu are rendered conditionally based on the presence of URLs set in the environment variables.
@@ -271,6 +281,48 @@
 						{#if isDevOpsExpanded}
 							<Navigation.Menu class="mt-1 ml-4 flex flex-col gap-1 px-2">
 								{#each devOpsItems as subItem}
+									{@const Icon = subItem.iconComponent}
+									<a
+										href={subItem.href}
+										class="btn w-full justify-start gap-3 px-2 pl-6 text-sm hover:preset-tonal"
+										class:preset-filled-secondary-50-950={page.url.pathname === subItem.href}
+										class:border-l-2={page.url.pathname === subItem.href}
+										class:border-primary-500={page.url.pathname === subItem.href}
+										title={subItem.label}
+										aria-label={subItem.label}
+										target={subItem.external ? '_blank' : undefined}
+										rel={subItem.external ? 'noopener noreferrer' : undefined}
+									>
+										<Icon class="size-4" />
+										<span>{subItem.label}</span>
+									</a>
+								{/each}
+							</Navigation.Menu>
+						{/if}
+					</Navigation.Group>
+
+					<!-- Integration Group -->
+					<Navigation.Group>
+						<button
+							type="button"
+							class="hover:bg-surface-100-800 mx-2 flex w-full items-center justify-between rounded-md p-3 text-left transition-colors"
+							class:bg-primary-100-800={isIntegrationActive}
+							onclick={toggleIntegration}
+						>
+							<div class="flex items-center gap-3">
+								<Plug class="h-5 w-5" />
+								<span>Integration</span>
+							</div>
+							{#if isIntegrationExpanded}
+								<ChevronDown class="h-4 w-4" />
+							{:else}
+								<ChevronRight class="h-4 w-4" />
+							{/if}
+						</button>
+
+						{#if isIntegrationExpanded}
+							<Navigation.Menu class="mt-1 ml-4 flex flex-col gap-1 px-2">
+								{#each integrationItems as subItem}
 									{@const Icon = subItem.iconComponent}
 									<a
 										href={subItem.href}
