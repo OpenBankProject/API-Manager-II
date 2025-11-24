@@ -16,11 +16,22 @@
 
 /* Global select dropdown styling for better contrast */
 select option {
+  background: white !important;
+  color: #111827 !important;
+}
+
+[data-mode="dark"] select option {
+  background: rgb(31 41 55) !important;
+  color: rgb(243 244 246) !important;
+}
+
+/* Additional select styling to ensure readability */
+select {
   background: white;
   color: #111827;
 }
 
-[data-mode="dark"] select option {
+[data-mode="dark"] select {
   background: rgb(31 41 55);
   color: rgb(243 244 246);
 }
