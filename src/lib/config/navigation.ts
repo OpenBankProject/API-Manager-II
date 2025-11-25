@@ -8,6 +8,7 @@ import {
   Database,
   GitBranch,
   Route,
+  BarChart3,
 } from "@lucide/svelte";
 import { env } from "$env/dynamic/public";
 
@@ -113,4 +114,32 @@ export function getActiveIntegrationMenuItem(pathname: string) {
   });
 
   return found || integrationItems[0]; // fallback to first item
+}
+
+// API Metrics navigation items
+function buildApiMetricsItems(): NavigationItem[] {
+  const items: NavigationItem[] = [
+    { href: "/metrics", label: "Metrics", iconComponent: BarChart3 },
+    {
+      href: "/aggregate-metrics",
+      label: "Aggregate Metrics",
+      iconComponent: BarChart3,
+    },
+  ];
+
+  return items;
+}
+
+export const apiMetricsItems = buildApiMetricsItems();
+
+export function getActiveApiMetricsMenuItem(pathname: string) {
+  const found = apiMetricsItems.find((item) => {
+    // Skip external links for active menu detection
+    if (item.external) {
+      return false;
+    }
+    return pathname.startsWith(item.href);
+  });
+
+  return found || apiMetricsItems[0]; // fallback to first item
 }
