@@ -402,21 +402,6 @@
               />
             </div>
             <div class="form-field narrow-field">
-              <label for="auto_refresh">Auto Refresh</label>
-              <select
-                id="auto_refresh"
-                bind:value={autoRefresh}
-                class="form-input"
-              >
-                <option value="none">None</option>
-                <option value="5">5 sec</option>
-                <option value="10">10 sec</option>
-                <option value="20">20 sec</option>
-                <option value="30">30 sec</option>
-                <option value="60">60 sec</option>
-              </select>
-            </div>
-            <div class="form-field narrow-field">
               <label for="limit">Limit</label>
               <input
                 type="number"
@@ -559,6 +544,24 @@
         </div>
 
         <div class="form-actions">
+          <div
+            class="form-field narrow-field"
+            style="display: inline-block; margin-right: 1rem;"
+          >
+            <label for="auto_refresh">Auto Refresh</label>
+            <select
+              id="auto_refresh"
+              bind:value={autoRefresh}
+              class="form-input"
+            >
+              <option value="none">None</option>
+              <option value="5">5 sec</option>
+              <option value="10">10 sec</option>
+              <option value="20">20 sec</option>
+              <option value="30">30 sec</option>
+              <option value="60">60 sec</option>
+            </select>
+          </div>
           <button type="button" class="btn btn-secondary" on:click={clearQuery}>
             🗑️ Clear Form
           </button>
