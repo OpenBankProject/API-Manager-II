@@ -34,7 +34,7 @@
   let countdown = $state(5);
   let isCountingDown = $state(false);
   let timestampColorIndex = $state(0);
-  let autoRefresh = $state("2");
+  let autoRefresh = $state("5");
 
   // Configuration information
   let obpInfo = $derived(configHelpers.getObpConnectionInfo());
@@ -75,6 +75,21 @@
     verb: "",
     correlation_id: "",
     duration: "",
+  });
+
+  // Function to update to_date based on Auto Refresh setting
+  function updateToDate() {
+    if (autoRefresh === "none") {
+      return; // Don't update if Auto Refresh is disabled
+    }
+
+    const now = new Date();
+    queryForm.to_date = now.toISOString().slice(0, 16);
+  }
+
+  // Watch for autoRefresh changes and update to_date
+  $effect(() => {
+    updateToDate();
   });
 
   // Initialize on mount - run only once
@@ -375,13 +390,12 @@
                 bind:value={autoRefresh}
                 class="form-input"
               >
-                <option value="no">No</option>
-                <option value="1">1 min</option>
-                <option value="2">2 min</option>
-                <option value="3">3 min</option>
-                <option value="4">4 min</option>
-                <option value="5">5 min</option>
-                <option value="10">10 min</option>
+                <option value="none">None</option>
+                <option value="5">5 sec</option>
+                <option value="10">10 sec</option>
+                <option value="20">20 sec</option>
+                <option value="30">30 sec</option>
+                <option value="60">60 sec</option>
               </select>
             </div>
             <div class="form-field narrow-field">
