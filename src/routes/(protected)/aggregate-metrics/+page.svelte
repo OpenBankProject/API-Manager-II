@@ -77,14 +77,21 @@
     duration: "",
   });
 
-  // Function to update to_date based on Auto Refresh setting
+  // Function to update to_date and from_date based on Auto Refresh setting
   function updateToDate() {
     if (autoRefresh === "none") {
       return; // Don't update if Auto Refresh is disabled
     }
 
     const now = new Date();
-    queryForm.to_date = now.toISOString().slice(0, 16);
+    const seconds = parseInt(autoRefresh);
+    now.setSeconds(now.getSeconds() + seconds);
+    queryForm.to_date = now.toISOString().slice(0, 19);
+
+    // Set from_date to 1 hour earlier than to_date
+    const oneHourEarlier = new Date(now);
+    oneHourEarlier.setHours(oneHourEarlier.getHours() - 1);
+    queryForm.from_date = oneHourEarlier.toISOString().slice(0, 19);
   }
 
   // Watch for autoRefresh changes and update to_date
@@ -157,6 +164,11 @@
   function refreshMetrics() {
     console.log("refreshMetrics called at", new Date().toLocaleTimeString());
     console.log("Current queryForm.limit:", queryForm.limit);
+
+    // Update dates if Auto Refresh is active
+    if (autoRefresh !== "none") {
+      updateToDate();
+    }
 
     // Update last refresh timestamp and alternate color
     lastRefreshTime = new Date().toLocaleString();
@@ -375,6 +387,7 @@
                 bind:value={queryForm.from_date}
                 on:blur={handleFieldChange}
                 class="form-input"
+                step="1"
               />
             </div>
             <div class="form-field date-field">
@@ -385,6 +398,7 @@
                 bind:value={queryForm.to_date}
                 on:blur={handleFieldChange}
                 class="form-input"
+                step="1"
               />
             </div>
             <div class="form-field narrow-field">
@@ -558,11 +572,13 @@
     <div class="panel-header">
       <h2 class="panel-title">Aggregate Metrics Results</h2>
       <div class="panel-subtitle">
-        URL: {obpInfo.baseUrl}/obp/v6.0.0/management/aggregate-metrics?{currentQueryString}
+        URL: {obpInfo.baseUrl}/obp/v6.0.0/management/aggregate-metrics?{decodeURIComponent(
+          currentQueryString,
+        )}
         <br />
         Last updated:
         <span class="timestamp-color-{timestampColorIndex}"
-          >{lastRefreshTime}</span
+          >{lastRefreshTime} (UTC: {new Date().toISOString()})</span
         >
         •
         {#if isCountingDown}
@@ -1131,7 +1147,7 @@
   }
 
   .form-field.date-field {
-    max-width: 200px;
+    max-width: 300px;
   }
 
   .form-field.narrow-field {
