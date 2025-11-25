@@ -27,13 +27,14 @@
     });
   });
 
-  let refreshInterval: NodeJS.Timeout | undefined = undefined;
-  let countdownInterval: NodeJS.Timeout | undefined = undefined;
+  let refreshInterval: number | undefined = undefined;
+  let countdownInterval: number | undefined = undefined;
   let currentTime = $state(new Date().toLocaleString());
   let lastRefreshTime = $state(new Date().toLocaleString());
   let countdown = $state(5);
   let isCountingDown = $state(false);
   let timestampColorIndex = $state(0);
+  let autoRefresh = $state("2");
 
   // Configuration information
   let obpInfo = $derived(configHelpers.getObpConnectionInfo());
@@ -366,6 +367,22 @@
                 on:blur={handleFieldChange}
                 class="form-input"
               />
+            </div>
+            <div class="form-field narrow-field">
+              <label for="auto_refresh">Auto Refresh</label>
+              <select
+                id="auto_refresh"
+                bind:value={autoRefresh}
+                class="form-input"
+              >
+                <option value="no">No</option>
+                <option value="1">1 min</option>
+                <option value="2">2 min</option>
+                <option value="3">3 min</option>
+                <option value="4">4 min</option>
+                <option value="5">5 min</option>
+                <option value="10">10 min</option>
+              </select>
             </div>
             <div class="form-field narrow-field">
               <label for="limit">Limit</label>
