@@ -52,14 +52,21 @@
     isAuthenticated = false;
   }
 
-  let isMyAccountActive = $derived(page.url.pathname.startsWith("/user"));
-  let isDevOpsActive = $derived(page.url.pathname.startsWith("/devops"));
+  let isMyAccountActive = $derived(
+    page.url.pathname === "/user" || page.url.pathname.startsWith("/user/"),
+  );
+  let isDevOpsActive = $derived(
+    page.url.pathname === "/devops" || page.url.pathname.startsWith("/devops/"),
+  );
   let isIntegrationActive = $derived(
-    page.url.pathname.startsWith("/integration"),
+    page.url.pathname === "/integration" ||
+      page.url.pathname.startsWith("/integration/"),
   );
   let isApiMetricsActive = $derived(
-    page.url.pathname.startsWith("/metrics") ||
-      page.url.pathname.startsWith("/aggregate-metrics"),
+    page.url.pathname === "/metrics" ||
+      page.url.pathname.startsWith("/metrics/") ||
+      page.url.pathname === "/aggregate-metrics" ||
+      page.url.pathname.startsWith("/aggregate-metrics/"),
   );
 
   // Watch for route changes to auto-expand sections
