@@ -7,6 +7,7 @@
   let error = $state<string | null>(null);
   let lastUpdated = $state<string>("");
   let refreshInterval: NodeJS.Timeout | null = null;
+  let copiedMessageIndex = $state<number | null>(null);
 
   const logLevels = [
     { value: "", label: "ALL" },
@@ -147,6 +148,25 @@
   onDestroy(() => {
     stopAutoRefresh();
   });
+
+  async function copyMessage(log: any, index: number) {
+    try {
+      const parsed = parseLogMessage(log.message || "");
+      const timestamp = formatTimestamp(parsed.timestamp);
+      const level = log.level || log.log_level || "N/A";
+      const message = parsed.cleanMessage || "N/A";
+      const source = parsed.source || "N/A";
+
+      const rowData = `${timestamp},${level},${message},${source}`;
+      await navigator.clipboard.writeText(rowData);
+      copiedMessageIndex = index;
+      setTimeout(() => {
+        copiedMessageIndex = null;
+      }, 2000);
+    } catch (err) {
+      console.error("Failed to copy message:", err);
+    }
+  }
 </script>
 
 <svelte:head>
@@ -226,7 +246,59 @@
                         {log.level || log.log_level || "N/A"}
                       </span>
                     </td>
-                    <td class="message-cell">{parsed.cleanMessage || "N/A"}</td>
+                    <td class="message-cell">
+                      <div class="message-container">
+                        <span class="message-text"
+                          >{parsed.cleanMessage || "N/A"}</span
+                        >
+                        <button
+                          class="copy-btn"
+                          onclick={() => copyMessage(log, logs.indexOf(log))}
+                          title="Copy row"
+                          aria-label="Copy row"
+                        >
+                          {#if copiedMessageIndex === logs.indexOf(log)}
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            >
+                              <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                          {:else}
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            >
+                              <rect
+                                x="9"
+                                y="9"
+                                width="13"
+                                height="13"
+                                rx="2"
+                                ry="2"
+                              ></rect>
+                              <path
+                                d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                              ></path>
+                            </svg>
+                          {/if}
+                        </button>
+                      </div>
+                    </td>
                     <td class="source-cell">{parsed.source || "N/A"}</td>
                   </tr>
                 {/each}
@@ -449,6 +521,59 @@
   .message-cell {
     max-width: 600px;
     word-wrap: break-word;
+  }
+
+  .message-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: space-between;
+  }
+
+  .message-text {
+    flex: 1;
+  }
+
+  .copy-btn {
+    flex-shrink: 0;
+    padding: 0.25rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #6b7280;
+    border-radius: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    opacity: 0;
+  }
+
+  .message-container:hover .copy-btn {
+    opacity: 1;
+  }
+
+  .copy-btn:hover {
+    background: #f3f4f6;
+    color: #3b82f6;
+  }
+
+  :global([data-mode="dark"]) .copy-btn {
+    color: var(--color-surface-400);
+  }
+
+  :global([data-mode="dark"]) .copy-btn:hover {
+    background: rgb(var(--color-surface-700));
+    color: rgb(var(--color-primary-400));
+  }
+
+  .copy-btn:active {
+    transform: scale(0.95);
+  }
+
+  .copy-btn svg {
+    width: 16px;
+    height: 16px;
   }
 
   .source-cell {
