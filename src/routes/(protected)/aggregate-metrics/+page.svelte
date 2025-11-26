@@ -12,7 +12,8 @@
       average_response_time: number;
       minimum_response_time: number;
       maximum_response_time: number;
-      timestamp: string;
+      from_date: string;
+      to_date: string;
     }>
   >([]);
   let hasApiAccess = $derived(data.hasApiAccess);
@@ -739,6 +740,30 @@
                 {@const maxInHistory = Math.max(
                   ...metricsHistory.map((m) => m.maximum_response_time),
                 )}
+                {@const minPercent =
+                  (metric.minimum_response_time / maxInHistory) * 100}
+                {@const minColor =
+                  minPercent < 33
+                    ? "#10b981"
+                    : minPercent < 66
+                      ? "#f59e0b"
+                      : "#ef4444"}
+                {@const maxPercent =
+                  (metric.maximum_response_time / maxInHistory) * 100}
+                {@const maxColor =
+                  maxPercent < 33
+                    ? "#10b981"
+                    : maxPercent < 66
+                      ? "#f59e0b"
+                      : "#ef4444"}
+                {@const avgPercent =
+                  (metric.average_response_time / maxInHistory) * 100}
+                {@const avgColor =
+                  avgPercent < 33
+                    ? "#10b981"
+                    : avgPercent < 66
+                      ? "#f59e0b"
+                      : "#ef4444"}
                 <tr>
                   <td class="date-cell">
                     {metric.from_date}
@@ -753,14 +778,6 @@
                     {metric.count}
                   </td>
                   <td class="duration-cell">
-                    {@const minPercent =
-                      (metric.minimum_response_time / maxInHistory) * 100}
-                    {@const minColor =
-                      minPercent < 33
-                        ? "#10b981"
-                        : minPercent < 66
-                          ? "#f59e0b"
-                          : "#ef4444"}
                     <div style="display: flex; align-items: center; gap: 8px;">
                       <span style="min-width: 60px;"
                         >{metric.minimum_response_time?.toFixed(2) ||
@@ -772,14 +789,6 @@
                     </div>
                   </td>
                   <td class="duration-cell">
-                    {@const maxPercent =
-                      (metric.maximum_response_time / maxInHistory) * 100}
-                    {@const maxColor =
-                      maxPercent < 33
-                        ? "#10b981"
-                        : maxPercent < 66
-                          ? "#f59e0b"
-                          : "#ef4444"}
                     <div style="display: flex; align-items: center; gap: 8px;">
                       <span style="min-width: 60px;"
                         >{metric.maximum_response_time?.toFixed(2) ||
@@ -791,14 +800,6 @@
                     </div>
                   </td>
                   <td class="duration-cell">
-                    {@const avgPercent =
-                      (metric.average_response_time / maxInHistory) * 100}
-                    {@const avgColor =
-                      avgPercent < 33
-                        ? "#10b981"
-                        : avgPercent < 66
-                          ? "#f59e0b"
-                          : "#ef4444"}
                     <div style="display: flex; align-items: center; gap: 8px;">
                       <span style="min-width: 60px;"
                         >{metric.average_response_time?.toFixed(2) ||
@@ -1275,7 +1276,7 @@
   }
 
   .form-row.date-row {
-    grid-template-columns: 200px 220px 80px 80px 80px 80px 80px 80px;
+    grid-template-columns: 240px 260px 80px 80px 80px 80px 80px 80px;
     gap: 1rem;
   }
 
@@ -1289,8 +1290,8 @@
   }
 
   .form-field.date-field {
-    min-width: 200px;
-    max-width: 220px;
+    min-width: 240px;
+    max-width: 260px;
   }
 
   .form-field.narrow-field {
