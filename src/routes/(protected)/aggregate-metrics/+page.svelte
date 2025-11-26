@@ -3,6 +3,7 @@
   import { invalidate } from "$app/navigation";
   import type { PageData } from "./$types";
   import { configHelpers } from "$lib/config";
+  import MetricsQueryForm from "$lib/components/metrics/MetricsQueryForm.svelte";
 
   let { data } = $props<{ data: PageData }>();
 
@@ -434,249 +435,17 @@
 
     <div class="panel-content">
       <!-- Query Form -->
-      <form on:submit|preventDefault={submitQuery} class="query-form">
-        <div class="form-section">
-          <div
-            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;"
-          >
-            <h3 class="form-section-title" style="margin: 0;">
-              Query Parameters
-            </h3>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-              <button
-                type="button"
-                class="btn btn-secondary"
-                on:click={clearQuery}
-                style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
-              >
-                🗑️ Clear Form
-              </button>
-              <button
-                class="refresh-btn"
-                on:click={refreshMetrics}
-                title="Manual refresh"
-              >
-                🔄
-              </button>
-              <label for="auto_refresh" style="font-size: 0.875rem; margin: 0;"
-                >Auto Refresh:</label
-              >
-              <select
-                id="auto_refresh"
-                bind:value={autoRefresh}
-                class="form-input"
-                style="font-size: 0.875rem; padding: 0.375rem 0.5rem; min-width: 90px;"
-              >
-                <option value="none">None</option>
-                <option value="5">5 sec</option>
-                <option value="10">10 sec</option>
-                <option value="20">20 sec</option>
-                <option value="30">30 sec</option>
-                <option value="60">60 sec</option>
-                <option value="120">2 min</option>
-                <option value="600">10 min</option>
-                <option value="1200">20 min</option>
-                <option value="3600">60 min</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-row date-row">
-            <div class="form-field date-field">
-              <label for="from_date">From Date (UTC)</label>
-              <input
-                type="datetime-local"
-                id="from_date"
-                bind:value={queryForm.from_date}
-                on:blur={handleFieldChange}
-                class="form-input"
-                step="1"
-              />
-            </div>
-            <div class="form-field date-field">
-              <label for="to_date">To Date (UTC)</label>
-              <input
-                type="datetime-local"
-                id="to_date"
-                bind:value={queryForm.to_date}
-                on:blur={handleFieldChange}
-                class="form-input"
-                step="1"
-              />
-            </div>
-            <div class="form-field narrow-field">
-              <label for="limit">Limit</label>
-              <input
-                type="number"
-                id="limit"
-                bind:value={queryForm.limit}
-                min="1"
-                max="10000"
-                on:blur={handleFieldChange}
-                class="form-input"
-              />
-            </div>
-            <div class="form-field narrow-field">
-              <label for="offset">Offset</label>
-              <input
-                type="number"
-                id="offset"
-                bind:value={queryForm.offset}
-                min="0"
-                on:blur={handleFieldChange}
-                class="form-input"
-              />
-            </div>
-            <div class="form-field narrow-field">
-              <label for="sort_by">Sort By</label>
-              <select
-                id="sort_by"
-                bind:value={queryForm.sort_by}
-                on:change={handleFieldChange}
-                class="form-input"
-              >
-                <option value="date">Date</option>
-                <option value="url">URL</option>
-                <option value="user_name">User Name</option>
-                <option value="app_name">App Name</option>
-                <option value="verb">Method</option>
-                <option value="duration">Duration</option>
-              </select>
-            </div>
-            <div class="form-field narrow-field">
-              <label for="direction">Direction</label>
-              <select
-                id="direction"
-                bind:value={queryForm.direction}
-                on:change={handleFieldChange}
-                class="form-input"
-              >
-                <option value="desc">Descending</option>
-                <option value="asc">Ascending</option>
-              </select>
-            </div>
-            <div class="form-field narrow-field">
-              <label for="verb">Method</label>
-              <select
-                id="verb"
-                bind:value={queryForm.verb}
-                on:change={handleFieldChange}
-                class="form-input"
-              >
-                <option value="">All Methods</option>
-                <option value="GET">GET</option>
-                <option value="POST">POST</option>
-                <option value="PUT">PUT</option>
-                <option value="DELETE">DELETE</option>
-                <option value="PATCH">PATCH</option>
-              </select>
-            </div>
-            <div class="form-field narrow-field">
-              <label for="http_status_code">Code</label>
-              <select
-                id="http_status_code"
-                bind:value={queryForm.http_status_code}
-                on:change={handleFieldChange}
-                class="form-input"
-              >
-                <option value="">All Status Codes</option>
-                <option value="200">200 OK</option>
-                <option value="201">201 Created</option>
-                <option value="204">204 No Content</option>
-                <option value="400">400 Bad Request</option>
-                <option value="401">401 Unauthorized</option>
-                <option value="403">403 Forbidden</option>
-                <option value="404">404 Not Found</option>
-                <option value="500">500 Internal Server Error</option>
-                <option value="502">502 Bad Gateway</option>
-                <option value="503">503 Service Unavailable</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-field">
-              <label for="app_name">App Name</label>
-              <input
-                type="text"
-                id="app_name"
-                bind:value={queryForm.app_name}
-                placeholder="Filter by app name"
-                on:blur={handleFieldChange}
-                class="form-input"
-              />
-            </div>
-            <div class="form-field">
-              <label for="exclude_app_names">Exclude App Names</label>
-              <input
-                type="text"
-                id="exclude_app_names"
-                bind:value={queryForm.exclude_app_names}
-                placeholder="Comma-separated app names to exclude"
-                on:blur={handleFieldChange}
-                class="form-input"
-              />
-            </div>
-            <div class="form-field">
-              <label for="user_name">User ID</label>
-              <input
-                type="text"
-                id="user_name"
-                bind:value={queryForm.user_name}
-                placeholder="Filter by user ID"
-                on:blur={handleFieldChange}
-                class="form-input"
-              />
-            </div>
-            <div class="form-field">
-              <label for="implemented_by_partial_function"
-                >Partial Function</label
-              >
-              <input
-                type="text"
-                id="implemented_by_partial_function"
-                bind:value={queryForm.implemented_by_partial_function}
-                placeholder="Filter by partial function"
-                on:blur={handleFieldChange}
-                class="form-input"
-              />
-            </div>
-            <div class="form-field">
-              <label for="implemented_in_version">Version</label>
-              <input
-                type="text"
-                id="implemented_in_version"
-                bind:value={queryForm.implemented_in_version}
-                placeholder="Filter by version"
-                on:blur={handleFieldChange}
-                class="form-input"
-              />
-            </div>
-            <div class="form-field">
-              <label for="consumer_id">Consumer ID</label>
-              <input
-                type="text"
-                id="consumer_id"
-                bind:value={queryForm.consumer_id}
-                placeholder="Filter by consumer ID"
-                on:blur={handleFieldChange}
-                class="form-input"
-              />
-            </div>
-            <div class="form-field narrow-field">
-              <label for="anon">Anonymous</label>
-              <select
-                id="anon"
-                bind:value={queryForm.anon}
-                on:change={handleFieldChange}
-                class="form-input"
-              >
-                <option value="">All Users</option>
-                <option value="true">Anonymous Only</option>
-                <option value="false">Authenticated Only</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </form>
+      <MetricsQueryForm
+        bind:queryForm
+        bind:autoRefresh
+        onFieldChange={handleFieldChange}
+        onClear={clearQuery}
+        onRefresh={refreshMetrics}
+        onSubmit={submitQuery}
+        showAutoRefresh={true}
+        showClearButton={true}
+        showRefreshButton={true}
+      />
       <div style="margin-top: 1rem; font-size: 0.7rem; line-height: 1.4;">
         <strong>URL:</strong>
         {obpInfo.baseUrl}/obp/v6.0.0/management/aggregate-metrics?{decodeURIComponent(
@@ -1246,91 +1015,6 @@
     color: var(--color-surface-400);
   }
 
-  .query-form {
-    margin-bottom: 2rem;
-  }
-
-  .form-section {
-    margin-bottom: 1.5rem;
-  }
-
-  .form-section-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--color-surface-700);
-    margin-bottom: 0.75rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--color-surface-300);
-  }
-
-  :global([data-mode="dark"]) .form-section-title {
-    color: var(--color-surface-300);
-    border-color: var(--color-surface-700);
-  }
-
-  .form-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 2rem;
-    margin-bottom: 1rem;
-  }
-
-  .form-row.date-row {
-    grid-template-columns: 240px 260px 80px 80px 80px 80px 80px 80px;
-    gap: 1rem;
-  }
-
-  .form-row.compact {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  }
-
-  .form-field {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .form-field.date-field {
-    min-width: 240px;
-    max-width: 260px;
-  }
-
-  .form-field.narrow-field {
-    max-width: 80px;
-  }
-
-  .form-field label {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--color-surface-700);
-    margin-bottom: 0.25rem;
-  }
-
-  :global([data-mode="dark"]) .form-field label {
-    color: var(--color-surface-300);
-  }
-
-  .form-input {
-    padding: 0.5rem;
-    border: 1px solid var(--color-surface-400);
-    border-radius: 6px;
-    font-size: 0.875rem;
-    transition: border-color 0.2s;
-    background: var(--color-surface-50);
-    color: var(--color-surface-900);
-  }
-
-  :global([data-mode="dark"]) .form-input {
-    background: var(--color-surface-900);
-    border-color: var(--color-surface-600);
-    color: var(--color-surface-100);
-  }
-
-  .form-input:focus {
-    outline: none;
-    border-color: var(--color-tertiary-500);
-    box-shadow: 0 0 0 1px var(--color-tertiary-500);
-  }
-
   .form-actions {
     display: flex;
     gap: 1rem;
@@ -1425,21 +1109,11 @@
     background: var(--color-surface-800);
   }
 
-  @media (max-width: 1200px) {
-    .form-row {
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    }
-  }
-
   @media (max-width: 768px) {
     .panel-header {
       flex-direction: column;
       align-items: flex-start;
       text-align: left;
-    }
-
-    .form-row {
-      grid-template-columns: 1fr;
     }
 
     .form-actions {
