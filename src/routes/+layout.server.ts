@@ -20,6 +20,9 @@ export interface RootLayoutData {
 }
 
 export async function load(event: RequestEvent) {
+  const startTime = performance.now();
+  logger.info("🚀 Layout server load started");
+
   const { session } = event.locals;
 
   let data: Partial<RootLayoutData> = {};
@@ -33,6 +36,7 @@ export async function load(event: RequestEvent) {
   };
 
   // Filter out undefined/null values and warn about missing ones
+  logger.info("📋 Processing external links configuration");
   const validExternalLinks: Record<string, string> = {};
   Object.entries(externalLinks).forEach(([name, url]) => {
     if (!url) {
@@ -43,24 +47,50 @@ export async function load(event: RequestEvent) {
       validExternalLinks[name] = url;
     }
   });
+  logger.info(
+    `✅ External links processed: ${Object.keys(validExternalLinks).length} links configured`,
+  );
 
   // Get information about the user from the session if they are logged in
+  logger.info("👤 Checking user session");
   if (session?.data?.user) {
     data.userId = session.data.user.user_id;
     data.email = session.data.user.email;
     data.username = session.data.user.username;
+    logger.info(`✅ User session found: ${data.email}`);
+  } else {
+    logger.info("ℹ️  No user session found (user not logged in)");
   }
 
   // Get Opey consent info if we have Opey consumer ID configured
+  logger.info("🔐 Fetching Opey consent info");
+  const consentStartTime = performance.now();
   try {
     const currentConsentInfo =
       await obpIntegrationService.getCurrentConsentInfo(session);
+    const consentEndTime = performance.now();
+    logger.info(
+      `✅ Opey consent info fetched in ${(consentEndTime - consentStartTime).toFixed(2)}ms`,
+    );
     if (currentConsentInfo) {
       data.opeyConsentInfo = currentConsentInfo;
+      logger.info(
+        `✅ Consent info available: status=${currentConsentInfo.status}`,
+      );
+    } else {
+      logger.info("ℹ️  No consent info available");
     }
   } catch (error) {
-    logger.error("Error fetching Opey consent info:", error);
+    const consentEndTime = performance.now();
+    logger.error(
+      `❌ Error fetching Opey consent info after ${(consentEndTime - consentStartTime).toFixed(2)}ms:`,
+      error,
+    );
   }
+
+  const endTime = performance.now();
+  const totalTime = endTime - startTime;
+  logger.info(`✅ Layout server load completed in ${totalTime.toFixed(2)}ms`);
 
   return {
     ...data,

@@ -10,6 +10,11 @@
     rbacItems,
   } from "$lib/config/navigation";
   import Toast from "$lib/components/Toast.svelte";
+  import { createLogger } from "$lib/utils/logger";
+
+  const logger = createLogger("LayoutClient");
+  const layoutStartTime = performance.now();
+  logger.info("🎨 Layout client initialization started");
 
   // Lucide Icons
   import {
@@ -39,7 +44,14 @@
   import LightSwitch from "$lib/components/LightSwitch.svelte";
   import type { RootLayoutData } from "./+layout.server";
 
+  logger.info("📦 All imports loaded");
+  const importsLoadedTime = performance.now();
+  logger.info(
+    `⏱️  Imports loaded in ${(importsLoadedTime - layoutStartTime).toFixed(2)}ms`,
+  );
+
   let { data, children } = $props();
+  logger.info("📊 Props received from server");
   let isAuthenticated = $state(false);
   let isMobileMenuOpen = $state(false);
   let isMyAccountExpanded = $state(false);
@@ -49,10 +61,13 @@
   let isRbacExpanded = $state(false);
   let displayMode: "dark" | "light" = $state("dark");
 
+  logger.info("🔐 Checking authentication state");
   if (data.email) {
     isAuthenticated = true;
+    logger.info(`✅ User authenticated: ${data.email}`);
   } else {
     isAuthenticated = false;
+    logger.info("ℹ️  User not authenticated");
   }
 
   let isMyAccountActive = $derived(
@@ -75,8 +90,15 @@
     page.url.pathname === "/rbac" || page.url.pathname.startsWith("/rbac/"),
   );
 
+  logger.info("🧭 Navigation state initialized");
+  const navStateTime = performance.now();
+  logger.info(
+    `⏱️  Navigation state in ${(navStateTime - importsLoadedTime).toFixed(2)}ms`,
+  );
+
   // Watch for route changes to auto-expand sections
   $effect(() => {
+    logger.info("🔄 Route effect triggered");
     if (isMyAccountActive) {
       isMyAccountExpanded = true;
     }
@@ -92,6 +114,16 @@
     if (isRbacActive) {
       isRbacExpanded = true;
     }
+    logger.info(`📍 Current route: ${page.url.pathname}`);
+  });
+
+  // Log when layout is fully initialized
+  $effect(() => {
+    const layoutEndTime = performance.now();
+    const totalTime = layoutEndTime - layoutStartTime;
+    logger.info(
+      `✅ Layout client fully initialized in ${totalTime.toFixed(2)}ms`,
+    );
   });
 
   function toggleMobileMenu() {
@@ -304,7 +336,7 @@
               onclick={toggleDevOps}
             >
               <Server class="size-5" />
-              <span>DevOps</span>
+              <span>Insights</span>
               {#if isDevOpsExpanded}
                 <ChevronDown class="h-4 w-4" />
               {:else}
