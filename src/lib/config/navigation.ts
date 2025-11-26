@@ -67,9 +67,9 @@ export function getActiveMenuItem(pathname: string) {
 // DevOps navigation items
 function buildDevOpsItems(): NavigationItem[] {
   const items: NavigationItem[] = [
-    { href: "/devops/logcache", label: "LogCache", iconComponent: Database },
+    { href: "/system/log-cache", label: "LogCache", iconComponent: Database },
     {
-      href: "/devops/migrations",
+      href: "/system/migrations",
       label: "Migrations",
       iconComponent: GitBranch,
     },

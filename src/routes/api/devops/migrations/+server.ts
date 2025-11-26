@@ -36,7 +36,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 
   try {
     logger.info("=== MIGRATIONS API CALL ===");
-    const endpoint = `/obp/v6.0.0/devops/migrations`;
+    const endpoint = `/obp/v6.0.0/system/migrations`;
 
     logger.info(`Request: ${endpoint}`);
 

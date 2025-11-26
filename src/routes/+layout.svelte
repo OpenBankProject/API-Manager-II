@@ -74,7 +74,7 @@
     page.url.pathname === "/user" || page.url.pathname.startsWith("/user/"),
   );
   let isDevOpsActive = $derived(
-    page.url.pathname === "/devops" || page.url.pathname.startsWith("/devops/"),
+    page.url.pathname === "/system" || page.url.pathname.startsWith("/system/"),
   );
   let isIntegrationActive = $derived(
     page.url.pathname === "/integration" ||

@@ -38,7 +38,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     const logLevel = url.searchParams.get("log_level") || "ALL";
 
     logger.info("=== LOG-CACHE API CALL ===");
-    const endpoint = `/obp/v6.0.0/devops/log-cache/${encodeURIComponent(logLevel)}`;
+    const endpoint = `/obp/v6.0.0/system/log-cache/${encodeURIComponent(logLevel)}`;
 
     logger.info(`Request: ${endpoint}`);
 
