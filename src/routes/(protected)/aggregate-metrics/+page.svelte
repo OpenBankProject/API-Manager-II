@@ -81,7 +81,7 @@
     verb: "",
     correlation_id: "",
     duration: "",
-    exclude_app_names: "",
+    include_app_names: "",
     http_status_code: "",
   });
 
@@ -144,7 +144,7 @@
         verb: urlParams.get("verb") || "",
         correlation_id: urlParams.get("correlation_id") || "",
         duration: urlParams.get("duration") || "",
-        exclude_app_names: urlParams.get("exclude_app_names") || "",
+        include_app_names: urlParams.get("include_app_names") || "",
         http_status_code: urlParams.get("http_status_code") || "",
       };
 
@@ -271,10 +271,10 @@
       params.set("anon", queryForm.anon);
     }
     if (
-      queryForm.exclude_app_names &&
-      queryForm.exclude_app_names.trim() !== ""
+      queryForm.include_app_names &&
+      queryForm.include_app_names.trim() !== ""
     ) {
-      params.set("exclude_app_names", queryForm.exclude_app_names);
+      params.set("include_app_names", queryForm.include_app_names);
     }
     if (
       queryForm.http_status_code &&
@@ -340,7 +340,7 @@
       verb: "",
       correlation_id: "",
       duration: "",
-      exclude_app_names: "",
+      include_app_names: "",
       http_status_code: "",
     };
 

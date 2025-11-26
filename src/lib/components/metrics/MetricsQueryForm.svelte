@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Snippet } from 'svelte';
+  import type { Snippet } from "svelte";
 
   interface Props {
     queryForm: {
@@ -20,7 +20,7 @@
       verb: string;
       correlation_id: string;
       duration: string;
-      exclude_app_names: string;
+      include_app_names: string;
       http_status_code: string;
     };
     autoRefresh?: string;
@@ -36,7 +36,7 @@
 
   let {
     queryForm = $bindable(),
-    autoRefresh = $bindable('none'),
+    autoRefresh = $bindable("none"),
     onFieldChange = () => {},
     onClear = () => {},
     onRefresh = () => {},
@@ -44,7 +44,7 @@
     showAutoRefresh = true,
     showClearButton = true,
     showRefreshButton = true,
-    headerActions
+    headerActions,
   }: Props = $props();
 
   function handleFieldChange() {
@@ -79,11 +79,7 @@
       <h3 class="form-section-title">Query Parameters</h3>
       <div class="form-actions">
         {#if showClearButton}
-          <button
-            type="button"
-            class="btn btn-secondary"
-            onclick={handleClear}
-          >
+          <button type="button" class="btn btn-secondary" onclick={handleClear}>
             🗑️ Clear Form
           </button>
         {/if}
@@ -250,12 +246,12 @@
         />
       </div>
       <div class="form-field">
-        <label for="exclude_app_names">Exclude App Names</label>
+        <label for="include_app_names">Include App Names</label>
         <input
           type="text"
-          id="exclude_app_names"
-          bind:value={queryForm.exclude_app_names}
-          placeholder="Comma-separated app names to exclude"
+          id="include_app_names"
+          bind:value={queryForm.include_app_names}
+          placeholder="Comma-separated app names to include"
           onblur={handleFieldChange}
           class="form-input"
         />
