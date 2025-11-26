@@ -3,6 +3,7 @@
   import { invalidate } from "$app/navigation";
   import type { PageData } from "./$types";
   import { configHelpers } from "$lib/config";
+  import MetricsQueryForm from "$lib/components/metrics/MetricsQueryForm.svelte";
 
   let { data } = $props<{ data: PageData }>();
 
@@ -80,6 +81,8 @@
     verb: "",
     correlation_id: "",
     duration: "",
+    exclude_app_names: "",
+    http_status_code: "",
   });
 
   // Initialize on mount - run only once
@@ -116,6 +119,8 @@
         verb: urlParams.get("verb") || "",
         correlation_id: urlParams.get("correlation_id") || "",
         duration: urlParams.get("duration") || "",
+        exclude_app_names: urlParams.get("exclude_app_names") || "",
+        http_status_code: urlParams.get("http_status_code") || "",
       };
 
       // Sync URL with form values and start auto-refresh
@@ -212,6 +217,18 @@
     if (queryForm.duration && String(queryForm.duration).trim() !== "") {
       params.set("duration", String(queryForm.duration));
     }
+    if (
+      queryForm.exclude_app_names &&
+      queryForm.exclude_app_names.trim() !== ""
+    ) {
+      params.set("exclude_app_names", queryForm.exclude_app_names);
+    }
+    if (
+      queryForm.http_status_code &&
+      queryForm.http_status_code.trim() !== ""
+    ) {
+      params.set("http_status_code", queryForm.http_status_code);
+    }
 
     // Always include pagination and sorting
     params.set("limit", queryForm.limit);
@@ -269,6 +286,8 @@
       verb: "",
       correlation_id: "",
       duration: "",
+      exclude_app_names: "",
+      http_status_code: "",
     };
 
     // Reset default date range
@@ -343,189 +362,15 @@
 
     <div class="panel-content">
       <!-- Query Form -->
-      <form on:submit|preventDefault={submitQuery} class="query-form">
-        <div class="form-section">
-          <h3 class="form-section-title">Query Parameters</h3>
-          <div class="form-row">
-            <div class="form-field date-field">
-              <label for="from_date">From Date</label>
-              <input
-                type="datetime-local"
-                id="from_date"
-                bind:value={queryForm.from_date}
-                on:blur={handleFieldChange}
-                class="form-input"
-              />
-            </div>
-            <div class="form-field date-field">
-              <label for="to_date">To Date</label>
-              <input
-                type="datetime-local"
-                id="to_date"
-                bind:value={queryForm.to_date}
-                on:blur={handleFieldChange}
-                class="form-input"
-              />
-            </div>
-            <div class="form-field narrow-field">
-              <label for="limit">Limit</label>
-              <input
-                type="number"
-                id="limit"
-                bind:value={queryForm.limit}
-                min="1"
-                max="10000"
-                on:blur={handleFieldChange}
-                class="form-input"
-              />
-            </div>
-            <div class="form-field narrow-field">
-              <label for="offset">Offset</label>
-              <input
-                type="number"
-                id="offset"
-                bind:value={queryForm.offset}
-                min="0"
-                on:blur={handleFieldChange}
-                class="form-input"
-              />
-            </div>
-            <div class="form-field">
-              <label for="sort_by">Sort By</label>
-              <select
-                id="sort_by"
-                bind:value={queryForm.sort_by}
-                on:change={handleFieldChange}
-                class="form-input"
-              >
-                <option value="date">Date</option>
-                <option value="url">URL</option>
-                <option value="user_name">User Name</option>
-                <option value="app_name">App Name</option>
-                <option value="verb">HTTP Method</option>
-                <option value="duration">Duration</option>
-              </select>
-            </div>
-            <div class="form-field narrow-field">
-              <label for="direction">Direction</label>
-              <select
-                id="direction"
-                bind:value={queryForm.direction}
-                on:change={handleFieldChange}
-                class="form-input"
-              >
-                <option value="desc">Descending</option>
-                <option value="asc">Ascending</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-field">
-              <label for="verb">HTTP Method</label>
-              <select
-                id="verb"
-                bind:value={queryForm.verb}
-                on:change={handleFieldChange}
-                class="form-input"
-              >
-                <option value="">All Methods</option>
-                <option value="GET">GET</option>
-                <option value="POST">POST</option>
-                <option value="PUT">PUT</option>
-                <option value="DELETE">DELETE</option>
-                <option value="PATCH">PATCH</option>
-              </select>
-            </div>
-            <div class="form-field">
-              <label for="app_name">App Name</label>
-              <input
-                type="text"
-                id="app_name"
-                bind:value={queryForm.app_name}
-                placeholder="Filter by app name"
-                on:blur={handleFieldChange}
-                class="form-input"
-              />
-            </div>
-            <div class="form-field">
-              <label for="user_name">User ID</label>
-              <input
-                type="text"
-                id="user_name"
-                bind:value={queryForm.user_name}
-                placeholder="Filter by user ID"
-                on:blur={handleFieldChange}
-                class="form-input"
-              />
-            </div>
-            <div class="form-field">
-              <label for="implemented_by_partial_function"
-                >Partial Function</label
-              >
-              <input
-                type="text"
-                id="implemented_by_partial_function"
-                bind:value={queryForm.implemented_by_partial_function}
-                placeholder="Filter by partial function"
-                on:blur={handleFieldChange}
-                class="form-input"
-              />
-            </div>
-            <div class="form-field">
-              <label for="implemented_in_version">Version</label>
-              <input
-                type="text"
-                id="implemented_in_version"
-                bind:value={queryForm.implemented_in_version}
-                placeholder="Filter by version"
-                on:blur={handleFieldChange}
-                class="form-input"
-              />
-            </div>
-            <div class="form-field">
-              <label for="consumer_id">Consumer ID</label>
-              <input
-                type="text"
-                id="consumer_id"
-                bind:value={queryForm.consumer_id}
-                placeholder="Filter by consumer ID"
-                on:blur={handleFieldChange}
-                class="form-input"
-              />
-            </div>
-            <div class="form-field">
-              <label for="anon">Anonymous</label>
-              <select
-                id="anon"
-                bind:value={queryForm.anon}
-                on:change={handleFieldChange}
-                class="form-input"
-              >
-                <option value="">All Users</option>
-                <option value="true">Anonymous Only</option>
-                <option value="false">Authenticated Only</option>
-              </select>
-            </div>
-            <div class="form-field">
-              <label for="duration">Min Duration ms</label>
-              <input
-                type="number"
-                id="duration"
-                bind:value={queryForm.duration}
-                placeholder="Filter by minimum duration"
-                on:blur={handleFieldChange}
-                class="form-input"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div class="form-actions">
-          <button type="button" class="btn btn-secondary" on:click={clearQuery}>
-            🗑️ Clear Form
-          </button>
-        </div>
-      </form>
+      <MetricsQueryForm
+        bind:queryForm
+        onFieldChange={handleFieldChange}
+        onClear={clearQuery}
+        onSubmit={submitQuery}
+        showAutoRefresh={false}
+        showClearButton={true}
+        showRefreshButton={false}
+      />
     </div>
   </div>
 
