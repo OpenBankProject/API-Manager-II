@@ -9,6 +9,9 @@ import {
   GitBranch,
   Route,
   BarChart3,
+  Shield,
+  Users,
+  FileCheck,
 } from "@lucide/svelte";
 import { env } from "$env/dynamic/public";
 
@@ -142,4 +145,42 @@ export function getActiveApiMetricsMenuItem(pathname: string) {
   });
 
   return found || apiMetricsItems[0]; // fallback to first item
+}
+
+// RBAC navigation items
+function buildRbacItems(): NavigationItem[] {
+  const items: NavigationItem[] = [
+    { href: "/rbac/roles", label: "Roles", iconComponent: Shield },
+    {
+      href: "/rbac/entitlements",
+      label: "Entitlements",
+      iconComponent: KeyRound,
+    },
+    {
+      href: "/rbac/groups",
+      label: "Groups",
+      iconComponent: Users,
+    },
+    {
+      href: "/rbac/entitlement-requests",
+      label: "Entitlement Requests",
+      iconComponent: FileCheck,
+    },
+  ];
+
+  return items;
+}
+
+export const rbacItems = buildRbacItems();
+
+export function getActiveRbacMenuItem(pathname: string) {
+  const found = rbacItems.find((item) => {
+    // Skip external links for active menu detection
+    if (item.external) {
+      return false;
+    }
+    return pathname.startsWith(item.href);
+  });
+
+  return found || rbacItems[0]; // fallback to first item
 }

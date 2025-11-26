@@ -7,6 +7,7 @@
     devOpsItems,
     integrationItems,
     apiMetricsItems,
+    rbacItems,
   } from "$lib/config/navigation";
   import Toast from "$lib/components/Toast.svelte";
 
@@ -26,6 +27,7 @@
     ChevronDown,
     ChevronRight,
     Settings,
+    Shield,
     CreditCard,
     BarChart3,
     Globe,
@@ -44,6 +46,7 @@
   let isDevOpsExpanded = $state(false);
   let isIntegrationExpanded = $state(false);
   let isApiMetricsExpanded = $state(false);
+  let isRbacExpanded = $state(false);
   let displayMode: "dark" | "light" = $state("dark");
 
   if (data.email) {
@@ -68,6 +71,9 @@
       page.url.pathname === "/aggregate-metrics" ||
       page.url.pathname.startsWith("/aggregate-metrics/"),
   );
+  let isRbacActive = $derived(
+    page.url.pathname === "/rbac" || page.url.pathname.startsWith("/rbac/"),
+  );
 
   // Watch for route changes to auto-expand sections
   $effect(() => {
@@ -82,6 +88,9 @@
     }
     if (isApiMetricsActive) {
       isApiMetricsExpanded = true;
+    }
+    if (isRbacActive) {
+      isRbacExpanded = true;
     }
   });
 
@@ -103,6 +112,10 @@
 
   function toggleApiMetrics() {
     isApiMetricsExpanded = !isApiMetricsExpanded;
+  }
+
+  function toggleRbac() {
+    isRbacExpanded = !isRbacExpanded;
   }
 
   // Some items in the menu are rendered conditionally based on the presence of URLs set in the environment variables.
@@ -403,6 +416,48 @@
                     aria-label={subItem.label}
                     target={subItem.external ? "_blank" : undefined}
                     rel={subItem.external ? "noopener noreferrer" : undefined}
+                  >
+                    <Icon class="size-4" />
+                    <span>{subItem.label}</span>
+                  </a>
+                {/each}
+              </Navigation.Menu>
+            {/if}
+          </Navigation.Group>
+
+          <!-- RBAC Group -->
+          <Navigation.Group>
+            <button
+              type="button"
+              class="btn w-full justify-start gap-3 px-2 hover:preset-tonal"
+              class:preset-filled-primary-50-950={isRbacActive}
+              class:border={isRbacActive}
+              class:border-solid-secondary-500={isRbacActive}
+              onclick={toggleRbac}
+            >
+              <Shield class="size-5" />
+              <span>RBAC</span>
+              {#if isRbacExpanded}
+                <ChevronDown class="h-4 w-4" />
+              {:else}
+                <ChevronRight class="h-4 w-4" />
+              {/if}
+            </button>
+
+            {#if isRbacExpanded}
+              <Navigation.Menu class="mt-1 ml-4 flex flex-col gap-1 px-2">
+                {#each rbacItems as subItem}
+                  {@const Icon = subItem.iconComponent}
+                  <a
+                    href={subItem.href}
+                    class="btn w-full justify-start gap-3 px-2 pl-6 text-sm hover:preset-tonal"
+                    class:preset-filled-secondary-50-950={page.url.pathname ===
+                      subItem.href}
+                    class:border-l-2={page.url.pathname === subItem.href}
+                    class:border-primary-500={page.url.pathname ===
+                      subItem.href}
+                    title={subItem.label}
+                    aria-label={subItem.label}
                   >
                     <Icon class="size-4" />
                     <span>{subItem.label}</span>
