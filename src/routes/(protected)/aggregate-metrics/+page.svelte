@@ -582,6 +582,12 @@
           </div>
         </div>
       </form>
+      <div style="margin-top: 1rem; font-size: 0.7rem; line-height: 1.4;">
+        <strong>URL:</strong>
+        {obpInfo.baseUrl}/obp/v6.0.0/management/aggregate-metrics?{decodeURIComponent(
+          currentQueryString,
+        )}
+      </div>
     </div>
   </div>
 
@@ -596,10 +602,6 @@
         </h2>
       </div>
       <div class="panel-subtitle">
-        URL: {obpInfo.baseUrl}/obp/v6.0.0/management/aggregate-metrics?{decodeURIComponent(
-          currentQueryString,
-        )}
-        <br />
         Last updated:
         <span class="timestamp-color-{timestampColorIndex}"
           >{lastRefreshTime} (UTC: {new Date().toISOString()})</span
@@ -1288,7 +1290,7 @@
   }
 
   :global([data-mode="dark"]) .results-header h3 {
-    color: var(--color-surface-100);
+    color: var(--color-surface-200);
   }
 
   .results-count {
