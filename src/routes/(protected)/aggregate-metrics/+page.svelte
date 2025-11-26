@@ -385,6 +385,14 @@
             </h3>
             <div style="display: flex; align-items: center; gap: 0.75rem;">
               <button
+                type="button"
+                class="btn btn-secondary"
+                on:click={clearQuery}
+                style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
+              >
+                🗑️ Clear Form
+              </button>
+              <button
                 class="refresh-btn"
                 on:click={refreshMetrics}
                 title="Manual refresh"
@@ -586,16 +594,6 @@
         <h2 class="panel-title" style="margin: 0;">
           Aggregate Metrics Results
         </h2>
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
-          <button
-            type="button"
-            class="btn btn-secondary"
-            on:click={clearQuery}
-            style="padding: 0.375rem 0.75rem; font-size: 0.875rem;"
-          >
-            🗑️ Clear Form
-          </button>
-        </div>
       </div>
       <div class="panel-subtitle">
         URL: {obpInfo.baseUrl}/obp/v6.0.0/management/aggregate-metrics?{decodeURIComponent(
