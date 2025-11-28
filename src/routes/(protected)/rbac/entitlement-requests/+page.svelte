@@ -9,6 +9,7 @@
     Calendar,
   } from "@lucide/svelte";
   import { toast } from "$lib/utils/toastService";
+  import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
 
   interface EntitlementRequest {
     entitlement_request_id: string;
@@ -27,6 +28,8 @@
   let entitlementRequests = $derived(data.entitlementRequests || []);
   let hasApiAccess = $derived(data.hasApiAccess);
   let error = $derived(data.error);
+  let userEntitlements = $derived(data.userEntitlements || []);
+  let requiredRoles = $derived(data.requiredRoles || []);
 
   // Search state
   let searchQuery = $state("");
@@ -241,7 +244,9 @@
 </svelte:head>
 
 <div class="container mx-auto px-4 py-8">
-  <!-- Error Alert -->
+  <!-- Role Check - Display missing roles upfront -->
+  <PageRoleCheck {userEntitlements} {requiredRoles} />
+
   {#if error}
     <div class="alert alert-error mb-6">
       <strong>Error:</strong>

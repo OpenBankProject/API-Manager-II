@@ -2,6 +2,7 @@
   import type { PageData } from "./$types";
   import { Search, User, Building2, Globe, Trash2 } from "@lucide/svelte";
   import MissingRoleAlert from "$lib/components/MissingRoleAlert.svelte";
+  import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
 
   interface Entitlement {
     entitlement_id: string;
@@ -15,6 +16,8 @@
   let entitlements = $derived(data.entitlements || []);
   let hasApiAccess = $derived(data.hasApiAccess);
   let error = $derived(data.error);
+  let userEntitlements = $derived(data.userEntitlements || []);
+  let requiredRoles = $derived(data.requiredRoles || []);
 
   // Parse OBP error to extract missing role information
   let parsedError = $derived.by(() => {
@@ -101,6 +104,9 @@
 </svelte:head>
 
 <div class="container mx-auto px-4 py-8">
+  <!-- Role Check - Display missing roles upfront -->
+  <PageRoleCheck {userEntitlements} {requiredRoles} />
+
   <!-- Error Alert -->
   {#if error && parsedError}
     {#if parsedError.type === "missing_role"}
