@@ -217,11 +217,11 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.625rem 1.25rem;
-    background: #f59e0b;
+    background: #51b265;
     color: white;
     border: none;
     border-radius: 6px;
-    font-size: 0.875rem;
+    font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
@@ -229,7 +229,7 @@
   }
 
   .btn-request:hover {
-    background: #d97706;
+    background: #3d9e52;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
     transform: translateY(-1px);
   }
@@ -240,11 +240,11 @@
   }
 
   :global([data-mode="dark"]) .btn-request {
-    background: rgb(var(--color-warning-600));
+    background: #51b265;
   }
 
   :global([data-mode="dark"]) .btn-request:hover {
-    background: rgb(var(--color-warning-700));
+    background: #3d9e52;
   }
 
   .btn-request:disabled {
