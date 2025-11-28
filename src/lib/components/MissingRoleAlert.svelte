@@ -1,21 +1,64 @@
 <script lang="ts">
   import { ShieldCheck } from "@lucide/svelte";
+  import MessageBox from "$lib/components/MessageBox.svelte";
 
   interface Props {
     roles: string[];
     errorCode?: string;
     message?: string;
-    onRequestEntitlement?: () => void;
+    bankId?: string;
   }
 
-  let { roles, errorCode, message, onRequestEntitlement }: Props = $props();
+  let { roles, errorCode, message, bankId }: Props = $props();
 
-  function handleRequestClick() {
-    if (onRequestEntitlement) {
-      onRequestEntitlement();
-    } else {
-      // Default behavior: navigate to entitlement request page
-      window.location.href = "/user/entitlements";
+  let isSubmitting = $state(false);
+  let submitSuccess = $state(false);
+  let submitError = $state<string | null>(null);
+
+  async function handleRequestClick() {
+    if (isSubmitting) return;
+
+    isSubmitting = true;
+    submitError = null;
+
+    try {
+      // Submit entitlement request for each missing role
+      for (const role of roles) {
+        const requestBody: any = {
+          role_name: role,
+        };
+
+        // Only include bank_id if it's provided
+        if (bankId) {
+          requestBody.bank_id = bankId;
+        }
+
+        const response = await fetch("/api/rbac/entitlement-requests", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.error || "Failed to submit entitlement request",
+          );
+        }
+      }
+
+      submitSuccess = true;
+
+      // Redirect after a short delay to show success message
+      setTimeout(() => {
+        window.location.href = "/rbac/entitlement-requests";
+      }, 1500);
+    } catch (error) {
+      submitError =
+        error instanceof Error ? error.message : "Failed to submit request";
+      isSubmitting = false;
     }
   }
 </script>
@@ -35,20 +78,53 @@
 
   <ul class="role-list">
     {#each roles as role}
-      <li><code class="role-code">{role}</code></li>
+      <li>
+        <code class="role-code">{role}</code>
+        {#if role.includes("AtOneBank") && !role.includes("AtAnyBank")}
+          <span class="role-scope bank-level">Bank-level</span>
+        {:else if role.includes("AtAnyBank")}
+          <span class="role-scope system-wide">System-wide</span>
+        {/if}
+      </li>
     {/each}
   </ul>
 
-  {#if message}
-    <p class="alert-detail">{message}</p>
+  {#if bankId}
+    <p class="bank-info">
+      <strong>Bank ID:</strong> <code class="bank-code">{bankId}</code>
+    </p>
   {/if}
 
-  <div class="alert-actions">
-    <button class="btn-request" onclick={handleRequestClick}>
-      <ShieldCheck size={18} />
-      Request Entitlement
-    </button>
-  </div>
+  {#if message}
+    <MessageBox {message} type="error" />
+  {/if}
+
+  {#if submitError}
+    <MessageBox message={submitError} type="error" />
+  {/if}
+
+  {#if submitSuccess}
+    <div class="submit-success">
+      ✅ Entitlement request{roles.length > 1 ? "s" : ""} submitted successfully!
+      Redirecting...
+    </div>
+  {:else}
+    <div class="alert-actions">
+      <button
+        class="btn-request"
+        onclick={handleRequestClick}
+        disabled={isSubmitting}
+      >
+        {#if isSubmitting}
+          <span class="spinner">⏳</span>
+          Submitting...
+        {:else}
+          <ShieldCheck size={18} />
+          Request Entitlement
+        {/if}
+      </button>
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -125,10 +201,60 @@
     color: rgb(var(--color-warning-100));
   }
 
-  .alert-detail {
-    margin: 0.5rem 0;
+  .role-scope {
+    display: inline-block;
     font-size: 0.75rem;
-    opacity: 0.8;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    margin-left: 0.5rem;
+    font-weight: 600;
+  }
+
+  .role-scope.bank-level {
+    background: rgba(59, 130, 246, 0.15);
+    color: #1e40af;
+  }
+
+  :global([data-mode="dark"]) .role-scope.bank-level {
+    background: rgba(59, 130, 246, 0.2);
+    color: rgb(var(--color-primary-300));
+  }
+
+  .role-scope.system-wide {
+    background: rgba(16, 185, 129, 0.15);
+    color: #065f46;
+  }
+
+  :global([data-mode="dark"]) .role-scope.system-wide {
+    background: rgba(16, 185, 129, 0.2);
+    color: rgb(var(--color-success-300));
+  }
+
+  .bank-info {
+    margin: 1rem 0 0.5rem 0;
+    padding: 0.75rem;
+    background: rgba(59, 130, 246, 0.1);
+    border-left: 3px solid #3b82f6;
+    border-radius: 4px;
+    font-size: 0.875rem;
+  }
+
+  :global([data-mode="dark"]) .bank-info {
+    background: rgba(59, 130, 246, 0.15);
+    border-left-color: rgb(var(--color-primary-500));
+  }
+
+  .bank-code {
+    background: rgba(0, 0, 0, 0.1);
+    padding: 0.125rem 0.5rem;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  :global([data-mode="dark"]) .bank-code {
+    background: rgba(255, 255, 255, 0.15);
   }
 
   .alert-actions {
@@ -174,5 +300,42 @@
 
   :global([data-mode="dark"]) .btn-request:hover {
     background: rgb(var(--color-warning-700));
+  }
+
+  .btn-request:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  .spinner {
+    display: inline-block;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .submit-success {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: 4px;
+    color: #065f46;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  :global([data-mode="dark"]) .submit-success {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: rgba(16, 185, 129, 0.4);
+    color: rgb(var(--color-success-200));
   }
 </style>

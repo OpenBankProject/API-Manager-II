@@ -24,10 +24,32 @@
       /OBP-(\d+):.*missing one or more roles:\s*(.+)/i,
     );
     if (missingRoleMatch) {
+      const rolesString = missingRoleMatch[2];
+      const roles = rolesString.split(",").map((r: string) => r.trim());
+
+      // Try to detect bank_id from the error message or role name
+      // Bank-level roles typically end with "AtOneBank" or "AtAnyBank"
+      // or the error message might mention a specific bank
+      let bankId: string | undefined = undefined;
+
+      // Check if any role requires a bank (ends with AtOneBank)
+      const requiresBank = roles.some(
+        (role: string) =>
+          role.includes("AtOneBank") && !role.includes("AtAnyBank"),
+      );
+
+      // Try to extract bank_id from error message if present
+      const bankMatch = error.match(/bank[_\s]?id[:\s]+([a-zA-Z0-9._-]+)/i);
+      if (bankMatch) {
+        bankId = bankMatch[1];
+      }
+
       return {
         type: "missing_role",
         code: missingRoleMatch[1],
-        roles: missingRoleMatch[2].split(",").map((r: string) => r.trim()),
+        roles: roles,
+        bankId: bankId,
+        requiresBank: requiresBank,
         message: error,
       };
     }
@@ -81,11 +103,7 @@
         roles={parsedError.roles}
         errorCode={parsedError.code}
         message={parsedError.message}
-        onRequestEntitlement={() => {
-          // Navigate to user entitlements page with the role name
-          const role = parsedError.roles[0]; // Use the first role
-          window.location.href = `/user/entitlements?request=${encodeURIComponent(role)}`;
-        }}
+        bankId={parsedError.bankId}
       />
     {:else}
       <div class="alert alert-error mb-6">
