@@ -100,7 +100,7 @@
 </script>
 
 <svelte:head>
-  <title>RBAC Entitlements - API Manager II</title>
+  <title>Entitlements - API Manager II</title>
 </svelte:head>
 
 <div class="container mx-auto px-4 py-8">
@@ -128,9 +128,9 @@
     <div class="panel-header">
       <div class="header-top">
         <div>
-          <h1 class="panel-title">RBAC Entitlements</h1>
+          <h1 class="panel-title">Entitlements</h1>
           <div class="panel-subtitle">
-            Manage user entitlements and role assignments across your
+            View and manage user entitlements and role assignments across your
             organization
           </div>
         </div>

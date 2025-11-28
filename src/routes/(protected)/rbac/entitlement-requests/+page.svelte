@@ -240,7 +240,7 @@
 </script>
 
 <svelte:head>
-  <title>RBAC Entitlement Requests - API Manager II</title>
+  <title>Entitlement Requests - API Manager II</title>
 </svelte:head>
 
 <div class="container mx-auto px-4 py-8">

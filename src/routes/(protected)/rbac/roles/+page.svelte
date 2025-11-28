@@ -95,7 +95,7 @@
 </script>
 
 <svelte:head>
-  <title>RBAC Roles - API Manager II</title>
+  <title>Roles - API Manager II</title>
 </svelte:head>
 
 <div class="container mx-auto px-4 py-8">
@@ -123,9 +123,9 @@
     <div class="panel-header">
       <div class="header-top">
         <div>
-          <h1 class="panel-title">RBAC Roles</h1>
+          <h1 class="panel-title">Roles</h1>
           <div class="panel-subtitle">
-            Manage roles and role-based access control for your organization
+            View and manage roles across all banks in your organization
           </div>
         </div>
         <div class="role-count">
