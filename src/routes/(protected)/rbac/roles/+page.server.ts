@@ -8,6 +8,7 @@ import { error } from "@sveltejs/kit";
 interface Role {
   role: string;
   bank_id?: string;
+  entitlement_count?: number;
 }
 
 interface RolesResponse {
@@ -35,8 +36,8 @@ export const load: PageServerLoad = async ({ locals }) => {
   }
 
   try {
-    logger.info("=== ROLES API CALL ===");
-    const endpoint = `/obp/v6.0.0/roles`;
+    logger.info("=== ROLES WITH ENTITLEMENT COUNTS API CALL ===");
+    const endpoint = `/obp/v6.0.0/management/roles-with-entitlement-counts`;
     logger.info(`Request: ${endpoint}`);
 
     const response: RolesResponse = await obp_requests.get(

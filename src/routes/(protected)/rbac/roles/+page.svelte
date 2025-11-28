@@ -5,6 +5,7 @@
   interface Role {
     role: string;
     bank_id?: string;
+    entitlement_count?: number;
   }
 
   let { data } = $props<{ data: PageData }>();
@@ -143,6 +144,12 @@
                         <span class="role-meta">Bank: {role.bank_id}</span>
                       {:else}
                         <span class="role-meta system">System Role</span>
+                      {/if}
+                      {#if role.entitlement_count !== undefined}
+                        <span class="role-meta entitlement-count">
+                          👥 {role.entitlement_count}
+                          {role.entitlement_count === 1 ? "user" : "users"}
+                        </span>
                       {/if}
                     </div>
                   </a>
@@ -518,6 +525,15 @@
 
   :global([data-mode="dark"]) .role-meta.system {
     color: rgb(var(--color-primary-400));
+  }
+
+  .role-meta.entitlement-count {
+    color: #10b981;
+    font-weight: 500;
+  }
+
+  :global([data-mode="dark"]) .role-meta.entitlement-count {
+    color: rgb(var(--color-success-400));
   }
 
   @media (max-width: 768px) {
