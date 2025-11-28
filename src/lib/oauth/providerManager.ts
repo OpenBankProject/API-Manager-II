@@ -53,11 +53,19 @@ class OAuth2ProviderManager {
    * Fetches all well-known URIs from the OBP API
    */
   async fetchWellKnownUris(): Promise<WellKnownUri[]> {
+    const endpoint = "/obp/v6.0.0/well-known";
+    const fullUrl = `${PUBLIC_OBP_BASE_URL}${endpoint}`;
+
     try {
-      const response = await obp_requests.get("/obp/v6.0.0/well-known");
+      logger.debug(`Fetching well-known URIs from: ${fullUrl}`);
+      const response = await obp_requests.get(endpoint);
       return response.well_known_uris;
     } catch (error) {
-      logger.error("Failed to fetch well-known URIs:", error);
+      logger.error(`Failed to fetch well-known URIs from ${fullUrl}:`, error);
+      logger.error(
+        "This usually means the OBP server is not reachable, not configured correctly, " +
+          "or the endpoint does not exist. Please verify PUBLIC_OBP_BASE_URL is correct.",
+      );
       throw error;
     }
   }
@@ -74,8 +82,11 @@ class OAuth2ProviderManager {
       wellKnownUris = await this.fetchWellKnownUris();
       logger.debug("Well-known URIs fetched successfully:", wellKnownUris);
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       logger.error(
-        "Failed to fetch well-known URIs, marking all providers as unavailable",
+        "Failed to fetch well-known URIs, marking all providers as unavailable. Error:",
+        errorMessage,
       );
       // Mark all defined providers as unavailable due to API connectivity issues
       this.definedProviders.forEach((provider) => {
@@ -84,8 +95,7 @@ class OAuth2ProviderManager {
         );
         if (existingProvider) {
           existingProvider.status = "unavailable";
-          existingProvider.error =
-            "Unable to fetch provider configuration from OBP API";
+          existingProvider.error = `Unable to fetch provider configuration from OBP API: ${errorMessage}`;
         }
       });
       throw error;

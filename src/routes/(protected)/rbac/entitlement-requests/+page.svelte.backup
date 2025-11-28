@@ -8,7 +8,6 @@
     User,
     Calendar,
   } from "@lucide/svelte";
-  import { toast } from "$lib/utils/toastService";
 
   interface EntitlementRequest {
     entitlement_request_id: string;
@@ -62,23 +61,15 @@
 
   // Accept handler: 1) Create entitlement, 2) Delete request
   async function handleAccept(requestId: string) {
-    console.log("handleAccept called with requestId:", requestId);
     const request = filteredRequests.find(
       (r: EntitlementRequest) => r.entitlement_request_id === requestId,
     );
-    if (!request) {
-      console.log("Request not found!");
-      return;
-    }
+    if (!request) return;
 
-    console.log("Request found:", request);
-    processingRequests = new Map(processingRequests).set(requestId, true);
-    const newErrors = new Map(processErrors);
-    newErrors.delete(requestId);
-    processErrors = newErrors;
+    processingRequests.set(requestId, true);
+    processErrors.delete(requestId);
 
     try {
-      console.log("Creating entitlement...");
       // Step 1: Create the entitlement
       const createResponse = await fetch("/api/rbac/entitlements", {
         method: "POST",
@@ -90,65 +81,9 @@
         }),
       });
 
-      console.log("Create response status:", createResponse.status);
-      // Check if entitlement already exists (OBP-30216)
       if (!createResponse.ok) {
         const errorData = await createResponse.json();
-        console.log("Create failed with error:", errorData);
-        console.log("Checking if OBP-30216...");
-        console.log("errorData.obpErrorCode:", errorData.obpErrorCode);
-        console.log("errorData.error:", errorData.error);
-
-        // If entitlement already exists, treat as success - just delete the request
-        if (
-          errorData.obpErrorCode === "OBP-30216" ||
-          (errorData.error && errorData.error.includes("OBP-30216"))
-        ) {
-          console.log(
-            "✅ OBP-30216 detected! Entitlement already exists. Attempting to delete request...",
-          );
-          const deleteResponse = await fetch(
-            `/api/rbac/entitlement-requests/${requestId}`,
-            {
-              method: "DELETE",
-            },
-          );
-
-          console.log("Delete response status:", deleteResponse.status);
-
-          if (!deleteResponse.ok) {
-            console.log("❌ Failed to delete request");
-            const deleteErrorData = await deleteResponse.json();
-            console.log("Delete error data:", deleteErrorData);
-            processErrors = new Map(processErrors).set(
-              requestId,
-              deleteErrorData.error || "Failed to delete entitlement request",
-            );
-            return;
-          }
-
-          // Success - user already has entitlement, show success and reload
-          console.log(
-            "✅ Request deleted successfully! Showing success toast...",
-          );
-          toast.success(
-            "Request Accepted",
-            `${request.user.username} already has this entitlement`,
-          );
-
-          setTimeout(() => {
-            window.location.reload();
-          }, 1000);
-          return;
-        }
-
-        console.log("❌ Not OBP-30216, displaying error inline");
-        // Other error - display inline
-        processErrors = new Map(processErrors).set(
-          requestId,
-          errorData.error || "Failed to create entitlement",
-        );
-        return;
+        throw new Error(errorData.error || "Failed to create entitlement");
       }
 
       // Step 2: Delete the entitlement request
@@ -161,42 +96,26 @@
 
       if (!deleteResponse.ok) {
         const errorData = await deleteResponse.json();
-        processErrors = new Map(processErrors).set(
-          requestId,
+        throw new Error(
           errorData.error || "Failed to delete entitlement request",
         );
-        return;
       }
 
-      // Success - show success message and reload the page
-      toast.success(
-        "Request Accepted",
-        `Entitlement granted to ${request.user.username}`,
-      );
-
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      // Success - reload the page
+      window.location.reload();
     } catch (error) {
-      console.error("Exception in handleAccept:", error);
       const errorMessage =
         error instanceof Error ? error.message : "Failed to accept request";
-      processErrors = new Map(processErrors).set(requestId, errorMessage);
+      processErrors.set(requestId, errorMessage);
     } finally {
-      processingRequests = new Map(processingRequests).set(requestId, false);
+      processingRequests.set(requestId, false);
     }
   }
 
   // Decline handler: Delete the entitlement request
   async function handleDecline(requestId: string) {
-    const request = filteredRequests.find(
-      (r: EntitlementRequest) => r.entitlement_request_id === requestId,
-    );
-
-    processingRequests = new Map(processingRequests).set(requestId, true);
-    const newErrors = new Map(processErrors);
-    newErrors.delete(requestId);
-    processErrors = newErrors;
+    processingRequests.set(requestId, true);
+    processErrors.delete(requestId);
 
     try {
       const response = await fetch(
@@ -208,30 +127,19 @@
 
       if (!response.ok) {
         const errorData = await response.json();
-        processErrors = new Map(processErrors).set(
-          requestId,
+        throw new Error(
           errorData.error || "Failed to delete entitlement request",
         );
-        return;
       }
 
-      // Success - show success message and reload the page
-      toast.success(
-        "Request Declined",
-        request
-          ? `Request from ${request.user.username} has been declined`
-          : "Request has been declined",
-      );
-
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      // Success - reload the page
+      window.location.reload();
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Failed to decline request";
-      processErrors = new Map(processErrors).set(requestId, errorMessage);
+      processErrors.set(requestId, errorMessage);
     } finally {
-      processingRequests = new Map(processingRequests).set(requestId, false);
+      processingRequests.set(requestId, false);
     }
   }
 </script>
@@ -381,7 +289,8 @@
                     {/if}
                     <button
                       class="btn-accept"
-                      onclick={() => handleAccept(request.entitlement_request_id)}
+                      onclick={() =>
+                        handleAccept(request.entitlement_request_id)}
                       disabled={processingRequests.get(
                         request.entitlement_request_id,
                       )}
@@ -395,7 +304,8 @@
                     </button>
                     <button
                       class="btn-decline"
-                      onclick={() => handleDecline(request.entitlement_request_id)}
+                      onclick={() =>
+                        handleDecline(request.entitlement_request_id)}
                       disabled={processingRequests.get(
                         request.entitlement_request_id,
                       )}

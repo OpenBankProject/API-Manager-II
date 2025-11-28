@@ -29,26 +29,57 @@ class OBPRequests {
       headers,
     });
 
-    const data = await response.json();
+    // Check content type before parsing
+    const contentType = response.headers.get("content-type");
+    const isJson = contentType && contentType.includes("application/json");
 
     if (!response.ok) {
+      // Try to get error details, but handle non-JSON responses
+      let data;
+      try {
+        data = isJson ? await response.json() : await response.text();
+      } catch (e) {
+        data = null;
+      }
+
       logger.error("Failed to fetch OBP data:", {
         statusText: response.statusText,
-        data,
+        contentType,
+        data: typeof data === "string" ? data.substring(0, 200) : data,
       });
 
       // Handle OBP error format - v6.0.0 uses code/message, older versions use failCode/failMsg
-      if (data && data.code && data.message) {
+      if (data && typeof data === "object" && data.code && data.message) {
         throw new OBPRequestError(data.code, data.message);
-      } else if (data && data.failCode && data.failMsg) {
+      } else if (
+        data &&
+        typeof data === "object" &&
+        data.failCode &&
+        data.failMsg
+      ) {
         throw new OBPRequestError(data.failCode, data.failMsg);
       } else {
-        throw new OBPErrorBase(
-          `Error fetching OBP data: ${response.statusText}`,
-        );
+        const errorMsg =
+          typeof data === "string"
+            ? `Server returned ${response.status}: ${data.substring(0, 100)}`
+            : `Error fetching OBP data: ${response.statusText}`;
+        throw new OBPErrorBase(errorMsg);
       }
     }
 
+    // Only parse as JSON if content-type indicates JSON
+    if (!isJson) {
+      const text = await response.text();
+      logger.error("Expected JSON response but got:", {
+        contentType,
+        preview: text.substring(0, 200),
+      });
+      throw new OBPErrorBase(
+        `Expected JSON response from ${endpoint} but got ${contentType || "unknown content type"}`,
+      );
+    }
+
+    const data = await response.json();
     logger.debug("Response from OBP", response.status, response.statusText);
     logger.debug("GET done");
     return data;
@@ -68,26 +99,57 @@ class OBPRequests {
       body: JSON.stringify(body),
     });
 
-    const data = await response.json();
+    // Check content type before parsing
+    const contentType = response.headers.get("content-type");
+    const isJson = contentType && contentType.includes("application/json");
 
     if (!response.ok) {
+      // Try to get error details, but handle non-JSON responses
+      let data;
+      try {
+        data = isJson ? await response.json() : await response.text();
+      } catch (e) {
+        data = null;
+      }
+
       logger.error("Failed to post OBP data:", {
         statusText: response.statusText,
-        data,
+        contentType,
+        data: typeof data === "string" ? data.substring(0, 200) : data,
       });
 
       // Handle OBP error format - v6.0.0 uses code/message, older versions use failCode/failMsg
-      if (data && data.code && data.message) {
+      if (data && typeof data === "object" && data.code && data.message) {
         throw new OBPRequestError(data.code, data.message);
-      } else if (data && data.failCode && data.failMsg) {
+      } else if (
+        data &&
+        typeof data === "object" &&
+        data.failCode &&
+        data.failMsg
+      ) {
         throw new OBPRequestError(data.failCode, data.failMsg);
       } else {
-        throw new OBPErrorBase(
-          `Error posting OBP data: ${response.statusText}`,
-        );
+        const errorMsg =
+          typeof data === "string"
+            ? `Server returned ${response.status}: ${data.substring(0, 100)}`
+            : `Error posting OBP data: ${response.statusText}`;
+        throw new OBPErrorBase(errorMsg);
       }
     }
 
+    // Only parse as JSON if content-type indicates JSON
+    if (!isJson) {
+      const text = await response.text();
+      logger.error("Expected JSON response but got:", {
+        contentType,
+        preview: text.substring(0, 200),
+      });
+      throw new OBPErrorBase(
+        `Expected JSON response from ${endpoint} but got ${contentType || "unknown content type"}`,
+      );
+    }
+
+    const data = await response.json();
     logger.debug("Response from OBP", response.status, response.statusText);
     logger.debug("POST done");
     return data;
@@ -106,22 +168,57 @@ class OBPRequests {
       headers,
     });
 
-    const data = await response.json();
+    // Check content type before parsing
+    const contentType = response.headers.get("content-type");
+    const isJson = contentType && contentType.includes("application/json");
 
     if (!response.ok) {
-      logger.error("Failed to delete OBP data:", response.statusText, data);
+      // Try to get error details, but handle non-JSON responses
+      let data;
+      try {
+        data = isJson ? await response.json() : await response.text();
+      } catch (e) {
+        data = null;
+      }
+
+      logger.error("Failed to delete OBP data:", {
+        statusText: response.statusText,
+        contentType,
+        data: typeof data === "string" ? data.substring(0, 200) : data,
+      });
+
       // Handle OBP error format - v6.0.0 uses code/message, older versions use failCode/failMsg
-      if (data && data.code && data.message) {
+      if (data && typeof data === "object" && data.code && data.message) {
         throw new OBPRequestError(data.code, data.message);
-      } else if (data && data.failCode && data.failMsg) {
+      } else if (
+        data &&
+        typeof data === "object" &&
+        data.failCode &&
+        data.failMsg
+      ) {
         throw new OBPRequestError(data.failCode, data.failMsg);
       } else {
-        throw new OBPErrorBase(
-          `Error deleting OBP data: ${response.statusText}`,
-        );
+        const errorMsg =
+          typeof data === "string"
+            ? `Server returned ${response.status}: ${data.substring(0, 100)}`
+            : `Error deleting OBP data: ${response.statusText}`;
+        throw new OBPErrorBase(errorMsg);
       }
     }
 
+    // Only parse as JSON if content-type indicates JSON
+    if (!isJson) {
+      const text = await response.text();
+      logger.error("Expected JSON response but got:", {
+        contentType,
+        preview: text.substring(0, 200),
+      });
+      throw new OBPErrorBase(
+        `Expected JSON response from ${endpoint} but got ${contentType || "unknown content type"}`,
+      );
+    }
+
+    const data = await response.json();
     logger.debug("Response from OBP", response.status, response.statusText);
     logger.debug("DELETE done");
     return data;
@@ -141,25 +238,57 @@ class OBPRequests {
       body: JSON.stringify(body),
     });
 
-    const data = await response.json();
+    // Check content type before parsing
+    const contentType = response.headers.get("content-type");
+    const isJson = contentType && contentType.includes("application/json");
 
     if (!response.ok) {
+      // Try to get error details, but handle non-JSON responses
+      let data;
+      try {
+        data = isJson ? await response.json() : await response.text();
+      } catch (e) {
+        data = null;
+      }
+
       logger.error("Failed to put OBP data:", {
         statusText: response.statusText,
-        data,
+        contentType,
+        data: typeof data === "string" ? data.substring(0, 200) : data,
       });
+
       // Handle OBP error format - v6.0.0 uses code/message, older versions use failCode/failMsg
-      if (data && data.code && data.message) {
+      if (data && typeof data === "object" && data.code && data.message) {
         throw new OBPRequestError(data.code, data.message);
-      } else if (data && data.failCode && data.failMsg) {
+      } else if (
+        data &&
+        typeof data === "object" &&
+        data.failCode &&
+        data.failMsg
+      ) {
         throw new OBPRequestError(data.failCode, data.failMsg);
       } else {
-        throw new OBPErrorBase(
-          `Error putting OBP data: ${response.statusText}`,
-        );
+        const errorMsg =
+          typeof data === "string"
+            ? `Server returned ${response.status}: ${data.substring(0, 100)}`
+            : `Error putting OBP data: ${response.statusText}`;
+        throw new OBPErrorBase(errorMsg);
       }
     }
 
+    // Only parse as JSON if content-type indicates JSON
+    if (!isJson) {
+      const text = await response.text();
+      logger.error("Expected JSON response but got:", {
+        contentType,
+        preview: text.substring(0, 200),
+      });
+      throw new OBPErrorBase(
+        `Expected JSON response from ${endpoint} but got ${contentType || "unknown content type"}`,
+      );
+    }
+
+    const data = await response.json();
     logger.debug("Response from OBP", response.status, response.statusText);
     logger.debug("PUT done");
     return data;
@@ -179,25 +308,57 @@ class OBPRequests {
       body: JSON.stringify(body),
     });
 
-    const data = await response.json();
+    // Check content type before parsing
+    const contentType = response.headers.get("content-type");
+    const isJson = contentType && contentType.includes("application/json");
 
     if (!response.ok) {
+      // Try to get error details, but handle non-JSON responses
+      let data;
+      try {
+        data = isJson ? await response.json() : await response.text();
+      } catch (e) {
+        data = null;
+      }
+
       logger.error("Failed to patch OBP data:", {
         statusText: response.statusText,
-        data,
+        contentType,
+        data: typeof data === "string" ? data.substring(0, 200) : data,
       });
+
       // Handle OBP error format - v6.0.0 uses code/message, older versions use failCode/failMsg
-      if (data && data.code && data.message) {
+      if (data && typeof data === "object" && data.code && data.message) {
         throw new OBPRequestError(data.code, data.message);
-      } else if (data && data.failCode && data.failMsg) {
+      } else if (
+        data &&
+        typeof data === "object" &&
+        data.failCode &&
+        data.failMsg
+      ) {
         throw new OBPRequestError(data.failCode, data.failMsg);
       } else {
-        throw new OBPErrorBase(
-          `Error patching OBP data: ${response.statusText}`,
-        );
+        const errorMsg =
+          typeof data === "string"
+            ? `Server returned ${response.status}: ${data.substring(0, 100)}`
+            : `Error patching OBP data: ${response.statusText}`;
+        throw new OBPErrorBase(errorMsg);
       }
     }
 
+    // Only parse as JSON if content-type indicates JSON
+    if (!isJson) {
+      const text = await response.text();
+      logger.error("Expected JSON response but got:", {
+        contentType,
+        preview: text.substring(0, 200),
+      });
+      throw new OBPErrorBase(
+        `Expected JSON response from ${endpoint} but got ${contentType || "unknown content type"}`,
+      );
+    }
+
+    const data = await response.json();
     logger.debug("Response from OBP", response.status, response.statusText);
     logger.debug("PATCH done");
     return data;
