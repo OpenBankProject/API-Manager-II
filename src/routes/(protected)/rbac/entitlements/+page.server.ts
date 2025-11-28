@@ -11,6 +11,7 @@ interface Entitlement {
   role_name: string;
   bank_id: string;
   user_id: string;
+  username: string;
 }
 
 interface EntitlementsResponse {

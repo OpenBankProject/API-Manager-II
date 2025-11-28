@@ -9,6 +9,7 @@
     role_name: string;
     bank_id: string;
     user_id: string;
+    username: string;
   }
 
   let { data } = $props<{ data: PageData }>();
@@ -218,9 +219,9 @@
                     <div class="entitlement-header">
                       <div class="entitlement-role">
                         <h4 class="role-name">{entitlement.role_name}</h4>
-                      </div>
-                      <div class="entitlement-id">
-                        ID: {entitlement.entitlement_id}
+                        <div class="entitlement-id">
+                          {entitlement.entitlement_id}
+                        </div>
                       </div>
                     </div>
 
@@ -228,8 +229,16 @@
                       <div class="entitlement-info">
                         <User size={16} class="info-icon" />
                         <div class="info-content">
-                          <span class="info-label">User ID:</span>
-                          <span class="info-value">{entitlement.user_id}</span>
+                          <span class="info-label">User:</span>
+                          <a
+                            href="/user/{entitlement.user_id}"
+                            class="user-link"
+                          >
+                            {entitlement.username}
+                          </a>
+                          <span class="info-detail"
+                            >({entitlement.user_id})</span
+                          >
                         </div>
                       </div>
 
@@ -588,9 +597,6 @@
   }
 
   .entitlement-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
     margin-bottom: 1rem;
     padding-bottom: 0.75rem;
     border-bottom: 1px solid #f3f4f6;
@@ -601,8 +607,9 @@
   }
 
   .entitlement-role {
-    flex: 1;
-    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
   }
 
   .role-name {
@@ -618,9 +625,10 @@
   }
 
   .entitlement-id {
-    font-size: 0.7rem;
+    font-size: 0.625rem;
     color: #9ca3af;
     font-family: monospace;
+    opacity: 0.7;
   }
 
   :global([data-mode="dark"]) .entitlement-id {
@@ -676,6 +684,36 @@
 
   :global([data-mode="dark"]) .info-value {
     color: var(--color-surface-200);
+  }
+
+  .user-link {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+
+  .user-link:hover {
+    color: #5568d3;
+    text-decoration: underline;
+  }
+
+  :global([data-mode="dark"]) .user-link {
+    color: rgb(var(--color-primary-400));
+  }
+
+  :global([data-mode="dark"]) .user-link:hover {
+    color: rgb(var(--color-primary-300));
+  }
+
+  .info-detail {
+    font-size: 0.7rem;
+    color: #9ca3af;
+    font-family: monospace;
+  }
+
+  :global([data-mode="dark"]) .info-detail {
+    color: var(--color-surface-500);
   }
 
   @media (max-width: 768px) {
