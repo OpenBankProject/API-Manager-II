@@ -66,16 +66,35 @@
   // Search state
   let searchQuery = $state("");
 
-  // Filter roles based on search query
+  // Sort order state
+  type SortOrder = "all" | "usage";
+  let sortOrder = $state<SortOrder>("all");
+
+  // Filter and sort roles based on search query and sort order
   let filteredRoles = $derived.by(() => {
-    if (!searchQuery.trim()) {
-      return roles;
+    let filtered = roles;
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      // Remove spaces from the query for matching (role names never have spaces)
+      const query = searchQuery.toLowerCase().replace(/\s+/g, "");
+      filtered = roles.filter((role: Role) =>
+        role.role.toLowerCase().includes(query),
+      );
     }
-    // Remove spaces from the query for matching (role names never have spaces)
-    const query = searchQuery.toLowerCase().replace(/\s+/g, "");
-    return roles.filter((role: Role) =>
-      role.role.toLowerCase().includes(query),
-    );
+
+    // Apply sort order
+    if (sortOrder === "usage") {
+      // Sort by entitlement_count descending (highest usage first)
+      return [...filtered].sort((a, b) => {
+        const countA = a.entitlement_count || 0;
+        const countB = b.entitlement_count || 0;
+        return countB - countA;
+      });
+    }
+
+    // Default: return as is (normal order)
+    return filtered;
   });
 
   // Group roles by bank_id
@@ -134,26 +153,37 @@
         </div>
       </div>
 
-      <!-- Search Box -->
+      <!-- Search Bar and Sort -->
       <div class="search-container">
-        <div class="search-input-wrapper">
-          <Search class="search-icon" size={20} />
-          <input
-            type="text"
-            bind:value={searchQuery}
-            placeholder="Search roles by name..."
-            class="search-input"
-          />
-          {#if searchQuery}
-            <button
-              class="clear-button"
-              onclick={() => (searchQuery = "")}
-              aria-label="Clear search"
-            >
-              ×
-            </button>
-          {/if}
+        <div class="search-row">
+          <div class="search-input-wrapper">
+            <Search class="search-icon" size={20} />
+            <input
+              type="text"
+              class="search-input"
+              placeholder="Search roles..."
+              bind:value={searchQuery}
+            />
+            {#if searchQuery}
+              <button
+                class="clear-button"
+                onclick={() => (searchQuery = "")}
+                aria-label="Clear search"
+              >
+                ✕
+              </button>
+            {/if}
+          </div>
+
+          <div class="sort-selector">
+            <label for="sort-order" class="sort-label">Sort:</label>
+            <select id="sort-order" class="sort-select" bind:value={sortOrder}>
+              <option value="all">Alpha</option>
+              <option value="usage">Usage</option>
+            </select>
+          </div>
         </div>
+
         {#if searchQuery}
           <div class="search-results-info">
             Showing {filteredRoles.length} of {roles.length} roles
@@ -310,19 +340,24 @@
   }
 
   .search-container {
-    padding: 0 1.5rem 1.5rem 1.5rem;
-    border-bottom: 1px solid #e5e7eb;
+    margin-top: 1rem;
   }
 
   :global([data-mode="dark"]) .search-container {
-    border-bottom-color: rgb(var(--color-surface-700));
+    border-top-color: rgb(var(--color-surface-700));
+  }
+
+  .search-row {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
   }
 
   .search-input-wrapper {
     position: relative;
     display: flex;
     align-items: center;
-    max-width: 33.333%;
+    flex: 1;
   }
 
   .search-input-wrapper :global(.search-icon) {
@@ -401,6 +436,64 @@
 
   :global([data-mode="dark"]) .search-results-info {
     color: var(--color-surface-400);
+  }
+
+  .sort-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  .sort-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #6b7280;
+  }
+
+  :global([data-mode="dark"]) .sort-label {
+    color: var(--color-surface-400);
+  }
+
+  .sort-select {
+    padding: 0.5rem 2rem 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    background-color: white;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    appearance: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .sort-select:hover {
+    border-color: #9ca3af;
+  }
+
+  .sort-select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+
+  :global([data-mode="dark"]) .sort-select {
+    background-color: rgb(var(--color-surface-700));
+    border-color: rgb(var(--color-surface-600));
+    color: var(--color-surface-100);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  }
+
+  :global([data-mode="dark"]) .sort-select:hover {
+    border-color: rgb(var(--color-surface-500));
+  }
+
+  :global([data-mode="dark"]) .sort-select:focus {
+    border-color: rgb(var(--color-primary-500));
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
   }
 
   .panel-content {
@@ -605,6 +698,24 @@
 
     .role-count {
       width: 100%;
+    }
+
+    .search-row {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .search-input-wrapper {
+      width: 100%;
+    }
+
+    .sort-selector {
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .sort-select {
+      flex: 1;
     }
 
     .roles-grid {
