@@ -18,7 +18,6 @@
     };
     role_name: string;
     bank_id?: string;
-    status: string;
     created: string;
   }
 
@@ -46,21 +45,6 @@
     );
   });
 
-  // Group requests by status
-  let groupedRequests = $derived.by(() => {
-    const grouped = new Map<string, EntitlementRequest[]>();
-
-    filteredRequests.forEach((request: EntitlementRequest) => {
-      const status = request.status || "PENDING";
-      if (!grouped.has(status)) {
-        grouped.set(status, []);
-      }
-      grouped.get(status)!.push(request);
-    });
-
-    return grouped;
-  });
-
   // Helper function to format date
   function formatDate(dateString: string): string {
     try {
@@ -71,32 +55,15 @@
     }
   }
 
-  // Helper function to get status badge class
-  function getStatusBadgeClass(status: string): string {
-    switch (status.toUpperCase()) {
-      case "APPROVED":
-        return "status-approved";
-      case "REJECTED":
-        return "status-rejected";
-      case "PENDING":
-        return "status-pending";
-      default:
-        return "status-default";
-    }
+  // Action handlers (to be implemented)
+  function handleAccept(requestId: string) {
+    console.log("Accept request:", requestId);
+    // TODO: Implement accept logic
   }
 
-  // Helper function to get status icon
-  function getStatusIcon(status: string) {
-    switch (status.toUpperCase()) {
-      case "APPROVED":
-        return CheckCircle;
-      case "REJECTED":
-        return XCircle;
-      case "PENDING":
-        return Clock;
-      default:
-        return Clock;
-    }
+  function handleDecline(requestId: string) {
+    console.log("Decline request:", requestId);
+    // TODO: Implement decline logic
   }
 </script>
 
@@ -185,93 +152,80 @@
         </div>
       {:else}
         <div class="requests-container">
-          {#each Array.from(groupedRequests.entries()) as [status, requests]}
-            {@const StatusIcon = getStatusIcon(status)}
-            <div class="request-group">
-              <div class="group-header">
-                <div class="group-header-left">
-                  <StatusIcon class="group-icon" size={20} />
-                  <h3 class="group-title">{status}</h3>
+          <div class="requests-list">
+            {#each filteredRequests as request}
+              <div class="request-card">
+                <div class="request-header">
+                  <div class="request-title">
+                    <h4 class="role-name">{request.role_name}</h4>
+                  </div>
+                  <div class="request-id">
+                    ID: {request.entitlement_request_id}
+                  </div>
                 </div>
-                <span class="group-count">{requests.length} requests</span>
-              </div>
-              <div class="requests-list">
-                {#each requests as request}
-                  <div class="request-card">
-                    <div class="request-header">
-                      <div class="request-title">
-                        <h4 class="role-name">{request.role_name}</h4>
-                        <span
-                          class="status-badge {getStatusBadgeClass(
-                            request.status,
-                          )}"
-                        >
-                          {request.status}
-                        </span>
-                      </div>
-                      <div class="request-id">
-                        ID: {request.entitlement_request_id}
+
+                <div class="request-body">
+                  <div class="request-info">
+                    <div class="info-item">
+                      <User size={16} class="info-icon" />
+                      <div class="info-content">
+                        <span class="info-label">User:</span>
+                        <span class="info-value">{request.user.username}</span>
+                        <span class="info-detail">({request.user.email})</span>
                       </div>
                     </div>
 
-                    <div class="request-body">
-                      <div class="request-info">
-                        <div class="info-item">
-                          <User size={16} class="info-icon" />
-                          <div class="info-content">
-                            <span class="info-label">User:</span>
-                            <span class="info-value"
-                              >{request.user.username}</span
-                            >
-                            <span class="info-detail"
-                              >({request.user.email})</span
-                            >
-                          </div>
-                        </div>
-
-                        {#if request.bank_id}
-                          <div class="info-item">
-                            <span class="info-icon">🏦</span>
-                            <div class="info-content">
-                              <span class="info-label">Bank:</span>
-                              <span class="info-value">{request.bank_id}</span>
-                            </div>
-                          </div>
-                        {:else}
-                          <div class="info-item">
-                            <span class="info-icon">🌐</span>
-                            <div class="info-content">
-                              <span class="info-label">Scope:</span>
-                              <span class="info-value">System-wide</span>
-                            </div>
-                          </div>
-                        {/if}
-
-                        <div class="info-item">
-                          <Calendar size={16} class="info-icon" />
-                          <div class="info-content">
-                            <span class="info-label">Created:</span>
-                            <span class="info-value"
-                              >{formatDate(request.created)}</span
-                            >
-                          </div>
+                    {#if request.bank_id}
+                      <div class="info-item">
+                        <span class="info-icon">🏦</span>
+                        <div class="info-content">
+                          <span class="info-label">Bank:</span>
+                          <span class="info-value">{request.bank_id}</span>
                         </div>
                       </div>
+                    {:else}
+                      <div class="info-item">
+                        <span class="info-icon">🌐</span>
+                        <div class="info-content">
+                          <span class="info-label">Scope:</span>
+                          <span class="info-value">System-wide</span>
+                        </div>
+                      </div>
+                    {/if}
 
-                      <div class="request-actions">
-                        <a
-                          href="/rbac/entitlement-requests/{request.entitlement_request_id}"
-                          class="btn-view"
+                    <div class="info-item">
+                      <Calendar size={16} class="info-icon" />
+                      <div class="info-content">
+                        <span class="info-label">Created:</span>
+                        <span class="info-value"
+                          >{formatDate(request.created)}</span
                         >
-                          View Details
-                        </a>
                       </div>
                     </div>
                   </div>
-                {/each}
+
+                  <div class="request-actions">
+                    <button
+                      class="btn-accept"
+                      onclick={() =>
+                        handleAccept(request.entitlement_request_id)}
+                    >
+                      <CheckCircle size={16} />
+                      Accept
+                    </button>
+                    <button
+                      class="btn-decline"
+                      onclick={() =>
+                        handleDecline(request.entitlement_request_id)}
+                    >
+                      <XCircle size={16} />
+                      Decline
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          {/each}
+            {/each}
+          </div>
         </div>
       {/if}
     </div>
@@ -517,64 +471,6 @@
   .requests-container {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
-  }
-
-  .request-group {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .group-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-bottom: 0.75rem;
-    border-bottom: 2px solid #e5e7eb;
-  }
-
-  :global([data-mode="dark"]) .group-header {
-    border-bottom-color: rgb(var(--color-surface-700));
-  }
-
-  .group-header-left {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .group-icon {
-    color: #6b7280;
-  }
-
-  :global([data-mode="dark"]) .group-icon {
-    color: var(--color-surface-400);
-  }
-
-  .group-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #111827;
-    margin: 0;
-    text-transform: uppercase;
-  }
-
-  :global([data-mode="dark"]) .group-title {
-    color: var(--color-surface-100);
-  }
-
-  .group-count {
-    font-size: 0.875rem;
-    color: #6b7280;
-    background: #f3f4f6;
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
-  }
-
-  :global([data-mode="dark"]) .group-count {
-    color: var(--color-surface-400);
-    background: rgb(var(--color-surface-700));
   }
 
   .requests-list {
@@ -632,54 +528,6 @@
 
   :global([data-mode="dark"]) .role-name {
     color: var(--color-surface-100);
-  }
-
-  .status-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-  }
-
-  .status-approved {
-    background: #d1fae5;
-    color: #065f46;
-  }
-
-  :global([data-mode="dark"]) .status-approved {
-    background: rgb(var(--color-success-900));
-    color: rgb(var(--color-success-200));
-  }
-
-  .status-rejected {
-    background: #fee2e2;
-    color: #991b1b;
-  }
-
-  :global([data-mode="dark"]) .status-rejected {
-    background: rgb(var(--color-error-900));
-    color: rgb(var(--color-error-200));
-  }
-
-  .status-pending {
-    background: #fef3c7;
-    color: #92400e;
-  }
-
-  :global([data-mode="dark"]) .status-pending {
-    background: rgb(var(--color-warning-900));
-    color: rgb(var(--color-warning-200));
-  }
-
-  .status-default {
-    background: #f3f4f6;
-    color: #4b5563;
-  }
-
-  :global([data-mode="dark"]) .status-default {
-    background: rgb(var(--color-surface-700));
-    color: var(--color-surface-300);
   }
 
   .request-id {
@@ -762,32 +610,55 @@
   .request-actions {
     display: flex;
     gap: 0.5rem;
+    flex-shrink: 0;
   }
 
-  .btn-view {
+  .btn-accept,
+  .btn-decline {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     padding: 0.5rem 1rem;
-    background: #3b82f6;
-    color: white;
     border: none;
     border-radius: 6px;
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
-    text-decoration: none;
-    display: inline-block;
   }
 
-  .btn-view:hover {
-    background: #2563eb;
+  .btn-accept {
+    background: #10b981;
+    color: white;
   }
 
-  :global([data-mode="dark"]) .btn-view {
-    background: rgb(var(--color-primary-500));
+  .btn-accept:hover {
+    background: #059669;
   }
 
-  :global([data-mode="dark"]) .btn-view:hover {
-    background: rgb(var(--color-primary-600));
+  :global([data-mode="dark"]) .btn-accept {
+    background: rgb(var(--color-success-600));
+  }
+
+  :global([data-mode="dark"]) .btn-accept:hover {
+    background: rgb(var(--color-success-700));
+  }
+
+  .btn-decline {
+    background: #ef4444;
+    color: white;
+  }
+
+  .btn-decline:hover {
+    background: #dc2626;
+  }
+
+  :global([data-mode="dark"]) .btn-decline {
+    background: rgb(var(--color-error-600));
+  }
+
+  :global([data-mode="dark"]) .btn-decline:hover {
+    background: rgb(var(--color-error-700));
   }
 
   @media (max-width: 768px) {
@@ -813,9 +684,10 @@
       width: 100%;
     }
 
-    .btn-view {
-      width: 100%;
-      text-align: center;
+    .btn-accept,
+    .btn-decline {
+      flex: 1;
+      justify-content: center;
     }
   }
 </style>
