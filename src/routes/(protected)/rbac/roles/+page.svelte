@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { PageData } from "./$types";
   import { Search } from "@lucide/svelte";
+  import MissingRoleAlert from "$lib/components/MissingRoleAlert.svelte";
 
   interface Role {
     role: string;
@@ -13,6 +14,29 @@
   let roles = $derived(data.roles || []);
   let hasApiAccess = $derived(data.hasApiAccess);
   let error = $derived(data.error);
+
+  // Parse OBP error to extract missing role information
+  let parsedError = $derived.by(() => {
+    if (!error) return null;
+
+    // Check if it's an OBP missing role error
+    const missingRoleMatch = error.match(
+      /OBP-(\d+):.*missing one or more roles:\s*(.+)/i,
+    );
+    if (missingRoleMatch) {
+      return {
+        type: "missing_role",
+        code: missingRoleMatch[1],
+        roles: missingRoleMatch[2].split(",").map((r: string) => r.trim()),
+        message: error,
+      };
+    }
+
+    return {
+      type: "general",
+      message: error,
+    };
+  });
 
   // Search state
   let searchQuery = $state("");
@@ -51,11 +75,24 @@
 
 <div class="container mx-auto px-4 py-8">
   <!-- Error Alert -->
-  {#if error}
-    <div class="alert alert-error mb-6">
-      <strong>Error:</strong>
-      {error}
-    </div>
+  {#if error && parsedError}
+    {#if parsedError.type === "missing_role"}
+      <MissingRoleAlert
+        roles={parsedError.roles}
+        errorCode={parsedError.code}
+        message={parsedError.message}
+        onRequestEntitlement={() => {
+          // Navigate to user entitlements page with the role name
+          const role = parsedError.roles[0]; // Use the first role
+          window.location.href = `/user/entitlements?request=${encodeURIComponent(role)}`;
+        }}
+      />
+    {:else}
+      <div class="alert alert-error mb-6">
+        <strong>Error:</strong>
+        {error}
+      </div>
+    {/if}
   {/if}
 
   <div class="panel">
