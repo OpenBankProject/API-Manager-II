@@ -2,6 +2,7 @@
   import { goto } from "$app/navigation";
   import { User, KeyRound, Building2, Search } from "@lucide/svelte";
   import { toast } from "$lib/utils/toastService";
+  import { trackedFetch } from "$lib/utils/trackedFetch";
   import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
   import UserSearchWidget from "$lib/components/UserSearchWidget.svelte";
   import BankSelectWidget from "$lib/components/BankSelectWidget.svelte";
@@ -56,7 +57,7 @@
     isSubmitting = true;
 
     try {
-      const response = await fetch("/api/rbac/entitlements", {
+      const response = await trackedFetch("/api/rbac/entitlements", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

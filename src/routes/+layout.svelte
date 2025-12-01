@@ -10,6 +10,7 @@
     rbacItems,
   } from "$lib/config/navigation";
   import Toast from "$lib/components/Toast.svelte";
+  import ApiActivityIndicator from "$lib/components/ApiActivityIndicator.svelte";
   import { createLogger } from "$lib/utils/logger";
   import { resourceDocsCache } from "$lib/stores/resourceDocsCache";
   import { onMount } from "svelte";
@@ -588,3 +589,6 @@
 
 <!-- Global Toast Component -->
 <Toast />
+
+<!-- Global API Activity Indicator -->
+<ApiActivityIndicator />

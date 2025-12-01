@@ -10,6 +10,7 @@
   } from "@lucide/svelte";
   import { toast } from "$lib/utils/toastService";
   import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
+  import { trackedFetch } from "$lib/utils/trackedFetch";
 
   interface EntitlementRequest {
     entitlement_request_id: string;
@@ -83,7 +84,7 @@
     try {
       console.log("Creating entitlement...");
       // Step 1: Create the entitlement
-      const createResponse = await fetch("/api/rbac/entitlements", {
+      const createResponse = await trackedFetch("/api/rbac/entitlements", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -110,7 +111,7 @@
           console.log(
             "✅ OBP-30216 detected! Entitlement already exists. Attempting to delete request...",
           );
-          const deleteResponse = await fetch(
+          const deleteResponse = await trackedFetch(
             `/api/rbac/entitlement-requests/${requestId}`,
             {
               method: "DELETE",
@@ -155,7 +156,7 @@
       }
 
       // Step 2: Delete the entitlement request
-      const deleteResponse = await fetch(
+      const deleteResponse = await trackedFetch(
         `/api/rbac/entitlement-requests/${requestId}`,
         {
           method: "DELETE",
@@ -195,14 +196,14 @@
     const request = filteredRequests.find(
       (r: EntitlementRequest) => r.entitlement_request_id === requestId,
     );
-
-    processingRequests = new Map(processingRequests).set(requestId, true);
+    if (!request) return;
     const newErrors = new Map(processErrors);
     newErrors.delete(requestId);
     processErrors = newErrors;
+    processingRequests = new Map(processingRequests).set(requestId, true);
 
     try {
-      const response = await fetch(
+      const response = await trackedFetch(
         `/api/rbac/entitlement-requests/${requestId}`,
         {
           method: "DELETE",
@@ -386,7 +387,8 @@
                     {/if}
                     <button
                       class="btn-accept"
-                      onclick={() => handleAccept(request.entitlement_request_id)}
+                      onclick={() =>
+                        handleAccept(request.entitlement_request_id)}
                       disabled={processingRequests.get(
                         request.entitlement_request_id,
                       )}
@@ -400,7 +402,8 @@
                     </button>
                     <button
                       class="btn-decline"
-                      onclick={() => handleDecline(request.entitlement_request_id)}
+                      onclick={() =>
+                        handleDecline(request.entitlement_request_id)}
                       disabled={processingRequests.get(
                         request.entitlement_request_id,
                       )}

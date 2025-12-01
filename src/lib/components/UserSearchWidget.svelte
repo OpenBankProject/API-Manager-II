@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Search, User, X } from "@lucide/svelte";
+  import { trackedFetch } from "$lib/utils/trackedFetch";
 
   interface UserResult {
     user_id: string;
@@ -41,7 +42,7 @@
     searchError = "";
 
     try {
-      const response = await fetch(
+      const response = await trackedFetch(
         `/api/users/search?q=${encodeURIComponent(query)}`,
       );
 
@@ -50,10 +51,17 @@
       }
 
       const data = await response.json();
-      // Filter out users without a username
-      searchResults = (data.users || []).filter(
-        (user: UserResult) => user.username && user.username.trim() !== "",
-      );
+      // Filter out users without a username AND filter by search query
+      const searchLower = query.toLowerCase();
+      searchResults = (data.users || []).filter((user: UserResult) => {
+        if (!user.username || user.username.trim() === "") {
+          return false;
+        }
+        // Match if username or email contains the search query
+        const usernameMatch = user.username.toLowerCase().includes(searchLower);
+        const emailMatch = user.email?.toLowerCase().includes(searchLower);
+        return usernameMatch || emailMatch;
+      });
       showResults = true;
     } catch (error) {
       console.error("User search error:", error);

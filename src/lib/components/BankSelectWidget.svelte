@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Building2, ChevronDown } from "@lucide/svelte";
   import { onMount } from "svelte";
+  import { trackedFetch } from "$lib/utils/trackedFetch";
 
   interface Bank {
     id: string;
@@ -37,7 +38,7 @@
     error = "";
 
     try {
-      const response = await fetch("/api/banks");
+      const response = await trackedFetch("/api/banks");
 
       if (!response.ok) {
         throw new Error("Failed to fetch banks");
@@ -57,11 +58,7 @@
 <div class="bank-select-widget">
   <div class="select-wrapper">
     <Building2 class="select-icon" size={18} />
-    <select
-      class="select-input"
-      bind:value={selectedBankId}
-      {disabled}
-    >
+    <select class="select-input" bind:value={selectedBankId} {disabled}>
       {#if allowEmpty}
         <option value="">{emptyLabel}</option>
       {/if}
