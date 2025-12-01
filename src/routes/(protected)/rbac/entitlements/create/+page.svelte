@@ -151,16 +151,16 @@
             Role
             <span class="required">*</span>
           </label>
+          <div class="form-hint">
+            Select whether the role is system-wide or bank-level, then choose a
+            role
+          </div>
           <RoleSearchWidget
             {roles}
             bind:selectedRole={roleName}
             bind:roleScope
             disabled={isSubmitting}
           />
-          <div class="form-hint">
-            Select whether the role is system-wide or bank-level, then choose a
-            role
-          </div>
         </div>
 
         <!-- Bank ID Field - Only show for All or Bank scope -->
