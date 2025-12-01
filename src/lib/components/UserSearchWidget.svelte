@@ -50,7 +50,10 @@
       }
 
       const data = await response.json();
-      searchResults = data.users || [];
+      // Filter out users without a username
+      searchResults = (data.users || []).filter(
+        (user: UserResult) => user.username && user.username.trim() !== "",
+      );
       showResults = true;
     } catch (error) {
       console.error("User search error:", error);

@@ -3,8 +3,7 @@
 
   interface Role {
     role: string;
-    bank_id?: string;
-    entitlement_count?: number;
+    requires_bank_id: boolean;
   }
 
   interface Props {
@@ -35,19 +34,13 @@
       );
     }
 
-    // Filter by scope
+    // Filter by scope using requires_bank_id flag
     if (roleScope === "system") {
-      // System roles typically don't have bank_id or are named with "AtAllBanks" or "AtAnyBank"
-      filtered = filtered.filter(
-        (role) =>
-          role.role.includes("AtAllBanks") ||
-          role.role.includes("AtAnyBank") ||
-          role.role.includes("System") ||
-          !role.role.includes("AtOneBank"),
-      );
+      // System roles don't require bank_id
+      filtered = filtered.filter((role) => !role.requires_bank_id);
     } else if (roleScope === "bank") {
-      // Bank roles typically have "AtOneBank" in the name
-      filtered = filtered.filter((role) => role.role.includes("AtOneBank"));
+      // Bank roles require bank_id
+      filtered = filtered.filter((role) => role.requires_bank_id);
     }
     // If roleScope === "all", don't filter by scope
 
@@ -143,12 +136,9 @@
             />
             <div class="role-option-content">
               <span class="role-option-name">{role.role}</span>
-              {#if role.entitlement_count !== undefined}
-                <span class="role-option-count">
-                  {role.entitlement_count}
-                  {role.entitlement_count === 1 ? "user" : "users"}
-                </span>
-              {/if}
+              <span class="role-option-badge">
+                {role.requires_bank_id ? "Bank-level" : "System-wide"}
+              </span>
             </div>
           </label>
         {/each}
@@ -373,12 +363,17 @@
     color: var(--color-surface-100);
   }
 
-  .role-option-count {
-    font-size: 0.75rem;
+  .role-option-badge {
+    font-size: 0.65rem;
+    padding: 0.125rem 0.375rem;
+    background: #f3f4f6;
     color: #6b7280;
+    border-radius: 4px;
+    font-weight: 500;
   }
 
-  :global([data-mode="dark"]) .role-option-count {
+  :global([data-mode="dark"]) .role-option-badge {
+    background: rgb(var(--color-surface-700));
     color: var(--color-surface-400);
   }
 

@@ -8,8 +8,7 @@ import { ROLE_REQUIREMENTS } from "$lib/utils/roleChecker";
 
 interface Role {
   role: string;
-  bank_id?: string;
-  entitlement_count?: number;
+  requires_bank_id: boolean;
 }
 
 interface RolesResponse {
@@ -44,7 +43,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
   try {
     logger.info("=== FETCHING ROLES FOR CREATE ENTITLEMENT PAGE ===");
-    const endpoint = `/obp/v6.0.0/management/roles-with-entitlement-counts`;
+    const endpoint = `/obp/v6.0.0/roles`;
     logger.info(`Request: ${endpoint}`);
 
     const response: RolesResponse = await obp_requests.get(
