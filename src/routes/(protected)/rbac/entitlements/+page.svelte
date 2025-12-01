@@ -136,9 +136,14 @@
             organization
           </div>
         </div>
-        <div class="entitlement-count">
-          <span class="count-number">{totalCount}</span>
-          <span class="count-label">Total Entitlements</span>
+        <div class="header-actions">
+          <div class="entitlement-count">
+            <span class="count-number">{totalCount}</span>
+            <span class="count-label">Total Entitlements</span>
+          </div>
+          <a href="/rbac/entitlements/create" class="btn-create">
+            ➕ Create Entitlement
+          </a>
         </div>
       </div>
 
@@ -319,6 +324,12 @@
     color: var(--color-surface-400);
   }
 
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
   .entitlement-count {
     display: flex;
     flex-direction: column;
@@ -331,6 +342,35 @@
 
   :global([data-mode="dark"]) .entitlement-count {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .btn-create {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: #51b265;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .btn-create:hover {
+    background: #3d9e52;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(81, 178, 101, 0.3);
+  }
+
+  :global([data-mode="dark"]) .btn-create {
+    background: #51b265;
+  }
+
+  :global([data-mode="dark"]) .btn-create:hover {
+    background: #3d9e52;
   }
 
   .count-number {
@@ -723,9 +763,19 @@
       gap: 1rem;
     }
 
+    .header-actions {
+      flex-direction: column;
+      width: 100%;
+    }
+
     .entitlement-count {
-      align-self: stretch;
+      width: 100%;
       align-items: center;
+    }
+
+    .btn-create {
+      width: 100%;
+      justify-content: center;
     }
 
     .search-input-wrapper {
