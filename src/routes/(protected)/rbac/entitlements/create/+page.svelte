@@ -392,20 +392,20 @@
   }
 
   .btn-primary {
-    background: #667eea;
+    background: #51b265;
     color: white;
   }
 
   .btn-primary:hover:not(:disabled) {
-    background: #5568d3;
+    background: #3d9e52;
   }
 
   :global([data-mode="dark"]) .btn-primary {
-    background: rgb(var(--color-primary-600));
+    background: #51b265;
   }
 
   :global([data-mode="dark"]) .btn-primary:hover:not(:disabled) {
-    background: rgb(var(--color-primary-500));
+    background: #3d9e52;
   }
 
   .btn-secondary:disabled,
