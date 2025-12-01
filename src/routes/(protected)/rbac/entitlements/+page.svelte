@@ -224,7 +224,14 @@
                   <div class="entitlement-card">
                     <div class="entitlement-header">
                       <div class="entitlement-role">
-                        <h4 class="role-name">{entitlement.role_name}</h4>
+                        <h4 class="role-name">
+                          <a
+                            href="/rbac/roles/{entitlement.role_name}"
+                            class="role-link"
+                          >
+                            {entitlement.role_name}
+                          </a>
+                        </h4>
                         <div class="entitlement-id">
                           {entitlement.entitlement_id}
                         </div>
@@ -237,7 +244,7 @@
                         <div class="info-content">
                           <span class="info-label">User:</span>
                           <a
-                            href="/user/{entitlement.user_id}"
+                            href="/users/{entitlement.user_id}"
                             class="user-link"
                           >
                             {entitlement.username}
@@ -663,6 +670,25 @@
 
   :global([data-mode="dark"]) .role-name {
     color: var(--color-surface-100);
+  }
+
+  .role-link {
+    color: #3b82f6;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .role-link:hover {
+    color: #2563eb;
+    text-decoration: underline;
+  }
+
+  :global([data-mode="dark"]) .role-link {
+    color: rgb(var(--color-primary-400));
+  }
+
+  :global([data-mode="dark"]) .role-link:hover {
+    color: rgb(var(--color-primary-300));
   }
 
   .entitlement-id {
