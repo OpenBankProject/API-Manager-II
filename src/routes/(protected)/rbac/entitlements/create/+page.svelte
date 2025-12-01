@@ -3,6 +3,7 @@
   import { User, KeyRound, Building2, Search } from "@lucide/svelte";
   import { toast } from "$lib/utils/toastService";
   import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
+  import UserSearchWidget from "$lib/components/UserSearchWidget.svelte";
   import type { PageData } from "./$types";
 
   let { data } = $props<{ data: PageData }>();
@@ -13,18 +14,22 @@
 
   // Form state
   let userId = $state("");
+  let username = $state("");
   let roleName = $state("");
   let bankId = $state("");
   let isSubmitting = $state(false);
   let searchQuery = $state("");
 
+  function handleUserSelect(user: any) {
+    userId = user.user_id;
+    username = user.username;
+  }
+
   // Filter roles based on search
   let filteredRoles = $derived.by(() => {
     if (!searchQuery.trim()) return roles;
     const query = searchQuery.toLowerCase();
-    return roles.filter((role: any) =>
-      role.role.toLowerCase().includes(query),
-    );
+    return roles.filter((role: any) => role.role.toLowerCase().includes(query));
   });
 
   async function handleSubmit(event: Event) {
@@ -113,24 +118,21 @@
 
     <div class="panel-content">
       <form onsubmit={handleSubmit} class="form">
-        <!-- User ID Field -->
+        <!-- User Search Field -->
         <div class="form-group">
-          <label for="user-id" class="form-label">
+          <label class="form-label">
             <User size={18} />
-            User ID
+            User
             <span class="required">*</span>
           </label>
-          <input
-            type="text"
-            id="user-id"
-            class="form-input"
-            placeholder="Enter user ID (e.g., c7b6cb47-cb96-4441-8801-35b57456753a)"
-            bind:value={userId}
+          <UserSearchWidget
+            onSelect={handleUserSelect}
+            bind:selectedUserId={userId}
+            bind:selectedUsername={username}
             disabled={isSubmitting}
-            required
           />
           <div class="form-hint">
-            The unique identifier of the user to grant the entitlement to
+            Search for a user by username or email to grant the entitlement to
           </div>
         </div>
 
