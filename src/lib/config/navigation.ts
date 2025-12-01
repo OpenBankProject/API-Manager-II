@@ -12,6 +12,7 @@ import {
   Shield,
   Users,
   FileCheck,
+  Plus,
 } from "@lucide/svelte";
 import { env } from "$env/dynamic/public";
 
@@ -155,6 +156,11 @@ function buildRbacItems(): NavigationItem[] {
       href: "/rbac/entitlements",
       label: "Entitlements",
       iconComponent: KeyRound,
+    },
+    {
+      href: "/rbac/entitlements/create",
+      label: "Create Entitlement",
+      iconComponent: Plus,
     },
     {
       href: "/rbac/groups",

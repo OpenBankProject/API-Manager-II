@@ -4,6 +4,7 @@
   import { toast } from "$lib/utils/toastService";
   import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
   import UserSearchWidget from "$lib/components/UserSearchWidget.svelte";
+  import BankSelectWidget from "$lib/components/BankSelectWidget.svelte";
   import type { PageData } from "./$types";
 
   let { data } = $props<{ data: PageData }>();
@@ -192,21 +193,19 @@
 
         <!-- Bank ID Field -->
         <div class="form-group">
-          <label for="bank-id" class="form-label">
+          <label class="form-label">
             <Building2 size={18} />
             Bank ID
             <span class="optional">(Optional)</span>
           </label>
-          <input
-            type="text"
-            id="bank-id"
-            class="form-input"
-            placeholder="Leave empty for system-wide access (e.g., gh.29.uk)"
-            bind:value={bankId}
+          <BankSelectWidget
+            bind:selectedBankId={bankId}
             disabled={isSubmitting}
+            allowEmpty={true}
+            emptyLabel="System-wide (no specific bank)"
           />
           <div class="form-hint">
-            Leave empty for system-wide roles, or specify a bank ID for
+            Leave empty for system-wide roles, or select a specific bank for
             bank-specific roles
           </div>
         </div>
@@ -361,41 +360,6 @@
   .optional {
     color: #9ca3af;
     font-weight: 400;
-  }
-
-  .form-input {
-    padding: 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 0.875rem;
-    transition: all 0.2s;
-  }
-
-  .form-input:focus {
-    outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-  }
-
-  .form-input:disabled {
-    background: #f9fafb;
-    cursor: not-allowed;
-    opacity: 0.6;
-  }
-
-  :global([data-mode="dark"]) .form-input {
-    background: rgb(var(--color-surface-700));
-    border-color: rgb(var(--color-surface-600));
-    color: var(--color-surface-100);
-  }
-
-  :global([data-mode="dark"]) .form-input:focus {
-    border-color: rgb(var(--color-primary-500));
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-  }
-
-  :global([data-mode="dark"]) .form-input:disabled {
-    background: rgb(var(--color-surface-800));
   }
 
   .form-hint {
