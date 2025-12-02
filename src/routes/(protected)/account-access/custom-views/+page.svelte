@@ -1,6 +1,13 @@
 <script lang="ts">
   import type { PageData } from "./$types";
-  import { Eye, Search, Shield, CheckCircle, XCircle } from "@lucide/svelte";
+  import {
+    Eye,
+    Search,
+    Shield,
+    CheckCircle,
+    XCircle,
+    Plus,
+  } from "@lucide/svelte";
 
   let { data } = $props<{ data: PageData }>();
 
@@ -38,6 +45,12 @@
           <div class="panel-subtitle">
             Custom views created for specific account access control
           </div>
+        </div>
+        <div class="header-actions">
+          <a href="/account-access/custom-views/create" class="btn-create">
+            <Plus size={18} />
+            Create View
+          </a>
         </div>
       </div>
     </div>
@@ -208,6 +221,47 @@
 
   :global([data-mode="dark"]) .panel-subtitle {
     color: var(--color-surface-400);
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .btn-create {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  .btn-create:hover {
+    background: #2563eb;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+  }
+
+  .btn-create:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  :global([data-mode="dark"]) .btn-create {
+    background: rgb(var(--color-primary-600));
+  }
+
+  :global([data-mode="dark"]) .btn-create:hover {
+    background: rgb(var(--color-primary-500));
   }
 
   .panel-content {

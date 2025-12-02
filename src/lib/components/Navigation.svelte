@@ -4,50 +4,85 @@
   import { configHelpers } from "$lib/config";
 
   // Props from layout with better typing
-  export let user: {
-    username?: string;
-    email?: string;
-    user_id?: string;
-  } | null = null;
-  export let authInfo: {
-    authenticated?: boolean;
-  } | null = null;
+  let {
+    user = null,
+    authInfo = null,
+  }: {
+    user?: {
+      username?: string;
+      email?: string;
+      user_id?: string;
+    } | null;
+    authInfo?: {
+      authenticated?: boolean;
+    } | null;
+  } = $props();
 
   // Reactive statements for better state management
-  $: isAuthenticated = !!user && !!authInfo?.authenticated;
-  $: userDisplayName = user?.username || user?.email || "User";
-  $: obpInfo = configHelpers.getObpConnectionInfo();
+  let isAuthenticated = $derived(!!user && !!authInfo?.authenticated);
+  let userDisplayName = $derived(user?.username || user?.email || "User");
+  let obpInfo = $derived(configHelpers.getObpConnectionInfo());
 
-  let isMobileMenuOpen = false;
+  let isMobileMenuOpen = $state(false);
+  let openDropdown = $state<string | null>(null);
 
   // Navigation items for authenticated users - computed based on access level
-  $: navigationItems = isAuthenticated
-    ? [
-        { href: "/", label: "Home", icon: "🏠", available: true },
+  let navigationItems = $derived(
+    isAuthenticated
+      ? [
+          { href: "/", label: "Home", icon: "🏠", available: true },
 
-        {
-          href: "/metrics",
-          label: "Metrics",
-          icon: "📊",
-          available: true,
-        },
-      ].filter((item) => item.available)
-    : [];
+          {
+            href: "/metrics",
+            label: "Metrics",
+            icon: "📊",
+            available: true,
+          },
+          {
+            href: "/dynamic-entities",
+            label: "Dynamic Entities",
+            icon: "🔷",
+            available: true,
+            subItems: [
+              {
+                href: "/dynamic-entities/create",
+                label: "Create Dynamic Entity",
+                icon: "➕",
+              },
+              {
+                href: "/dynamic-entities/definitions",
+                label: "Dynamic Entity Definitions",
+                icon: "📋",
+              },
+            ],
+          },
+        ].filter((item) => item.available)
+      : [],
+  );
 
   // Reactive check for active route
-  $: isActiveRoute = (href: string): boolean => {
+  function isActiveRoute(href: string): boolean {
     if (href === "/") {
       return $page.url.pathname === "/";
     }
     return $page.url.pathname.startsWith(href);
-  };
+  }
 
   // Event handlers with better encapsulation
   const handlers = {
-    toggleMobileMenu: () => (isMobileMenuOpen = !isMobileMenuOpen),
+    toggleMobileMenu: () => {
+      isMobileMenuOpen = !isMobileMenuOpen;
+    },
     navigate: (path: string) => {
       goto(path);
       isMobileMenuOpen = false;
+      openDropdown = null;
+    },
+    toggleDropdown: (label: string) => {
+      openDropdown = openDropdown === label ? null : label;
+    },
+    closeDropdown: () => {
+      openDropdown = null;
     },
     logout: () => handlers.navigate("/logout"),
     login: () => handlers.navigate("/login"),
@@ -69,14 +104,48 @@
     <div class="nav-links desktop-only">
       {#if isAuthenticated}
         {#each navigationItems as item}
-          <a
-            href={item.href}
-            class="nav-link"
-            class:active={isActiveRoute(item.href)}
-          >
-            <span class="nav-icon">{item.icon}</span>
-            {item.label}
-          </a>
+          {#if item.subItems && item.subItems.length > 0}
+            <!-- Dropdown menu item -->
+            <div class="nav-dropdown">
+              <button
+                class="nav-link dropdown-toggle"
+                class:active={isActiveRoute(item.href)}
+                onclick={() => handlers.toggleDropdown(item.label)}
+                onblur={() => setTimeout(handlers.closeDropdown, 200)}
+              >
+                <span class="nav-icon">{item.icon}</span>
+                {item.label}
+                <span class="dropdown-arrow"
+                  >{openDropdown === item.label ? "▲" : "▼"}</span
+                >
+              </button>
+              {#if openDropdown === item.label}
+                <div class="dropdown-menu">
+                  {#each item.subItems as subItem}
+                    <a
+                      href={subItem.href}
+                      class="dropdown-item"
+                      class:active={isActiveRoute(subItem.href)}
+                      onclick={handlers.closeDropdown}
+                    >
+                      <span class="nav-icon">{subItem.icon}</span>
+                      {subItem.label}
+                    </a>
+                  {/each}
+                </div>
+              {/if}
+            </div>
+          {:else}
+            <!-- Regular menu item -->
+            <a
+              href={item.href}
+              class="nav-link"
+              class:active={isActiveRoute(item.href)}
+            >
+              <span class="nav-icon">{item.icon}</span>
+              {item.label}
+            </a>
+          {/if}
         {/each}
       {/if}
     </div>
@@ -93,12 +162,12 @@
         </div>
 
         <!-- Logout Button -->
-        <button class="btn btn-logout desktop-only" on:click={handlers.logout}>
+        <button class="btn btn-logout desktop-only" onclick={handlers.logout}>
           Logout
         </button>
       {:else}
         <!-- Login Button -->
-        <button class="btn btn-login desktop-only" on:click={handlers.login}>
+        <button class="btn btn-login desktop-only" onclick={handlers.login}>
           Login
         </button>
       {/if}
@@ -107,7 +176,7 @@
       <button
         class="hamburger mobile-only"
         class:open={isMobileMenuOpen}
-        on:click={handlers.toggleMobileMenu}
+        onclick={handlers.toggleMobileMenu}
         aria-label="Toggle menu"
       >
         <span></span>
@@ -130,24 +199,56 @@
         <!-- Navigation Links -->
         <div class="mobile-nav-links">
           {#each navigationItems as item}
-            <button
-              class="mobile-nav-link"
-              class:active={isActiveRoute(item.href)}
-              on:click={() => handlers.navigate(item.href)}
-            >
-              <span class="nav-icon">{item.icon}</span>
-              {item.label}
-            </button>
+            {#if item.subItems && item.subItems.length > 0}
+              <!-- Mobile dropdown -->
+              <div class="mobile-nav-dropdown">
+                <button
+                  class="mobile-nav-link"
+                  class:active={isActiveRoute(item.href)}
+                  onclick={() => handlers.toggleDropdown(item.label)}
+                >
+                  <span class="nav-icon">{item.icon}</span>
+                  {item.label}
+                  <span class="dropdown-arrow"
+                    >{openDropdown === item.label ? "▲" : "▼"}</span
+                  >
+                </button>
+                {#if openDropdown === item.label}
+                  <div class="mobile-dropdown-items">
+                    {#each item.subItems as subItem}
+                      <button
+                        class="mobile-nav-sublink"
+                        class:active={isActiveRoute(subItem.href)}
+                        onclick={() => handlers.navigate(subItem.href)}
+                      >
+                        <span class="nav-icon">{subItem.icon}</span>
+                        {subItem.label}
+                      </button>
+                    {/each}
+                  </div>
+                {/if}
+              </div>
+            {:else}
+              <!-- Regular mobile link -->
+              <button
+                class="mobile-nav-link"
+                class:active={isActiveRoute(item.href)}
+                onclick={() => handlers.navigate(item.href)}
+              >
+                <span class="nav-icon">{item.icon}</span>
+                {item.label}
+              </button>
+            {/if}
           {/each}
         </div>
 
         <!-- Logout Button -->
-        <button class="mobile-logout-btn" on:click={handlers.logout}>
+        <button class="mobile-logout-btn" onclick={handlers.logout}>
           Logout
         </button>
       {:else}
         <!-- Login Button for Mobile -->
-        <button class="mobile-login-btn" on:click={handlers.login}>
+        <button class="mobile-login-btn" onclick={handlers.login}>
           Login with OBP
         </button>
       {/if}
@@ -231,6 +332,62 @@
 
   .nav-icon {
     font-size: 1rem;
+  }
+
+  /* Dropdown Navigation */
+  .nav-dropdown {
+    position: relative;
+  }
+
+  .dropdown-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: inherit;
+    font-family: inherit;
+  }
+
+  .dropdown-arrow {
+    font-size: 0.625rem;
+    margin-left: 0.25rem;
+    transition: transform 0.2s;
+  }
+
+  .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 0.5rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    min-width: 200px;
+    z-index: 100;
+    overflow: hidden;
+  }
+
+  .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    text-decoration: none;
+    color: #6b7280;
+    font-weight: 500;
+    transition: all 0.2s;
+    width: 100%;
+    text-align: left;
+  }
+
+  .dropdown-item:hover {
+    background-color: #f3f4f6;
+    color: #2563eb;
+  }
+
+  .dropdown-item.active {
+    background-color: #dbeafe;
+    color: #2563eb;
   }
 
   /* User Actions */
@@ -387,6 +544,47 @@
 
   .mobile-nav-link:hover,
   .mobile-nav-link.active {
+    background-color: #f3f4f6;
+    color: #2563eb;
+  }
+
+  /* Mobile Dropdown */
+  .mobile-nav-dropdown {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mobile-nav-link .dropdown-arrow {
+    margin-left: auto;
+    font-size: 0.625rem;
+  }
+
+  .mobile-dropdown-items {
+    display: flex;
+    flex-direction: column;
+    padding-left: 1rem;
+    margin-top: 0.25rem;
+  }
+
+  .mobile-nav-sublink {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 0.75rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-radius: 0.5rem;
+    color: #6b7280;
+    font-weight: 500;
+    transition: all 0.2s;
+    text-align: left;
+    width: 100%;
+    font-size: 0.875rem;
+  }
+
+  .mobile-nav-sublink:hover,
+  .mobile-nav-sublink.active {
     background-color: #f3f4f6;
     color: #2563eb;
   }
