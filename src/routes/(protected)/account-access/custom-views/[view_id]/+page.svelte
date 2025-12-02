@@ -1,0 +1,680 @@
+<script lang="ts">
+  import type { PageData } from "./$types";
+  import {
+    Eye,
+    ArrowLeft,
+    Shield,
+    CheckCircle,
+    XCircle,
+    AlertCircle,
+  } from "@lucide/svelte";
+
+  let { data } = $props<{ data: PageData }>();
+
+  let view = $derived(data.view);
+  let hasApiAccess = $derived(data.hasApiAccess);
+  let error = $derived(data.error);
+
+  // Helper function to check if permission array has values
+  function hasPermission(permission: string[] | undefined): boolean {
+    return !!permission && permission.length > 0;
+  }
+
+  // Group permissions by category
+  let transactionPermissions = $derived.by(() => {
+    if (!view) return [];
+    return [
+      {
+        label: "This Bank Account",
+        key: "can_see_transaction_this_bank_account",
+      },
+      {
+        label: "Other Bank Account",
+        key: "can_see_transaction_other_bank_account",
+      },
+      { label: "Metadata", key: "can_see_transaction_metadata" },
+      { label: "Label", key: "can_see_transaction_label" },
+      { label: "Amount", key: "can_see_transaction_amount" },
+      { label: "Type", key: "can_see_transaction_type" },
+      { label: "Currency", key: "can_see_transaction_currency" },
+      { label: "Start Date", key: "can_see_transaction_start_date" },
+      { label: "Finish Date", key: "can_see_transaction_finish_date" },
+      { label: "Balance", key: "can_see_transaction_balance" },
+    ];
+  });
+
+  let accountPermissions = $derived.by(() => {
+    if (!view) return [];
+    return [
+      { label: "Owners", key: "can_see_bank_account_owners" },
+      { label: "Type", key: "can_see_bank_account_type" },
+      { label: "Balance", key: "can_see_bank_account_balance" },
+      { label: "Currency", key: "can_see_bank_account_currency" },
+      { label: "Label", key: "can_see_bank_account_label" },
+      {
+        label: "National Identifier",
+        key: "can_see_bank_account_national_identifier",
+      },
+      { label: "SWIFT BIC", key: "can_see_bank_account_swift_bic" },
+      { label: "IBAN", key: "can_see_bank_account_iban" },
+      { label: "Number", key: "can_see_bank_account_number" },
+      { label: "Bank Name", key: "can_see_bank_account_bank_name" },
+      { label: "Credit Limit", key: "can_see_bank_account_credit_limit" },
+    ];
+  });
+
+  let otherPermissions = $derived.by(() => {
+    if (!view) return [];
+    return [
+      { label: "Comments", key: "can_see_comments" },
+      { label: "Narrative", key: "can_see_narrative" },
+      { label: "Tags", key: "can_see_tags" },
+      { label: "Images", key: "can_see_images" },
+      { label: "More Info", key: "can_see_more_info" },
+      { label: "URL", key: "can_see_url" },
+      { label: "Image URL", key: "can_see_image_url" },
+      { label: "Where Tag", key: "can_see_where_tag" },
+    ];
+  });
+
+  let counterpartyPermissions = $derived.by(() => {
+    if (!view) return [];
+    return [
+      {
+        label: "National Identifier",
+        key: "can_see_other_account_national_identifier",
+      },
+      { label: "SWIFT BIC", key: "can_see_other_account_swift_bic" },
+      { label: "IBAN", key: "can_see_other_account_iban" },
+      { label: "Bank Name", key: "can_see_other_account_bank_name" },
+      { label: "Number", key: "can_see_other_account_number" },
+      { label: "Metadata", key: "can_see_other_account_metadata" },
+      { label: "Kind", key: "can_see_other_account_kind" },
+      { label: "Public Alias", key: "can_see_public_alias" },
+      { label: "Private Alias", key: "can_see_private_alias" },
+    ];
+  });
+
+  let writePermissions = $derived.by(() => {
+    if (!view) return [];
+    return [
+      { label: "Add Comment", key: "can_add_comment" },
+      { label: "Delete Comment", key: "can_delete_comment" },
+      { label: "Add Tag", key: "can_add_tag" },
+      { label: "Delete Tag", key: "can_delete_tag" },
+      { label: "Add Image", key: "can_add_image" },
+      { label: "Delete Image", key: "can_delete_image" },
+      { label: "Edit Narrative", key: "can_edit_narrative" },
+      { label: "Create Counterparty", key: "can_create_counterparty" },
+      {
+        label: "Transaction Request (Own)",
+        key: "can_add_transaction_request_to_own_account",
+      },
+      {
+        label: "Transaction Request (Any)",
+        key: "can_add_transaction_request_to_any_account",
+      },
+    ];
+  });
+</script>
+
+<svelte:head>
+  <title>{view ? view.short_name : "Custom View"} - API Manager II</title>
+</svelte:head>
+
+<div class="container mx-auto px-4 py-8">
+  <!-- Breadcrumb Navigation -->
+  <nav class="breadcrumb mb-6">
+    <a href="/account-access/custom-views" class="breadcrumb-link"
+      >Custom Views</a
+    >
+    <span class="breadcrumb-separator">›</span>
+    <span class="breadcrumb-current">{view?.short_name || "View Detail"}</span>
+  </nav>
+
+  {#if error && !hasApiAccess}
+    <div class="error-message">
+      <p>⚠️ {error}</p>
+    </div>
+  {:else if !view}
+    <div class="error-message">
+      <p>⚠️ Custom view not found</p>
+    </div>
+  {:else}
+    <div class="panel">
+      <!-- Header -->
+      <div class="panel-header">
+        <div class="header-content">
+          <div class="header-left">
+            <div class="header-icon">
+              <Eye size={32} />
+            </div>
+            <div>
+              <div class="header-title-row">
+                <h1 class="panel-title">{view.short_name}</h1>
+                {#if view.is_public}
+                  <span class="status-badge status-public">
+                    <CheckCircle size={14} />
+                    Public
+                  </span>
+                {:else}
+                  <span class="status-badge status-private">
+                    <XCircle size={14} />
+                    Private
+                  </span>
+                {/if}
+              </div>
+              <div class="panel-subtitle">{view.description}</div>
+            </div>
+          </div>
+          <div class="header-actions">
+            <a href="/account-access/custom-views" class="btn-secondary">
+              <ArrowLeft size={16} />
+              Back to Views
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="panel-content">
+        <!-- Basic Info Section -->
+        <section class="info-section">
+          <h2 class="section-title">Basic Information</h2>
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="info-label">View ID</div>
+              <div class="info-value code">{view.id}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Short Name</div>
+              <div class="info-value">{view.short_name}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Visibility</div>
+              <div class="info-value">
+                {view.is_public ? "Public" : "Private"}
+              </div>
+            </div>
+            {#if view.alias}
+              <div class="info-item">
+                <div class="info-label">Alias</div>
+                <div class="info-value code">{view.alias}</div>
+              </div>
+            {/if}
+            {#if view.hide_metadata_if_alias_used !== undefined}
+              <div class="info-item">
+                <div class="info-label">Hide Metadata if Alias Used</div>
+                <div class="info-value">
+                  {view.hide_metadata_if_alias_used ? "Yes" : "No"}
+                </div>
+              </div>
+            {/if}
+          </div>
+        </section>
+
+        <!-- Transaction Permissions -->
+        <section class="info-section">
+          <h2 class="section-title">
+            <Shield size={20} />
+            Transaction Permissions
+          </h2>
+          <div class="permissions-grid">
+            {#each transactionPermissions as perm}
+              <div class="permission-item">
+                {#if hasPermission((view as any)[perm.key])}
+                  <CheckCircle size={16} class="permission-icon enabled" />
+                {:else}
+                  <XCircle size={16} class="permission-icon disabled" />
+                {/if}
+                <span class="permission-label">{perm.label}</span>
+              </div>
+            {/each}
+          </div>
+        </section>
+
+        <!-- Bank Account Permissions -->
+        <section class="info-section">
+          <h2 class="section-title">
+            <Shield size={20} />
+            Bank Account Permissions
+          </h2>
+          <div class="permissions-grid">
+            {#each accountPermissions as perm}
+              <div class="permission-item">
+                {#if hasPermission((view as any)[perm.key])}
+                  <CheckCircle size={16} class="permission-icon enabled" />
+                {:else}
+                  <XCircle size={16} class="permission-icon disabled" />
+                {/if}
+                <span class="permission-label">{perm.label}</span>
+              </div>
+            {/each}
+          </div>
+        </section>
+
+        <!-- Counterparty Permissions -->
+        <section class="info-section">
+          <h2 class="section-title">
+            <Shield size={20} />
+            Counterparty Permissions
+          </h2>
+          <div class="permissions-grid">
+            {#each counterpartyPermissions as perm}
+              <div class="permission-item">
+                {#if hasPermission((view as any)[perm.key])}
+                  <CheckCircle size={16} class="permission-icon enabled" />
+                {:else}
+                  <XCircle size={16} class="permission-icon disabled" />
+                {/if}
+                <span class="permission-label">{perm.label}</span>
+              </div>
+            {/each}
+          </div>
+        </section>
+
+        <!-- Other Permissions -->
+        <section class="info-section">
+          <h2 class="section-title">
+            <Shield size={20} />
+            Other View Permissions
+          </h2>
+          <div class="permissions-grid">
+            {#each otherPermissions as perm}
+              <div class="permission-item">
+                {#if hasPermission((view as any)[perm.key])}
+                  <CheckCircle size={16} class="permission-icon enabled" />
+                {:else}
+                  <XCircle size={16} class="permission-icon disabled" />
+                {/if}
+                <span class="permission-label">{perm.label}</span>
+              </div>
+            {/each}
+          </div>
+        </section>
+
+        <!-- Write/Modify Permissions -->
+        <section class="info-section">
+          <h2 class="section-title">
+            <AlertCircle size={20} />
+            Write & Modify Permissions
+          </h2>
+          <div class="permissions-grid">
+            {#each writePermissions as perm}
+              <div class="permission-item">
+                {#if hasPermission((view as any)[perm.key])}
+                  <CheckCircle size={16} class="permission-icon enabled" />
+                {:else}
+                  <XCircle size={16} class="permission-icon disabled" />
+                {/if}
+                <span class="permission-label">{perm.label}</span>
+              </div>
+            {/each}
+          </div>
+        </section>
+      </div>
+    </div>
+  {/if}
+</div>
+
+<style>
+  .container {
+    max-width: 1200px;
+  }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .breadcrumb-link {
+    color: #3b82f6;
+    text-decoration: none;
+  }
+
+  .breadcrumb-link:hover {
+    text-decoration: underline;
+  }
+
+  :global([data-mode="dark"]) .breadcrumb-link {
+    color: rgb(var(--color-primary-400));
+  }
+
+  .breadcrumb-separator {
+    color: #9ca3af;
+  }
+
+  :global([data-mode="dark"]) .breadcrumb-separator {
+    color: var(--color-surface-500);
+  }
+
+  .breadcrumb-current {
+    color: #6b7280;
+  }
+
+  :global([data-mode="dark"]) .breadcrumb-current {
+    color: var(--color-surface-400);
+  }
+
+  .error-message {
+    padding: 1rem;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    color: #991b1b;
+    font-size: 0.875rem;
+  }
+
+  :global([data-mode="dark"]) .error-message {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: rgb(var(--color-error-200));
+  }
+
+  .panel {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+
+  :global([data-mode="dark"]) .panel {
+    background: rgb(var(--color-surface-800));
+  }
+
+  .panel-header {
+    padding: 2rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  :global([data-mode="dark"]) .panel-header {
+    border-bottom-color: rgb(var(--color-surface-700));
+  }
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 2rem;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+    flex: 1;
+  }
+
+  .header-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    background: #eff6ff;
+    color: #3b82f6;
+    border-radius: 12px;
+    flex-shrink: 0;
+  }
+
+  :global([data-mode="dark"]) .header-icon {
+    background: rgba(59, 130, 246, 0.2);
+    color: rgb(var(--color-primary-400));
+  }
+
+  .header-title-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .panel-title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+  }
+
+  :global([data-mode="dark"]) .panel-title {
+    color: var(--color-surface-100);
+  }
+
+  .panel-subtitle {
+    font-size: 0.875rem;
+    color: #6b7280;
+    line-height: 1.5;
+  }
+
+  :global([data-mode="dark"]) .panel-subtitle {
+    color: var(--color-surface-400);
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.875rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .status-public {
+    background: #d1fae5;
+    color: #065f46;
+  }
+
+  :global([data-mode="dark"]) .status-public {
+    background: rgba(16, 185, 129, 0.2);
+    color: rgb(var(--color-success-300));
+  }
+
+  .status-private {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  :global([data-mode="dark"]) .status-private {
+    background: rgba(239, 68, 68, 0.2);
+    color: rgb(var(--color-error-300));
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: #f3f4f6;
+    color: #374151;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .btn-secondary:hover {
+    background: #e5e7eb;
+  }
+
+  :global([data-mode="dark"]) .btn-secondary {
+    background: rgb(var(--color-surface-700));
+    color: var(--color-surface-200);
+  }
+
+  :global([data-mode="dark"]) .btn-secondary:hover {
+    background: rgb(var(--color-surface-600));
+  }
+
+  .panel-content {
+    padding: 2rem;
+  }
+
+  .info-section {
+    margin-bottom: 2.5rem;
+  }
+
+  .info-section:last-child {
+    margin-bottom: 0;
+  }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0 0 1.5rem 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #e5e7eb;
+  }
+
+  :global([data-mode="dark"]) .section-title {
+    color: var(--color-surface-100);
+    border-bottom-color: rgb(var(--color-surface-700));
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .info-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  :global([data-mode="dark"]) .info-label {
+    color: var(--color-surface-400);
+  }
+
+  .info-value {
+    font-size: 0.875rem;
+    color: #111827;
+    font-weight: 500;
+  }
+
+  :global([data-mode="dark"]) .info-value {
+    color: var(--color-surface-200);
+  }
+
+  .info-value.code {
+    font-family: monospace;
+    background: #f3f4f6;
+    padding: 0.5rem;
+    border-radius: 4px;
+    word-break: break-all;
+  }
+
+  :global([data-mode="dark"]) .info-value.code {
+    background: rgb(var(--color-surface-900));
+  }
+
+  .permissions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .permission-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: #fafafa;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+  }
+
+  :global([data-mode="dark"]) .permission-item {
+    background: rgb(var(--color-surface-900));
+    border-color: rgb(var(--color-surface-700));
+  }
+
+  .permission-icon {
+    flex-shrink: 0;
+  }
+
+  .permission-icon.enabled {
+    color: #10b981;
+  }
+
+  :global([data-mode="dark"]) .permission-icon.enabled {
+    color: rgb(var(--color-success-400));
+  }
+
+  .permission-icon.disabled {
+    color: #d1d5db;
+  }
+
+  :global([data-mode="dark"]) .permission-icon.disabled {
+    color: var(--color-surface-600);
+  }
+
+  .permission-label {
+    font-size: 0.875rem;
+    color: #374151;
+    font-weight: 500;
+  }
+
+  :global([data-mode="dark"]) .permission-label {
+    color: var(--color-surface-300);
+  }
+
+  @media (max-width: 768px) {
+    .header-content {
+      flex-direction: column;
+    }
+
+    .header-left {
+      flex-direction: column;
+    }
+
+    .header-actions {
+      width: 100%;
+    }
+
+    .btn-secondary {
+      flex: 1;
+      justify-content: center;
+    }
+
+    .info-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .permissions-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .header-title-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+  }
+</style>

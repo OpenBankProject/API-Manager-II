@@ -107,7 +107,10 @@
         {:else}
           <div class="views-grid">
             {#each filteredViews as view}
-              <div class="view-card">
+              <a
+                href="/account-access/system-views/{view.id}"
+                class="view-card"
+              >
                 <div class="view-card-header">
                   <div class="view-icon">
                     <Eye size={24} />
@@ -144,7 +147,7 @@
                     </div>
                   </div>
                 </div>
-              </div>
+              </a>
             {/each}
           </div>
         {/if}
@@ -389,6 +392,8 @@
     border: 1px solid #e5e7eb;
     border-radius: 8px;
     transition: all 0.2s;
+    text-decoration: none;
+    color: inherit;
   }
 
   .view-card:hover {
