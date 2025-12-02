@@ -295,21 +295,7 @@
           </div>
         </div>
 
-        <!-- Is Enabled -->
-        <div class="form-group">
-          <label class="checkbox-label">
-            <input
-              type="checkbox"
-              class="form-checkbox"
-              bind:checked={isEnabled}
-              disabled={isSubmitting}
-            />
-            <span>Enable this group</span>
-          </label>
-          <div class="form-help">
-            Disabled groups will not grant their roles to members
-          </div>
-        </div>
+        <!-- Is Enabled (hidden, always true) -->
 
         <!-- Action Buttons -->
         <div class="form-actions">
@@ -812,42 +798,6 @@
 
   :global([data-mode="dark"]) .btn-secondary:hover:not(:disabled) {
     background: rgb(var(--color-surface-600));
-  }
-
-  .checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    font-size: 0.875rem;
-    color: #374151;
-  }
-
-  :global([data-mode="dark"]) .checkbox-label {
-    color: var(--color-surface-200);
-  }
-
-  .form-checkbox {
-    width: 1.25rem;
-    height: 1.25rem;
-    border-radius: 0.25rem;
-    border: 1px solid #d1d5db;
-    cursor: pointer;
-  }
-
-  .form-checkbox:checked {
-    background: #3b82f6;
-    border-color: #3b82f6;
-  }
-
-  :global([data-mode="dark"]) .form-checkbox {
-    background: rgb(var(--color-surface-700));
-    border-color: rgb(var(--color-surface-600));
-  }
-
-  :global([data-mode="dark"]) .form-checkbox:checked {
-    background: rgb(var(--color-primary-600));
-    border-color: rgb(var(--color-primary-600));
   }
 
   /* Responsive Design */

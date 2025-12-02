@@ -12,7 +12,7 @@ interface Group {
   group_name: string;
   group_description: string;
   is_enabled: boolean;
-  roles?: string[];
+  list_of_roles?: string[];
 }
 
 interface GroupsResponse {

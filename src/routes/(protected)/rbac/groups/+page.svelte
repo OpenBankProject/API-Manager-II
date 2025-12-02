@@ -135,11 +135,12 @@
                       <Building2 size={14} />
                       <span>{group.bank_id}</span>
                     </div>
-                    {#if group.roles && group.roles.length > 0}
+                    {#if group.list_of_roles && group.list_of_roles.length > 0}
                       <div class="meta-item">
                         <Shield size={14} />
                         <span
-                          >{group.roles.length} role{group.roles.length !== 1
+                          >{group.list_of_roles.length} role{group.list_of_roles
+                            .length !== 1
                             ? "s"
                             : ""}</span
                         >

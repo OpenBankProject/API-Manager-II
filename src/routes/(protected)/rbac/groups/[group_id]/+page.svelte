@@ -27,7 +27,8 @@
   <nav class="breadcrumb mb-6">
     <a href="/rbac/groups" class="breadcrumb-link">Groups</a>
     <span class="breadcrumb-separator">›</span>
-    <span class="breadcrumb-current">{group?.group_name || "Group Detail"}</span>
+    <span class="breadcrumb-current">{group?.group_name || "Group Detail"}</span
+    >
   </nav>
 
   {#if error && !hasApiAccess}
@@ -112,11 +113,11 @@
         <section class="info-section">
           <h2 class="section-title">
             <Shield size={20} />
-            Roles ({group.roles?.length || 0})
+            Roles ({group.list_of_roles?.length || 0})
           </h2>
-          {#if group.roles && group.roles.length > 0}
+          {#if group.list_of_roles && group.list_of_roles.length > 0}
             <div class="roles-grid">
-              {#each group.roles as role}
+              {#each group.list_of_roles as role}
                 <div class="role-card">
                   <div class="role-icon">
                     <Shield size={16} />
