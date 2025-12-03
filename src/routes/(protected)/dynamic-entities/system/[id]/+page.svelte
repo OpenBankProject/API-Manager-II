@@ -57,9 +57,7 @@
       alert("System dynamic entity deleted successfully");
       goto("/dynamic-entities/system");
     } catch (error) {
-      alert(
-        error instanceof Error ? error.message : "Failed to delete entity",
-      );
+      alert(error instanceof Error ? error.message : "Failed to delete entity");
       console.error("Delete error:", error);
     }
   }
@@ -132,6 +130,25 @@
         </p>
       </div>
       <div class="flex gap-2">
+        <a
+          href="/dynamic-entities/system/{entity.dynamicEntityId}/crud"
+          class="inline-flex items-center rounded-lg border border-blue-300 bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 dark:border-blue-600 dark:bg-blue-500 dark:hover:bg-blue-600"
+        >
+          <svg
+            class="mr-2 h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"
+            />
+          </svg>
+          Manage Data (CRUD)
+        </a>
         <button
           type="button"
           onclick={handleDelete}
@@ -294,9 +311,7 @@
                   </span>
                 </div>
                 {#if fieldDef.description}
-                  <p
-                    class="mt-2 text-sm text-gray-600 dark:text-gray-400"
-                  >
+                  <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
                     {fieldDef.description}
                   </p>
                 {/if}
@@ -324,9 +339,7 @@
                       >
                         Min Length:
                       </dt>
-                      <dd
-                        class="text-sm text-gray-900 dark:text-gray-100"
-                      >
+                      <dd class="text-sm text-gray-900 dark:text-gray-100">
                         {fieldDef.minLength}
                       </dd>
                     </div>
@@ -338,9 +351,7 @@
                       >
                         Max Length:
                       </dt>
-                      <dd
-                        class="text-sm text-gray-900 dark:text-gray-100"
-                      >
+                      <dd class="text-sm text-gray-900 dark:text-gray-100">
                         {fieldDef.maxLength}
                       </dd>
                     </div>
@@ -368,8 +379,10 @@
     </div>
     <div class="p-6">
       <pre
-        class="overflow-x-auto rounded-lg bg-gray-50 p-4 text-sm dark:bg-gray-900"
-      ><code class="text-gray-900 dark:text-gray-100">{JSON.stringify(schema, null, 2)}</code></pre>
+        class="overflow-x-auto rounded-lg bg-gray-50 p-4 text-sm dark:bg-gray-900"><code
+          class="text-gray-900 dark:text-gray-100"
+          >{JSON.stringify(schema, null, 2)}</code
+        ></pre>
     </div>
   </div>
 </div>
