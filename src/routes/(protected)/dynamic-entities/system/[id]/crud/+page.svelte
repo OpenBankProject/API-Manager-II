@@ -419,7 +419,30 @@
         throw new Error("Failed to delete record");
       }
 
-      dataRecords = dataRecords.filter((r) => r.id !== record.id);
+      // Refetch all records to ensure correct data structure
+      const refetchResponse = await fetch(
+        `/api/dynamic-entities/${entity.dynamicEntityId}/data`,
+        {
+          credentials: "include",
+        },
+      );
+
+      if (refetchResponse.ok) {
+        const refetchData = await refetchResponse.json();
+        // Handle the same data extraction logic as the server
+        if (Array.isArray(refetchData)) {
+          dataRecords = refetchData;
+        } else {
+          const snakeCaseKey = `${entityName.toLowerCase()}_list`;
+          dataRecords =
+            refetchData.data ||
+            refetchData.records ||
+            refetchData[entityName] ||
+            refetchData[snakeCaseKey] ||
+            [];
+        }
+      }
+
       alert("Record deleted successfully");
     } catch (error) {
       alert("Failed to delete record");
