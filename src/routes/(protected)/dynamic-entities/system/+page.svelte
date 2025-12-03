@@ -99,6 +99,25 @@
         Manage system-wide dynamic data entities
       </p>
     </div>
+    <a
+      href="/dynamic-entities/system/create"
+      class="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+    >
+      <svg
+        class="mr-2 h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M12 4v16m8-8H4"
+        />
+      </svg>
+      Create Dynamic Entity
+    </a>
   </div>
 
   <!-- Stats -->
