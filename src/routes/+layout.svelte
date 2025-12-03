@@ -43,6 +43,7 @@
     Globe,
     Server,
     Plug,
+    Database,
   } from "@lucide/svelte";
 
   import { env } from "$env/dynamic/public";
@@ -66,6 +67,29 @@
   let isRbacExpanded = $state(false);
   let isAccountAccessExpanded = $state(false);
   let displayMode: "dark" | "light" = $state("dark");
+
+  async function clearCache() {
+    try {
+      // Clear all caches
+      if ("caches" in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map((name) => caches.delete(name)));
+      }
+
+      // Clear localStorage
+      localStorage.clear();
+
+      // Clear sessionStorage
+      sessionStorage.clear();
+
+      // Reload the page
+      window.location.reload();
+    } catch (error) {
+      console.error("Error clearing cache:", error);
+      alert("Cache cleared. Page will reload.");
+      window.location.reload();
+    }
+  }
 
   logger.info("🔐 Checking authentication state");
   if (data.email) {
@@ -207,6 +231,11 @@
       label: "Consumers",
       href: "/consumers",
       iconComponent: KeyRound,
+    },
+    {
+      label: "Dynamic Entities",
+      href: "/dynamic-entities",
+      iconComponent: Database,
     },
 
     ...(data.externalLinks.SUBSCRIPTIONS_URL
@@ -590,6 +619,13 @@
               {link.label}
             </a>
           {/each}
+          <button
+            onclick={clearCache}
+            class="flex items-center gap-1 hover:text-tertiary-400 cursor-pointer"
+            title="Clear browser cache and reload"
+          >
+            ⚡
+          </button>
           <span> © TESOBE 2011-2025 </span>
           {#if data.externalLinks.LEGACY_PORTAL_URL}
             <!-- Legacy Portal Link -->
