@@ -2,6 +2,10 @@
 
 A modern web application for managing Open Bank Project (OBP) APIs, built with SvelteKit, TypeScript, and Tailwind CSS.
 
+## 📖 Documentation
+
+- **[UI Patterns & Component Guidelines](./UI_PATTERNS.md)** - Required reading for anyone creating new pages or components. Defines the UI frameworks, patterns, and styling conventions used in this project.
+
 ## Overview
 
 API Manager II provides an intuitive interface for managing and monitoring Open Bank Project APIs. It features OAuth2/OIDC authentication, real-time metrics monitoring, and comprehensive API management capabilities.
