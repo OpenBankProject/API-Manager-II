@@ -243,11 +243,6 @@
       href: "/consumers",
       iconComponent: KeyRound,
     },
-    {
-      label: "Dynamic Entities",
-      href: "/dynamic-entities",
-      iconComponent: Database,
-    },
 
     ...(data.externalLinks.SUBSCRIPTIONS_URL
       ? [

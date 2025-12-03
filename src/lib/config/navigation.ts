@@ -258,6 +258,11 @@ export function getActiveAccountAccessMenuItem(pathname: string) {
 function buildDynamicEntitiesItems(): NavigationItem[] {
   const items: NavigationItem[] = [
     {
+      href: "/dynamic-entities",
+      label: "DynEnt",
+      iconComponent: Database,
+    },
+    {
       href: "/dynamic-entities/system",
       label: "System Dynamic Entities",
       iconComponent: Settings,
