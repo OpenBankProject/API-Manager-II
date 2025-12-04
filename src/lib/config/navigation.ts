@@ -262,21 +262,6 @@ function buildDynamicEntitiesItems(): NavigationItem[] {
       label: "1. System Dynamic Entities",
       iconComponent: Settings,
     },
-    {
-      href: "/dynamic-entities/create",
-      label: "2. Create Dynamic Entity",
-      iconComponent: Plus,
-    },
-    {
-      href: "/dynamic-entities/definitions",
-      label: "3. Dynamic Entity Definitions",
-      iconComponent: FileText,
-    },
-    {
-      href: "/dynamic-entities",
-      label: "4. DynEnt",
-      iconComponent: Database,
-    },
   ];
 
   return items;
