@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { Mail } from "@lucide/svelte";
   import type { PageData } from "./$types";
 
   let { data } = $props<{ data: PageData }>();
@@ -133,7 +134,16 @@
     </div>
   {/if}
 
-  <h1 class="text-3xl font-bold mb-6">Users</h1>
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-3xl font-bold">Users</h1>
+    <a
+      href="/user-invitations"
+      class="btn btn-secondary flex items-center gap-2"
+    >
+      <Mail size={18} />
+      <span>User Invitations</span>
+    </a>
+  </div>
 
   <!-- Smart Search Panel -->
   <div class="panel mb-6">
@@ -388,6 +398,26 @@
   .btn-primary:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    background: white;
+    color: #3b82f6;
+    border: 1px solid #3b82f6;
+  }
+
+  .btn-secondary:hover {
+    background: #eff6ff;
+  }
+
+  :global([data-mode="dark"]) .btn-secondary {
+    background: rgb(var(--color-surface-700));
+    color: rgb(var(--color-primary-400));
+    border-color: rgb(var(--color-primary-400));
+  }
+
+  :global([data-mode="dark"]) .btn-secondary:hover {
+    background: rgb(var(--color-surface-600));
   }
 
   .table-wrapper {
