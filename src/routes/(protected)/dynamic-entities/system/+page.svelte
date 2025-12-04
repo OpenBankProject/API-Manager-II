@@ -62,13 +62,27 @@
       });
 
       if (!response.ok) {
-        throw new Error("Failed to delete entity");
+        let errorMessage = "Failed to delete entity";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.message || errorMessage;
+          console.error("Delete error response:", errorData);
+        } catch (e) {
+          const text = await response.text();
+          console.error("Delete error text:", text);
+          errorMessage = `${errorMessage}: ${response.status} ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
 
       alert("System dynamic entity deleted successfully");
       window.location.reload();
     } catch (error) {
-      alert("Failed to delete system dynamic entity");
+      const fullMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to delete system dynamic entity";
+      alert(`Failed to delete system dynamic entity:\n\n${fullMessage}`);
       console.error("Delete error:", error);
     }
   }

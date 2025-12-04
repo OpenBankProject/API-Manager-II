@@ -143,6 +143,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
     logger.info(`Deleting dynamic entity: ${id}`);
 
     const endpoint = `/obp/v4.0.0/management/system-dynamic-entities/${id}`;
+    logger.info(`Calling DELETE ${endpoint}`);
     const response = await obp_requests.delete(endpoint, accessToken);
 
     logger.info("Dynamic entity deleted successfully");
@@ -150,17 +151,29 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
   } catch (err) {
     logger.error("Error deleting dynamic entity:", err);
 
+    // Log full error details
+    if (err && typeof err === "object") {
+      logger.error("Error details:", JSON.stringify(err, null, 2));
+    }
+
     let errorMessage = "Failed to delete dynamic entity";
     let obpErrorCode = undefined;
+    let detailedError = undefined;
 
     if (err instanceof Error) {
       errorMessage = err.message;
       if ("obpErrorCode" in err) {
         obpErrorCode = (err as any).obpErrorCode;
       }
+      if ("response" in err) {
+        detailedError = (err as any).response;
+      }
     }
 
-    const errorResponse: any = { error: errorMessage };
+    const errorResponse: any = {
+      error: errorMessage,
+      details: detailedError,
+    };
     if (obpErrorCode) {
       errorResponse.obpErrorCode = obpErrorCode;
     }
