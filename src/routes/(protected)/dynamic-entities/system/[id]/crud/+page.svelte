@@ -786,7 +786,7 @@
           e.preventDefault();
           handleCreate();
         }}
-        class="p-6"
+        class="bg-white p-6 dark:bg-gray-800"
       >
         <div class="space-y-4">
           {#each Object.entries(properties) as [fieldName, fieldDef]}
@@ -919,7 +919,7 @@
           e.preventDefault();
           handleUpdate();
         }}
-        class="p-6"
+        class="bg-white p-6 dark:bg-gray-800"
       >
         <div class="space-y-4">
           {#each Object.entries(properties) as [fieldName, fieldDef]}
@@ -1047,7 +1047,7 @@
         </button>
       </div>
 
-      <div class="p-6">
+      <div class="bg-white p-6 dark:bg-gray-800">
         <dl class="space-y-4">
           {#each Object.entries(properties) as [fieldName, fieldDef]}
             {@const recordData = getRecordData(selectedRecord)}
