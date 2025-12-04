@@ -19,6 +19,7 @@ import {
   Box,
   Settings,
   FileText,
+  Mail,
 } from "@lucide/svelte";
 import { env } from "$env/dynamic/public";
 
@@ -79,6 +80,11 @@ function buildDevOpsItems(): NavigationItem[] {
       href: "/system/migrations",
       label: "Migrations",
       iconComponent: GitBranch,
+    },
+    {
+      href: "/user-invitations",
+      label: "User Invitations",
+      iconComponent: Mail,
     },
   ];
 
