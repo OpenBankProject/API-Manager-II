@@ -1,6 +1,11 @@
 <script lang="ts">
   import { Search, User, X } from "@lucide/svelte";
   import { trackedFetch } from "$lib/utils/trackedFetch";
+  import {
+    extractErrorFromResponse,
+    formatErrorForDisplay,
+    logErrorDetails,
+  } from "$lib/utils/errorHandler";
 
   interface UserResult {
     user_id: string;
@@ -47,7 +52,14 @@
       );
 
       if (!response.ok) {
-        throw new Error("Failed to search users");
+        const errorDetails = await extractErrorFromResponse(
+          response,
+          "Failed to search users",
+        );
+        logErrorDetails("Search Users", errorDetails);
+        searchError = formatErrorForDisplay(errorDetails);
+        searchResults = [];
+        return;
       }
 
       const data = await response.json();

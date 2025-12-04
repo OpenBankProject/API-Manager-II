@@ -1,6 +1,11 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import type { PageData } from "./$types";
+  import {
+    extractErrorFromResponse,
+    formatErrorForDisplay,
+    logErrorDetails,
+  } from "$lib/utils/errorHandler";
 
   export let data: PageData;
 
@@ -51,13 +56,21 @@
       );
 
       if (!response.ok) {
-        throw new Error("Failed to delete entity");
+        const errorDetails = await extractErrorFromResponse(
+          response,
+          "Failed to delete entity",
+        );
+        logErrorDetails("Delete Dynamic Entity", errorDetails);
+        const errorMessage = formatErrorForDisplay(errorDetails);
+        throw new Error(errorMessage);
       }
 
       alert("System dynamic entity deleted successfully");
       goto("/dynamic-entities/system");
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to delete entity");
+      const errorMsg =
+        error instanceof Error ? error.message : "Failed to delete entity";
+      alert(`Error: ${errorMsg}`);
       console.error("Delete error:", error);
     }
   }

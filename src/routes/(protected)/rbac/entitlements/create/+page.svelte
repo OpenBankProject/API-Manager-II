@@ -8,6 +8,11 @@
   import BankSelectWidget from "$lib/components/BankSelectWidget.svelte";
   import RoleSearchWidget from "$lib/components/RoleSearchWidget.svelte";
   import type { PageData } from "./$types";
+  import {
+    extractErrorFromResponse,
+    formatErrorForDisplay,
+    logErrorDetails,
+  } from "$lib/utils/errorHandler";
 
   let { data } = $props<{ data: PageData }>();
 
@@ -70,8 +75,13 @@
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create entitlement");
+        const errorDetails = await extractErrorFromResponse(
+          response,
+          "Failed to create entitlement",
+        );
+        logErrorDetails("Create Entitlement", errorDetails);
+        const errorMessage = formatErrorForDisplay(errorDetails);
+        throw new Error(errorMessage);
       }
 
       toast.success(

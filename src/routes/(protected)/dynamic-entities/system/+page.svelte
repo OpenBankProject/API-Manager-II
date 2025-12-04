@@ -1,6 +1,11 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import type { PageData } from "./$types";
+  import {
+    extractErrorFromResponse,
+    formatErrorForDisplay,
+    logErrorDetails,
+  } from "$lib/utils/errorHandler";
 
   export let data: PageData;
 
@@ -62,27 +67,23 @@
       });
 
       if (!response.ok) {
-        let errorMessage = "Failed to delete entity";
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error || errorData.message || errorMessage;
-          console.error("Delete error response:", errorData);
-        } catch (e) {
-          const text = await response.text();
-          console.error("Delete error text:", text);
-          errorMessage = `${errorMessage}: ${response.status} ${response.statusText}`;
-        }
+        const errorDetails = await extractErrorFromResponse(
+          response,
+          "Failed to delete entity",
+        );
+        logErrorDetails("Delete System Dynamic Entity", errorDetails);
+        const errorMessage = formatErrorForDisplay(errorDetails);
         throw new Error(errorMessage);
       }
 
       alert("System dynamic entity deleted successfully");
       window.location.reload();
     } catch (error) {
-      const fullMessage =
+      const errorMsg =
         error instanceof Error
           ? error.message
           : "Failed to delete system dynamic entity";
-      alert(`Failed to delete system dynamic entity:\n\n${fullMessage}`);
+      alert(`Error: ${errorMsg}`);
       console.error("Delete error:", error);
     }
   }

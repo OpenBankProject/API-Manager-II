@@ -1,5 +1,10 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
+  import {
+    extractErrorFromResponse,
+    formatErrorForDisplay,
+    logErrorDetails,
+  } from "$lib/utils/errorHandler";
 
   let entityName = $state("");
   let entityDescription = $state("");
@@ -78,16 +83,21 @@
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || error.message || "Failed to create entity");
+        const errorDetails = await extractErrorFromResponse(
+          response,
+          "Failed to create entity",
+        );
+        logErrorDetails("Create System Dynamic Entity", errorDetails);
+        const errorMessage = formatErrorForDisplay(errorDetails);
+        throw new Error(errorMessage);
       }
 
       alert("System dynamic entity created successfully");
       goto("/dynamic-entities/system");
     } catch (error) {
-      alert(
-        error instanceof Error ? error.message : "Failed to create entity",
-      );
+      const errorMsg =
+        error instanceof Error ? error.message : "Failed to create entity";
+      alert(`Error: ${errorMsg}`);
       console.error("Create error:", error);
     } finally {
       isSubmitting = false;
@@ -207,9 +217,7 @@
         <h3 class="text-sm font-semibold text-blue-900 dark:text-blue-100">
           Schema Format Guide
         </h3>
-        <ul
-          class="mt-2 space-y-1 text-xs text-blue-800 dark:text-blue-200"
-        >
+        <ul class="mt-2 space-y-1 text-xs text-blue-800 dark:text-blue-200">
           <li>
             <strong>properties:</strong> Define fields with type, description, and
             validation rules

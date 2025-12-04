@@ -2,6 +2,11 @@
   import { Building2, ChevronDown } from "@lucide/svelte";
   import { onMount } from "svelte";
   import { trackedFetch } from "$lib/utils/trackedFetch";
+  import {
+    extractErrorFromResponse,
+    formatErrorForDisplay,
+    logErrorDetails,
+  } from "$lib/utils/errorHandler";
 
   interface Bank {
     id: string;
@@ -43,7 +48,13 @@
       const response = await trackedFetch("/api/banks");
 
       if (!response.ok) {
-        throw new Error("Failed to fetch banks");
+        const errorDetails = await extractErrorFromResponse(
+          response,
+          "Failed to fetch banks",
+        );
+        logErrorDetails("Fetch Banks", errorDetails);
+        error = formatErrorForDisplay(errorDetails);
+        return;
       }
 
       const data = await response.json();
