@@ -113,22 +113,33 @@
   });
 
   // Fetch system dynamic entities for shortcuts
-  onMount(async () => {
-    if (isAuthenticated) {
-      try {
-        const response = await fetch("/api/dynamic-entities/system/list", {
-          credentials: "include",
-        });
-        if (response.ok) {
-          const data = await response.json();
-          systemDynamicEntities = data.entities || [];
-          logger.info(
-            `✅ Loaded ${systemDynamicEntities.length} system dynamic entities`,
-          );
-        }
-      } catch (error) {
-        logger.error("Failed to fetch system dynamic entities:", error);
+  async function fetchSystemDynamicEntities() {
+    if (!isAuthenticated) return;
+
+    try {
+      const response = await fetch("/api/dynamic-entities/system/list", {
+        credentials: "include",
+      });
+      if (response.ok) {
+        const data = await response.json();
+        systemDynamicEntities = data.entities || [];
+        logger.info(
+          `✅ Loaded ${systemDynamicEntities.length} system dynamic entities`,
+        );
       }
+    } catch (error) {
+      logger.error("Failed to fetch system dynamic entities:", error);
+    }
+  }
+
+  onMount(() => {
+    fetchSystemDynamicEntities();
+  });
+
+  // Refresh dynamic entities when navigating within dynamic entities section
+  $effect(() => {
+    if (page.url.pathname.startsWith("/dynamic-entities/system")) {
+      fetchSystemDynamicEntities();
     }
   });
 

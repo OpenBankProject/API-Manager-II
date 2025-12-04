@@ -4,7 +4,8 @@
 
   let { data }: { data: PageData } = $props();
 
-  const entity = data.entity;
+  // Make entity data reactive to prop changes
+  let entity = $derived(data.entity);
 
   // Helper function to extract the schema key
   function getSchemaKey(entity: any): string {
@@ -26,11 +27,12 @@
     return schemaKey ? entity[schemaKey] : null;
   }
 
-  const schema = getSchema(entity);
-  const schemaKey = getSchemaKey(entity);
-  const entityName = schemaKey || "Unknown";
-  const properties = schema?.properties || {};
-  const requiredFields = schema?.required || [];
+  // Make all derived values reactive
+  let schema = $derived(getSchema(entity));
+  let schemaKey = $derived(getSchemaKey(entity));
+  let entityName = $derived(schemaKey || "Unknown");
+  let properties = $derived(schema?.properties || {});
+  let requiredFields = $derived(schema?.required || []);
 
   // Helper function to extract data from record (handles potential nesting)
   function getRecordData(record: any): any {
@@ -86,6 +88,18 @@
   // Form data for create/edit
   let formData: Record<string, any> = $state({});
   let validationErrors: Record<string, string> = $state({});
+
+  // Reload data when entity changes (route parameter changes)
+  $effect(() => {
+    // Update dataRecords when data prop changes
+    dataRecords = data.dataRecords || [];
+    // Reset search and close modals when switching entities
+    searchQuery = "";
+    showCreateModal = false;
+    showEditModal = false;
+    showViewModal = false;
+    selectedRecord = null;
+  });
 
   // Filter records based on search
   let filteredRecords = $derived(
