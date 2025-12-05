@@ -7,12 +7,12 @@
     logErrorDetails,
   } from "$lib/utils/errorHandler";
 
-  export let data: PageData;
+  let { data }: { data: PageData } = $props();
 
   const entity = data.entity;
 
   // Helper function to extract the schema key (FooBar, Guitar, Piano, etc.)
-  function getSchemaKey(entity: any): string {
+  function getSchemaKey(entity: any): string | null {
     const metadataFields = [
       "entityName",
       "userId",
@@ -33,7 +33,7 @@
 
   const schema = getSchema(entity);
   const schemaKey = getSchemaKey(entity);
-  const entityName = schemaKey || "Unknown";
+  const entityName: string = schemaKey || "Unknown";
   const properties = schema?.properties || {};
   const requiredFields = schema?.required || [];
   const description = schema?.description || "No description available";
@@ -103,6 +103,48 @@
       "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
     );
   }
+
+  let exportCopied = $state(false);
+
+  function createExportDefinition(): any {
+    // Create the request body needed to recreate this entity
+    const exportDef: any = {};
+    if (schemaKey) {
+      exportDef[schemaKey] = schema;
+    }
+    return exportDef;
+  }
+
+  async function exportDefinition() {
+    const exportDef = createExportDefinition();
+    const exportJson = JSON.stringify(exportDef, null, 2);
+
+    try {
+      await navigator.clipboard.writeText(exportJson);
+      exportCopied = true;
+      setTimeout(() => {
+        exportCopied = false;
+      }, 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+      alert("Failed to copy to clipboard");
+    }
+  }
+
+  async function downloadDefinition() {
+    const exportDef = createExportDefinition();
+    const exportJson = JSON.stringify(exportDef, null, 2);
+
+    const blob = new Blob([exportJson], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${entityName}_definition.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
 </script>
 
 <svelte:head>
@@ -162,6 +204,65 @@
           </svg>
           Manage Data (CRUD)
         </a>
+        <button
+          type="button"
+          onclick={exportDefinition}
+          class="inline-flex items-center rounded-lg border border-green-300 bg-white px-4 py-2 text-sm font-medium text-green-700 hover:bg-green-50 dark:border-green-600 dark:bg-gray-800 dark:text-green-400 dark:hover:bg-green-900/20"
+          title="Copy definition to clipboard"
+        >
+          {#if exportCopied}
+            <svg
+              class="mr-2 h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            Copied!
+          {:else}
+            <svg
+              class="mr-2 h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+              />
+            </svg>
+            Export Definition
+          {/if}
+        </button>
+        <button
+          type="button"
+          onclick={downloadDefinition}
+          class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+          title="Download definition as JSON file"
+        >
+          <svg
+            class="mr-2 h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+            />
+          </svg>
+          Download
+        </button>
         <button
           type="button"
           onclick={handleDelete}
@@ -298,6 +399,7 @@
     {:else}
       <div class="divide-y divide-gray-200 dark:divide-gray-700">
         {#each Object.entries(properties) as [fieldName, fieldDef]}
+          {@const fieldDefTyped = fieldDef as any}
           {@const isRequired = requiredFields.includes(fieldName)}
           <div class="p-6">
             <div class="flex items-start justify-between">
@@ -317,19 +419,19 @@
                   {/if}
                   <span
                     class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium {getTypeBadgeColor(
-                      fieldDef.type,
+                      fieldDefTyped.type,
                     )}"
                   >
-                    {getTypeDisplayName(fieldDef.type)}
+                    {getTypeDisplayName(fieldDefTyped.type)}
                   </span>
                 </div>
-                {#if fieldDef.description}
+                {#if fieldDefTyped.description}
                   <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                    {fieldDef.description}
+                    {fieldDefTyped.description}
                   </p>
                 {/if}
                 <dl class="mt-3 space-y-1">
-                  {#if fieldDef.example !== undefined}
+                  {#if fieldDefTyped.example !== undefined}
                     <div class="flex gap-2">
                       <dt
                         class="text-sm font-medium text-gray-500 dark:text-gray-400"
@@ -339,13 +441,13 @@
                       <dd
                         class="font-mono text-sm text-gray-900 dark:text-gray-100"
                       >
-                        {typeof fieldDef.example === "boolean"
-                          ? fieldDef.example.toString()
-                          : fieldDef.example}
+                        {typeof fieldDefTyped.example === "boolean"
+                          ? fieldDefTyped.example.toString()
+                          : fieldDefTyped.example}
                       </dd>
                     </div>
                   {/if}
-                  {#if fieldDef.minLength !== undefined}
+                  {#if fieldDefTyped.minLength !== undefined}
                     <div class="flex gap-2">
                       <dt
                         class="text-sm font-medium text-gray-500 dark:text-gray-400"
@@ -353,11 +455,11 @@
                         Min Length:
                       </dt>
                       <dd class="text-sm text-gray-900 dark:text-gray-100">
-                        {fieldDef.minLength}
+                        {fieldDefTyped.minLength}
                       </dd>
                     </div>
                   {/if}
-                  {#if fieldDef.maxLength !== undefined}
+                  {#if fieldDefTyped.maxLength !== undefined}
                     <div class="flex gap-2">
                       <dt
                         class="text-sm font-medium text-gray-500 dark:text-gray-400"
@@ -365,7 +467,7 @@
                         Max Length:
                       </dt>
                       <dd class="text-sm text-gray-900 dark:text-gray-100">
-                        {fieldDef.maxLength}
+                        {fieldDefTyped.maxLength}
                       </dd>
                     </div>
                   {/if}

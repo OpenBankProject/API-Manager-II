@@ -14,6 +14,7 @@ interface EntityDiagnostic {
   schema?: any;
   responseKeys?: string[];
   triedKeys?: string[];
+  rawResponse?: any;
 }
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -69,6 +70,7 @@ export const load: PageServerLoad = async ({ locals }) => {
       let fetchError: string | undefined;
       let responseKeys: string[] = [];
       let triedKeys: string[] = [];
+      let rawResponse: any = undefined;
 
       try {
         // Fetch data records for this entity
@@ -76,6 +78,7 @@ export const load: PageServerLoad = async ({ locals }) => {
         logger.info(`  Fetching data from: ${dataEndpoint}`);
 
         const dataResponse = await obp_requests.get(dataEndpoint, accessToken);
+        rawResponse = dataResponse;
         responseKeys = Object.keys(dataResponse || {});
         logger.info(`  Response keys:`, responseKeys);
         logger.info(`  Full response:`, JSON.stringify(dataResponse, null, 2));
@@ -86,44 +89,49 @@ export const load: PageServerLoad = async ({ locals }) => {
         if (Array.isArray(dataResponse)) {
           records = dataResponse;
         } else {
-          // Convert camelCase to snake_case properly
-          // e.g., OGCR2ProjPerVerify -> ogcr2_proj_per_verify
-          const toSnakeCase = (str: string) => {
-            return str
-              .replace(/([A-Z][a-z0-9]+)/g, "_$1")
-              .replace(/([0-9]+)/g, "_$1")
-              .replace(/^_/, "")
-              .toLowerCase();
-          };
+          // Simple approach: find ANY key ending with _list that contains an array
+          const listKeys = Object.keys(dataResponse).filter((key) =>
+            key.endsWith("_list"),
+          );
 
-          const snakeCaseKey = `${toSnakeCase(entityName)}_list`;
-          const possibleKeys = [
-            snakeCaseKey,
-            `${entityName.toLowerCase()}_list`,
-            "data",
-            "records",
-            entityName,
-            `${entityName}_list`,
-          ];
+          logger.info(`  Found keys ending with _list:`, listKeys);
+          triedKeys = listKeys;
 
-          triedKeys = possibleKeys;
-          logger.info(`  Trying keys:`, possibleKeys);
+          for (const key of listKeys) {
+            const value = dataResponse[key];
+            logger.info(
+              `  Checking key "${key}": exists=${value !== undefined}, isArray=${Array.isArray(value)}, type=${typeof value}, length=${Array.isArray(value) ? value.length : "N/A"}`,
+            );
 
-          for (const key of possibleKeys) {
-            if (dataResponse[key] && Array.isArray(dataResponse[key])) {
-              records = dataResponse[key];
-              logger.info(`  Found records under key: ${key}`);
+            if (value && Array.isArray(value)) {
+              records = value;
+              logger.info(
+                `  ✓ Found records under key: ${key} with ${value.length} items`,
+              );
               break;
             }
           }
 
-          // If still no records, log the response structure
+          // If still no records, check if we found the key but it was empty vs not finding it at all
           if (records.length === 0) {
-            logger.warn(
-              `  Could not find records array. Response structure:`,
-              JSON.stringify(dataResponse, null, 2),
+            // Check if any of the tried keys actually existed in the response
+            const foundKey = triedKeys.find((key) =>
+              dataResponse.hasOwnProperty(key),
             );
-            fetchError = `Could not find records array. Response has keys: [${responseKeys.join(", ")}]. Tried keys: [${triedKeys.join(", ")}]`;
+
+            if (foundKey) {
+              // Key exists but array is empty - this is valid, not an error
+              logger.info(
+                `  Key "${foundKey}" found but array is empty (0 records)`,
+              );
+            } else {
+              // Key doesn't exist at all - this is an error
+              logger.warn(
+                `  Could not find records array. Response structure:`,
+                JSON.stringify(dataResponse, null, 2),
+              );
+              fetchError = `Could not find records array. Response has keys: [${responseKeys.join(", ")}]. Tried keys: [${triedKeys.join(", ")}]`;
+            }
           }
         }
 
@@ -147,6 +155,7 @@ export const load: PageServerLoad = async ({ locals }) => {
         schema,
         responseKeys,
         triedKeys,
+        rawResponse,
       });
     }
 

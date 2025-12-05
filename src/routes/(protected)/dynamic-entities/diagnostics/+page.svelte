@@ -7,6 +7,7 @@
   const totalRecords = data.totalRecords || 0;
 
   let searchQuery = $state("");
+  let copiedId = $state<string | null>(null);
 
   const filteredDiagnostics = $derived(
     diagnostics.filter((diag: any) => {
@@ -42,6 +43,27 @@
 
   function getPropertyCount(schema: any): number {
     return schema?.properties ? Object.keys(schema.properties).length : 0;
+  }
+
+  async function copyDiagnostic(diag: any) {
+    const diagnosticText = `
+Entity: ${diag.entityName}
+ID: ${diag.dynamicEntityId}
+Record Count: ${diag.error ? "Unknown" : diag.recordCount}
+${diag.error ? `Error: ${diag.error}` : ""}
+${diag.responseKeys ? `Response Keys: ${diag.responseKeys.join(", ")}` : ""}
+${diag.triedKeys ? `Tried Keys: ${diag.triedKeys.join(", ")}` : ""}
+`.trim();
+
+    try {
+      await navigator.clipboard.writeText(diagnosticText);
+      copiedId = diag.dynamicEntityId;
+      setTimeout(() => {
+        copiedId = null;
+      }, 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
   }
 </script>
 
@@ -179,13 +201,51 @@
               ID: {diag.dynamicEntityId}
             </p>
           </div>
-          <div class="text-right">
-            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
-              Record Count
-            </p>
-            <p class="text-3xl font-bold {getStatusColor(diag)}">
-              {diag.error ? "Unknown" : diag.recordCount}
-            </p>
+          <div class="flex items-start gap-4">
+            <button
+              type="button"
+              onclick={() => copyDiagnostic(diag)}
+              class="rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+              title="Copy diagnostic info"
+            >
+              {#if copiedId === diag.dynamicEntityId}
+                <svg
+                  class="h-5 w-5 text-green-600 dark:text-green-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              {:else}
+                <svg
+                  class="h-5 w-5 text-gray-600 dark:text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                  />
+                </svg>
+              {/if}
+            </button>
+            <div class="text-right">
+              <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Record Count
+              </p>
+              <p class="text-3xl font-bold {getStatusColor(diag)}">
+                {diag.error ? "Unknown" : diag.recordCount}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -252,6 +312,42 @@
             View Definition
           </a>
         </div>
+
+        <!-- Raw API Response -->
+        {#if diag.rawResponse}
+          <div class="mt-4">
+            <details class="group">
+              <summary
+                class="cursor-pointer rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+              >
+                <span class="inline-flex items-center gap-2">
+                  <svg
+                    class="h-4 w-4 transition-transform group-open:rotate-90"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                  Show Raw API Response
+                </span>
+              </summary>
+              <div
+                class="mt-2 overflow-auto max-h-96 rounded-lg bg-gray-50 p-4 dark:bg-gray-900"
+              >
+                <pre class="whitespace-pre-wrap break-words text-xs"><code
+                    class="text-gray-900 dark:text-gray-100"
+                    >{JSON.stringify(diag.rawResponse, null, 2)}</code
+                  ></pre>
+              </div>
+            </details>
+          </div>
+        {/if}
       </div>
     {/each}
   </div>
@@ -300,3 +396,30 @@
     </p>
   </div>
 {/if}
+
+<!-- Raw Data View -->
+<div
+  class="mt-6 rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800"
+>
+  <div class="border-b border-gray-200 p-6 dark:border-gray-700">
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+      Raw Diagnostics Data
+    </h2>
+    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+      Complete diagnostics data in JSON format for debugging
+    </p>
+  </div>
+  <div class="p-6">
+    <div class="overflow-auto max-h-[600px]">
+      <pre
+        class="whitespace-pre-wrap break-words rounded-lg bg-gray-50 p-4 text-xs dark:bg-gray-900"><code
+          class="text-gray-900 dark:text-gray-100"
+          >{JSON.stringify(
+            { diagnostics, totalEntities, totalRecords },
+            null,
+            2,
+          )}</code
+        ></pre>
+    </div>
+  </div>
+</div>
