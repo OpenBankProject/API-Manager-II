@@ -80,6 +80,11 @@ function buildDevOpsItems(): NavigationItem[] {
       label: "Migrations",
       iconComponent: GitBranch,
     },
+    {
+      href: "/system/webui-props",
+      label: "WebUI Props",
+      iconComponent: Settings,
+    },
   ];
 
   return items;

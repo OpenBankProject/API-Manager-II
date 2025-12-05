@@ -428,7 +428,7 @@
               onclick={toggleDevOps}
             >
               <Server class="size-5" />
-              <span>Insights</span>
+              <span>System</span>
               {#if isDevOpsExpanded}
                 <ChevronDown class="h-4 w-4" />
               {:else}
