@@ -69,10 +69,6 @@ ${diag.triedKeys ? `Tried Keys: ${diag.triedKeys.join(", ")}` : ""}
 
 <h1 class="text-gray-900 dark:text-gray-100">Dynamic Entity Diagnostics</h1>
 
-<p class="mb-4 text-gray-700 dark:text-gray-300">
-  View all dynamic entities and their record counts to diagnose data issues.
-</p>
-
 <!-- Summary Cards -->
 <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
   <!-- Total Entities -->
