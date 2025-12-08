@@ -14,6 +14,7 @@
   // Form state
   let formData = $state({
     bank_id: "",
+    account_id: "",
     name: "",
     description: "",
     metadata_view: "",
@@ -26,6 +27,37 @@
   let isSubmitting = $state(false);
   let submitError = $state<string | null>(null);
   let submitSuccess = $state(false);
+  let accounts = $state<any[]>([]);
+  let loadingAccounts = $state(false);
+
+  // Fetch accounts when bank is selected
+  $effect(() => {
+    if (formData.bank_id) {
+      fetchAccounts(formData.bank_id);
+    } else {
+      accounts = [];
+      formData.account_id = "";
+    }
+  });
+
+  async function fetchAccounts(bankId: string) {
+    loadingAccounts = true;
+    try {
+      const response = await fetch(`/api/obp/banks/${bankId}/accounts`);
+      if (response.ok) {
+        const data = await response.json();
+        accounts = data.accounts || [];
+      } else {
+        console.error("Failed to fetch accounts");
+        accounts = [];
+      }
+    } catch (err) {
+      console.error("Error fetching accounts:", err);
+      accounts = [];
+    } finally {
+      loadingAccounts = false;
+    }
+  }
 
   // Permission checkboxes state - organized by category
   let transactionPermissions = $state({
@@ -108,6 +140,7 @@
   let validationErrors = $derived.by(() => {
     const errors: string[] = [];
     if (!formData.bank_id) errors.push("Bank is required");
+    if (!formData.account_id) errors.push("Account is required");
     if (!formData.name || formData.name.trim().length === 0)
       errors.push("Name is required");
     if (!formData.description || formData.description.trim().length === 0)
@@ -152,13 +185,16 @@
       });
 
       // Make the API call
-      const response = await fetch(`/api/obp/banks/${formData.bank_id}/views`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `/api/obp/banks/${formData.bank_id}/accounts/${formData.account_id}/views`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
         },
-        body: JSON.stringify(payload),
-      });
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -168,10 +204,10 @@
       const result = await response.json();
       submitSuccess = true;
 
-      // Redirect to the new view's detail page after a short delay
+      // Redirect to the new view's detail page after showing success message
       setTimeout(() => {
         goto(`/account-access/custom-views/${result.id}`);
-      }, 1000);
+      }, 2500);
     } catch (err) {
       submitError =
         err instanceof Error ? err.message : "Failed to create custom view";
@@ -237,7 +273,27 @@
 
       {#if submitSuccess}
         <div class="success-message">
-          <p>✅ Custom view created successfully! Redirecting...</p>
+          <div
+            style="display: flex; align-items: center; gap: 0.75rem; font-size: 1.1rem;"
+          >
+            <svg
+              style="width: 24px; height: 24px; color: #10b981;"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+            <span
+              ><strong>Success!</strong> Custom view created successfully. Redirecting
+              to view details...</span
+            >
+          </div>
         </div>
       {/if}
 
@@ -268,6 +324,32 @@
                   <option value="">Select a bank...</option>
                   {#each banks as bank}
                     <option value={bank.id}>{bank.full_name || bank.id}</option>
+                  {/each}
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="account_id" class="form-label">
+                  Account <span class="required">*</span>
+                </label>
+                <select
+                  id="account_id"
+                  class="form-select"
+                  bind:value={formData.account_id}
+                  required
+                  disabled={!formData.bank_id || loadingAccounts}
+                >
+                  <option value="">
+                    {loadingAccounts
+                      ? "Loading accounts..."
+                      : formData.bank_id
+                        ? "Select an account..."
+                        : "Select a bank first"}
+                  </option>
+                  {#each accounts as account}
+                    <option value={account.id}>
+                      {account.label || account.id}
+                    </option>
                   {/each}
                 </select>
               </div>
@@ -909,7 +991,22 @@
             >
               {#if isSubmitting}
                 <span class="spinner">⏳</span>
-                Creating...
+                Creating View...
+              {:else if submitSuccess}
+                <svg
+                  style="width: 18px; height: 18px;"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+                Created Successfully
               {:else}
                 <Save size={18} />
                 Create Custom View

@@ -37,7 +37,7 @@ export interface UserEntitlement {
  */
 export function checkRoles(
   userEntitlements: UserEntitlement[],
-  requiredRoles: RoleRequirement[]
+  requiredRoles: RoleRequirement[],
 ): RoleCheckResult {
   const missingRoles: RoleRequirement[] = [];
   const hasRoles: RoleRequirement[] = [];
@@ -66,7 +66,7 @@ export function checkRoles(
   }
 
   logger.debug(
-    `Role check: ${hasRoles.length}/${requiredRoles.length} roles present`
+    `Role check: ${hasRoles.length}/${requiredRoles.length} roles present`,
   );
 
   if (missingRoles.length > 0) {
@@ -86,7 +86,7 @@ export function checkRoles(
  * @returns Map of bankId -> role requirements
  */
 export function groupMissingRolesByBank(
-  missingRoles: RoleRequirement[]
+  missingRoles: RoleRequirement[],
 ): Map<string, RoleRequirement[]> {
   const grouped = new Map<string, RoleRequirement[]>();
 
@@ -204,16 +204,12 @@ export function getEntitlementRequestsPageRoles(): RoleRequirement[] {
  * Get role requirements for the entitlements page
  */
 export function getEntitlementsPageRoles(): RoleRequirement[] {
-  return [
-    ...ROLE_REQUIREMENTS.viewEntitlements,
-  ];
+  return [...ROLE_REQUIREMENTS.viewEntitlements];
 }
 
 /**
  * Get role requirements for the roles page
  */
 export function getRolesPageRoles(): RoleRequirement[] {
-  return [
-    ...ROLE_REQUIREMENTS.viewRoles,
-  ];
+  return [...ROLE_REQUIREMENTS.viewRoles];
 }

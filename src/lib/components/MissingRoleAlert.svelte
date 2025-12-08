@@ -112,6 +112,11 @@
     <MessageBox {message} type="error" />
   {/if}
 
+  <div class="tip-box">
+    <strong>💡 Tip:</strong> If you have recently been granted this entitlement,
+    you should log out and log back in again so your session is refreshed.
+  </div>
+
   {#if submitError}
     <MessageBox message={submitError} type="error" />
   {/if}
@@ -306,5 +311,20 @@
     background: rgba(16, 185, 129, 0.2);
     border-color: rgba(16, 185, 129, 0.4);
     color: rgb(var(--color-success-200));
+  }
+
+  .tip-box {
+    margin: 1rem 0;
+    padding: 0.75rem;
+    background: rgba(59, 130, 246, 0.1);
+    border-left: 3px solid #3b82f6;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  :global([data-mode="dark"]) .tip-box {
+    background: rgba(59, 130, 246, 0.15);
+    border-left-color: rgb(var(--color-primary-500));
   }
 </style>
