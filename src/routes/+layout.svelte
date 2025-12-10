@@ -4,7 +4,7 @@
   import { page } from "$app/state";
   import {
     myAccountItems,
-    devOpsItems,
+    systemItems,
     integrationItems,
     apiMetricsItems,
     rbacItems,
@@ -63,7 +63,7 @@
   let isAuthenticated = $state(false);
   let isMobileMenuOpen = $state(false);
   let isMyAccountExpanded = $state(false);
-  let isDevOpsExpanded = $state(false);
+  let isSystemExpanded = $state(false);
   let isIntegrationExpanded = $state(false);
   let isApiMetricsExpanded = $state(false);
   let isRbacExpanded = $state(false);
@@ -146,7 +146,7 @@
   let isMyAccountActive = $derived(
     page.url.pathname === "/user" || page.url.pathname.startsWith("/user/"),
   );
-  let isDevOpsActive = $derived(
+  let isSystemActive = $derived(
     page.url.pathname === "/system" || page.url.pathname.startsWith("/system/"),
   );
   let isIntegrationActive = $derived(
@@ -183,8 +183,8 @@
     if (isMyAccountActive) {
       isMyAccountExpanded = true;
     }
-    if (isDevOpsActive) {
-      isDevOpsExpanded = true;
+    if (isSystemActive) {
+      isSystemExpanded = true;
     }
     if (isIntegrationActive) {
       isIntegrationExpanded = true;
@@ -218,8 +218,8 @@
     isMyAccountExpanded = !isMyAccountExpanded;
   }
 
-  function toggleDevOps() {
-    isDevOpsExpanded = !isDevOpsExpanded;
+  function toggleSystem() {
+    isSystemExpanded = !isSystemExpanded;
   }
 
   function toggleIntegration() {
@@ -417,28 +417,28 @@
             {/if}
           </Navigation.Group>
 
-          <!-- DevOps Group -->
+          <!-- System Group -->
           <Navigation.Group>
             <button
               type="button"
               class="btn w-full justify-start gap-3 px-2 hover:preset-tonal"
-              class:preset-filled-primary-50-950={isDevOpsActive}
-              class:border={isDevOpsActive}
-              class:border-solid-secondary-500={isDevOpsActive}
-              onclick={toggleDevOps}
+              class:preset-filled-primary-50-950={isSystemActive}
+              class:border={isSystemActive}
+              class:border-solid-secondary-500={isSystemActive}
+              onclick={toggleSystem}
             >
               <Server class="size-5" />
               <span>System</span>
-              {#if isDevOpsExpanded}
+              {#if isSystemExpanded}
                 <ChevronDown class="h-4 w-4" />
               {:else}
                 <ChevronRight class="h-4 w-4" />
               {/if}
             </button>
 
-            {#if isDevOpsExpanded}
+            {#if isSystemExpanded}
               <Navigation.Menu class="mt-1 ml-4 flex flex-col gap-1 px-2">
-                {#each devOpsItems as subItem}
+                {#each systemItems as subItem}
                   {@const Icon = subItem.iconComponent}
                   <a
                     href={subItem.href}

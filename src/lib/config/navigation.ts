@@ -71,8 +71,8 @@ export function getActiveMenuItem(pathname: string) {
   return found || myAccountItems[0]; // fallback to first item
 }
 
-// DevOps navigation items
-function buildDevOpsItems(): NavigationItem[] {
+// System navigation items
+function buildSystemItems(): NavigationItem[] {
   const items: NavigationItem[] = [
     { href: "/system/log-cache", label: "LogCache", iconComponent: Database },
     {
@@ -90,10 +90,10 @@ function buildDevOpsItems(): NavigationItem[] {
   return items;
 }
 
-export const devOpsItems = buildDevOpsItems();
+export const systemItems = buildSystemItems();
 
-export function getActiveDevOpsMenuItem(pathname: string) {
-  const found = devOpsItems.find((item) => {
+export function getActiveSystemMenuItem(pathname: string) {
+  const found = systemItems.find((item) => {
     // Skip external links for active menu detection
     if (item.external) {
       return false;
@@ -101,7 +101,7 @@ export function getActiveDevOpsMenuItem(pathname: string) {
     return pathname.startsWith(item.href);
   });
 
-  return found || devOpsItems[0]; // fallback to first item
+  return found || systemItems[0]; // fallback to first item
 }
 
 // Integration navigation items
