@@ -4,7 +4,11 @@
   let error = $state<string | null>(null);
   let lastUpdated = $state<string>("");
   let refreshInterval: number | undefined = undefined;
+  let countdownInterval: number | undefined = undefined;
   let initialized = $state(false);
+  let secondsUntilRefresh = $state(600); // 10 minutes in seconds
+
+  const REFRESH_INTERVAL_MS = 600000; // 10 minutes in milliseconds
 
   async function fetchMigrations() {
     try {
@@ -62,6 +66,31 @@
     }
   }
 
+  function startCountdown() {
+    // Clear any existing countdown interval
+    if (countdownInterval) {
+      clearInterval(countdownInterval);
+    }
+
+    // Reset countdown to 10 minutes
+    secondsUntilRefresh = 600;
+
+    // Update countdown every second
+    countdownInterval = setInterval(() => {
+      secondsUntilRefresh--;
+      if (secondsUntilRefresh <= 0) {
+        secondsUntilRefresh = 600;
+      }
+    }, 1000);
+  }
+
+  function stopCountdown() {
+    if (countdownInterval) {
+      clearInterval(countdownInterval);
+      countdownInterval = undefined;
+    }
+  }
+
   function startAutoRefresh() {
     // Clear any existing interval first
     if (refreshInterval) {
@@ -71,10 +100,14 @@
     // Initial fetch
     fetchMigrations();
 
-    // Set up 5-second interval
+    // Start countdown
+    startCountdown();
+
+    // Set up 10-minute interval
     refreshInterval = setInterval(() => {
       fetchMigrations();
-    }, 5000);
+      startCountdown(); // Reset countdown on each refresh
+    }, REFRESH_INTERVAL_MS);
   }
 
   function stopAutoRefresh() {
@@ -82,6 +115,20 @@
       clearInterval(refreshInterval);
       refreshInterval = undefined;
     }
+    stopCountdown();
+  }
+
+  async function handleManualRefresh() {
+    await fetchMigrations();
+    // Reset the auto-refresh cycle
+    stopAutoRefresh();
+    startAutoRefresh();
+  }
+
+  function formatCountdown(seconds: number): string {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   }
 
   function formatTimestamp(timestamp: string | number): string {
@@ -156,11 +203,41 @@
           </div>
         </div>
         <div class="header-controls">
-          {#if lastUpdated}
-            <div class="last-updated">
-              Last updated: <span class="timestamp">{lastUpdated}</span>
+          <button
+            class="refresh-button"
+            onclick={handleManualRefresh}
+            disabled={isLoading}
+            aria-label="Refresh migrations now"
+          >
+            <svg
+              class="refresh-icon"
+              class:spinning={isLoading}
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"
+              />
+            </svg>
+            Refresh Now
+          </button>
+          <div class="refresh-info">
+            {#if lastUpdated}
+              <div class="last-updated">
+                Last updated: <span class="timestamp">{lastUpdated}</span>
+              </div>
+            {/if}
+            <div class="next-refresh">
+              Next refresh in: <span class="countdown"
+                >{formatCountdown(secondsUntilRefresh)}</span
+              >
             </div>
-          {/if}
+          </div>
         </div>
       </div>
     </div>
@@ -298,23 +375,84 @@
     align-items: flex-end;
   }
 
-  .last-updated {
+  .refresh-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .refresh-button:hover:not(:disabled) {
+    background: #2563eb;
+  }
+
+  .refresh-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  :global([data-mode="dark"]) .refresh-button {
+    background: rgb(var(--color-primary-600));
+  }
+
+  :global([data-mode="dark"]) .refresh-button:hover:not(:disabled) {
+    background: rgb(var(--color-primary-500));
+  }
+
+  .refresh-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .refresh-icon.spinning {
+    animation: spin 1s linear infinite;
+  }
+
+  .refresh-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    align-items: flex-end;
+  }
+
+  .last-updated,
+  .next-refresh {
     font-size: 0.75rem;
     color: #6b7280;
   }
 
-  :global([data-mode="dark"]) .last-updated {
+  :global([data-mode="dark"]) .last-updated,
+  :global([data-mode="dark"]) .next-refresh {
     color: var(--color-surface-400);
   }
 
-  .timestamp {
+  .timestamp,
+  .countdown {
     font-family: monospace;
     font-weight: 500;
     color: #374151;
   }
 
-  :global([data-mode="dark"]) .timestamp {
+  :global([data-mode="dark"]) .timestamp,
+  :global([data-mode="dark"]) .countdown {
     color: var(--color-surface-300);
+  }
+
+  .countdown {
+    color: #3b82f6;
+    font-weight: 600;
+  }
+
+  :global([data-mode="dark"]) .countdown {
+    color: rgb(var(--color-primary-400));
   }
 
   .panel-content {
@@ -530,7 +668,16 @@
       align-items: stretch;
     }
 
-    .last-updated {
+    .refresh-button {
+      justify-content: center;
+    }
+
+    .refresh-info {
+      align-items: center;
+    }
+
+    .last-updated,
+    .next-refresh {
       text-align: center;
     }
   }

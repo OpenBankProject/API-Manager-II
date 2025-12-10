@@ -1,38 +1,18 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { obp_requests } from "$lib/obp/requests";
-import { SessionOAuthHelper } from "$lib/oauth/sessionHelper";
+import { checkAPIAuth } from "$lib/utils/apiAuth";
 import { createLogger } from "$lib/utils/logger";
 
 const logger = createLogger("LogCacheAPI");
 
 export const GET: RequestHandler = async ({ url, locals }) => {
-  const session = locals.session;
-
-  logger.info("=== LOG-CACHE AUTH DEBUG ===");
-  logger.info(`Session exists: ${!!session}`);
-  logger.info(`Session data exists: ${!!session?.data}`);
-  logger.info(`User exists: ${!!session?.data?.user}`);
-
-  if (!session?.data?.user) {
-    logger.error("No user in session - returning 401");
-    return json(
-      { error: "Unauthorized - No user in session" },
-      { status: 401 },
-    );
+  const auth = checkAPIAuth(locals);
+  if (!auth.authenticated) {
+    return auth.error!;
   }
 
-  const sessionOAuth = SessionOAuthHelper.getSessionOAuth(session);
-  logger.info(`SessionOAuth exists: ${!!sessionOAuth}`);
-
-  const accessToken = sessionOAuth?.accessToken;
-  logger.info(`Access token exists: ${!!accessToken}`);
-  logger.info(`Access token length: ${accessToken?.length || 0}`);
-
-  if (!accessToken) {
-    logger.error("No access token available for log-cache API call");
-    return json({ error: "No API access token available" }, { status: 401 });
-  }
+  const accessToken = auth.accessToken!;
 
   try {
     const logLevel = url.searchParams.get("log_level") || "ALL";
@@ -44,8 +24,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
     const response = await obp_requests.get(endpoint, accessToken);
 
-    const entryCount = response?.entries?.length || 0;
-    logger.info(`Retrieved ${entryCount} log entries`);
+    logger.info(`Retrieved ${response?.entries?.length || 0} log entries`);
 
     return json(response);
   } catch (err) {

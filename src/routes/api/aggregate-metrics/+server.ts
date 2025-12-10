@@ -1,27 +1,19 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { obp_requests } from "$lib/obp/requests";
-import { SessionOAuthHelper } from "$lib/oauth/sessionHelper";
+import { checkAPIAuth } from "$lib/utils/apiAuth";
 import { createLogger } from "$lib/utils/logger";
 import { env } from "$env/dynamic/public";
 
 const logger = createLogger("AggregateMetricsAPI");
 
 export const GET: RequestHandler = async ({ url, locals }) => {
-  const session = locals.session;
-
-  if (!session?.data?.user) {
-    return json({ error: "Unauthorized" }, { status: 401 });
+  const auth = checkAPIAuth(locals);
+  if (!auth.authenticated) {
+    return auth.error!;
   }
 
-  // Get the OAuth session data
-  const sessionOAuth = SessionOAuthHelper.getSessionOAuth(session);
-  const accessToken = sessionOAuth?.accessToken;
-
-  if (!accessToken) {
-    logger.warn("No access token available for metrics API calls");
-    return json({ error: "No API access token available" }, { status: 401 });
-  }
+  const accessToken = auth.accessToken!;
 
   try {
     // Get all query parameters from the request
