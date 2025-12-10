@@ -44,8 +44,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
     const response = await obp_requests.get(endpoint, accessToken);
 
-    logger.info("Raw response from OBP API:");
-    logger.debug(JSON.stringify(response, null, 2));
+    const entryCount = response?.entries?.length || 0;
+    logger.info(`Retrieved ${entryCount} log entries`);
 
     return json(response);
   } catch (err) {

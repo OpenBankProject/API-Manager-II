@@ -29,14 +29,21 @@ export async function load(event: RequestEvent) {
     // Fetch webui props using v6.0.0 endpoint
     // Optional what parameter: active (default), database, config
     const endpoint = `/obp/v6.0.0/webui-props?what=${whatParam}`;
+    logger.info("=== WEBUI PROPS API CALL ===");
+    logger.info(
+      `Full API URL: ${process.env.PUBLIC_OBP_BASE_URL || ""}${endpoint}`,
+    );
     logger.info(`Making API request to: ${endpoint}`);
 
     webuiPropsResponse = await obp_requests.get(endpoint, token);
 
+    logger.info("=== WEBUI PROPS API RESPONSE ===");
     logger.info("API request completed successfully");
     logger.info("Response type:", typeof webuiPropsResponse);
     logger.info("Response keys:", Object.keys(webuiPropsResponse || {}));
-    logger.info("Full response:", JSON.stringify(webuiPropsResponse, null, 2));
+    logger.info("=== FULL JSON RESPONSE ===");
+    logger.info(JSON.stringify(webuiPropsResponse, null, 2));
+    logger.info("=== END JSON RESPONSE ===");
 
     logger.info(
       "Fetched webui props count:",

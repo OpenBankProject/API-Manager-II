@@ -29,11 +29,21 @@ class OBPRequests {
       headers,
     });
 
+    // Log the actual HTTP status code and correlation ID
+    const correlationId = response.headers.get("Correlation-Id");
+    logger.debug(`HTTP Status: ${response.status} ${response.statusText}`);
+    if (correlationId) {
+      logger.debug(`Correlation ID: ${correlationId}`);
+    }
+
     // Check content type before parsing
     const contentType = response.headers.get("content-type");
     const isJson = contentType && contentType.includes("application/json");
 
     if (!response.ok) {
+      logger.error(
+        `HTTP Error: ${response.status} ${response.statusText} for ${endpoint}`,
+      );
       // Try to get error details, but handle non-JSON responses
       let data;
       try {
@@ -98,6 +108,12 @@ class OBPRequests {
       headers,
       body: JSON.stringify(body),
     });
+
+    // Log correlation ID
+    const correlationId = response.headers.get("Correlation-Id");
+    if (correlationId) {
+      logger.debug(`Correlation ID: ${correlationId}`);
+    }
 
     // Check content type before parsing
     const contentType = response.headers.get("content-type");
@@ -167,6 +183,12 @@ class OBPRequests {
       method: "DELETE",
       headers,
     });
+
+    // Log correlation ID
+    const correlationId = response.headers.get("Correlation-Id");
+    if (correlationId) {
+      logger.debug(`Correlation ID: ${correlationId}`);
+    }
 
     // Check content type before parsing
     const contentType = response.headers.get("content-type");
@@ -250,6 +272,12 @@ class OBPRequests {
       body: JSON.stringify(body),
     });
 
+    // Log correlation ID
+    const correlationId = response.headers.get("Correlation-Id");
+    if (correlationId) {
+      logger.debug(`Correlation ID: ${correlationId}`);
+    }
+
     // Check content type before parsing
     const contentType = response.headers.get("content-type");
     const isJson = contentType && contentType.includes("application/json");
@@ -319,6 +347,12 @@ class OBPRequests {
       headers,
       body: JSON.stringify(body),
     });
+
+    // Log correlation ID
+    const correlationId = response.headers.get("Correlation-Id");
+    if (correlationId) {
+      logger.debug(`Correlation ID: ${correlationId}`);
+    }
 
     // Check content type before parsing
     const contentType = response.headers.get("content-type");

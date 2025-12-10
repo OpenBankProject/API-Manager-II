@@ -150,7 +150,7 @@ const checkAuthorization: Handle = async ({ event, resolve }) => {
         },
       });
     } else {
-      logger.debug("User is authenticated:", session.data.user);
+      logger.debug("User is authenticated:", session.data.user?.email);
 
       // Pre-warm resource docs cache in background (non-blocking)
       const sessionOAuth = SessionOAuthHelper.getSessionOAuth(session);

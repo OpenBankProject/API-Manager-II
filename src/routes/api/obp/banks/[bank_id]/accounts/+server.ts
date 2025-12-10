@@ -1,0 +1,73 @@
+import { json } from "@sveltejs/kit";
+import type { RequestHandler } from "./$types";
+import { obp_requests } from "$lib/obp/requests";
+import { SessionOAuthHelper } from "$lib/oauth/sessionHelper";
+import { createLogger } from "$lib/utils/logger";
+
+const logger = createLogger("BankAccountsAPI");
+
+export const GET: RequestHandler = async ({ locals, params }) => {
+  const session = locals.session;
+
+  if (!session?.data?.user) {
+    return json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Get the OAuth session data
+  const sessionOAuth = SessionOAuthHelper.getSessionOAuth(session);
+  const accessToken = sessionOAuth?.accessToken;
+
+  if (!accessToken) {
+    logger.warn("No access token available for fetching accounts");
+    return json({ error: "No API access token available" }, { status: 401 });
+  }
+
+  const { bank_id } = params;
+
+  if (!bank_id) {
+    return json({ error: "Bank ID is required" }, { status: 400 });
+  }
+
+  try {
+    logger.info(`Fetching accounts for bank: ${bank_id}`);
+
+    // Fetch all accounts for the current user, then filter by bank
+    const endpoint = `/obp/v5.0.0/my/accounts`;
+    const response = await obp_requests.get(endpoint, accessToken);
+
+    // Filter accounts by the requested bank_id
+    const allAccounts = response.accounts || [];
+    const bankAccounts = allAccounts.filter(
+      (account: any) => account.bank_id === bank_id,
+    );
+
+    logger.info(
+      `Retrieved ${bankAccounts.length} accounts for bank ${bank_id} (out of ${allAccounts.length} total accounts)`,
+    );
+
+    return json({ accounts: bankAccounts }, { status: 200 });
+  } catch (err) {
+    logger.error("Error fetching accounts:", err);
+
+    let errorMessage = "Failed to fetch accounts";
+    let statusCode = 500;
+
+    if (err instanceof Error) {
+      errorMessage = err.message;
+
+      // Try to extract status code from error message
+      const statusMatch = err.message.match(/status (\d+)/i);
+      if (statusMatch) {
+        statusCode = parseInt(statusMatch[1], 10);
+      }
+    }
+
+    return json(
+      {
+        error: errorMessage,
+        accounts: [],
+      },
+      { status: statusCode },
+    );
+  }
+};
