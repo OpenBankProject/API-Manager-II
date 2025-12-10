@@ -8,7 +8,6 @@
 
   let { data } = $props();
   const webuiProps: OBPWebUIProp[] = data.webuiProps;
-  const currentWhat = data.whatParam || "active";
 
   let searchQuery = $state("");
   let showCreateModal = $state(false);
@@ -244,105 +243,14 @@
   application.
 </p>
 
-<!-- Source Selection Buttons -->
+<!-- Search -->
 <div class="mb-6">
-  <div class="flex items-center gap-4">
-    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-      Data Source:
-    </span>
-    <div class="flex gap-2">
-      <a
-        href="/system/webui-props?what=active"
-        class="rounded-lg px-4 py-2 text-sm font-medium transition-colors {currentWhat ===
-        'active'
-          ? 'bg-blue-600 text-white dark:bg-blue-500'
-          : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}"
-      >
-        Active
-      </a>
-      <a
-        href="/system/webui-props?what=database"
-        class="rounded-lg px-4 py-2 text-sm font-medium transition-colors {currentWhat ===
-        'database'
-          ? 'bg-blue-600 text-white dark:bg-blue-500'
-          : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}"
-      >
-        Database
-      </a>
-      <a
-        href="/system/webui-props?what=config"
-        class="rounded-lg px-4 py-2 text-sm font-medium transition-colors {currentWhat ===
-        'config'
-          ? 'bg-blue-600 text-white dark:bg-blue-500'
-          : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}"
-      >
-        Config
-      </a>
-    </div>
-  </div>
-  <p class="mt-2 text-xs text-gray-600 dark:text-gray-400">
-    <strong>Active:</strong> Props marked as active |
-    <strong>Database:</strong> All props from database |
-    <strong>Config:</strong> Props from configuration files
-  </p>
-</div>
-
-<!-- Info Notice -->
-<div
-  class="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20"
->
-  <div class="flex items-start">
-    <svg
-      class="mr-3 mt-0.5 h-5 w-5 shrink-0 text-blue-600 dark:text-blue-400"
-      fill="currentColor"
-      viewBox="0 0 20 20"
-    >
-      <path
-        fill-rule="evenodd"
-        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-        clip-rule="evenodd"
-      />
-    </svg>
-    <div>
-      <h3 class="text-sm font-medium text-blue-900 dark:text-blue-100">
-        About WebUI Props
-      </h3>
-      <p class="mt-1 text-sm text-blue-800 dark:text-blue-200">
-        WebUI props are key-value pairs used to configure various aspects of the
-        web interface, such as legal documents, feature flags, and other
-        settings. Changes take effect immediately.
-      </p>
-    </div>
-  </div>
-</div>
-
-<!-- Search and Create Button -->
-<div
-  class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
->
-  <div class="flex-1">
-    <input
-      type="text"
-      bind:value={searchQuery}
-      placeholder="Search by name, value, description, or ID..."
-      class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:focus:border-blue-400"
-    />
-  </div>
-  <button
-    type="button"
-    onclick={openCreateModal}
-    class="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:bg-blue-500 dark:hover:bg-blue-600"
-  >
-    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="2"
-        d="M12 4v16m8-8H4"
-      />
-    </svg>
-    Create New Prop
-  </button>
+  <input
+    type="text"
+    bind:value={searchQuery}
+    placeholder="Search by name, value, description, or ID..."
+    class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:focus:border-blue-400"
+  />
 </div>
 
 <!-- Props List -->
