@@ -73,6 +73,11 @@
       return;
     }
 
+    if (!formName.trim().startsWith("webui_")) {
+      formError = "Name must start with 'webui_'";
+      return;
+    }
+
     isSubmitting = true;
     formError = "";
 
@@ -384,8 +389,13 @@
               bind:value={formName}
               placeholder="e.g., webui_api_explorer_url"
               required
+              pattern="webui_.*"
+              title="Name must start with 'webui_'"
               class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
             />
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Name must start with "webui_"
+            </p>
           </div>
 
           <!-- Value -->

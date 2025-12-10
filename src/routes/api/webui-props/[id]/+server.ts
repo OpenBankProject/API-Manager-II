@@ -29,7 +29,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
     }
 
     const body = await request.json();
-    const { name, value, description, is_active } = body;
+    const { name, value } = body;
 
     if (!name || typeof name !== "string") {
       return json(
@@ -45,20 +45,11 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
       );
     }
 
-    if (typeof is_active !== "boolean") {
-      return json(
-        { error: "is_active is required and must be a boolean" },
-        { status: 400 },
-      );
-    }
-
     logger.info(`Updating webui prop: ${id}`);
 
     const requestBody = {
       name,
       value,
-      description: description || "",
-      is_active,
     };
 
     const endpoint = `/obp/v6.0.0/webui-props/${id}`;

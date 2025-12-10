@@ -23,7 +23,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
   try {
     const body = await request.json();
-    const { name, value, description, is_active } = body;
+    const { name, value } = body;
 
     if (!name || typeof name !== "string") {
       return json(
@@ -39,24 +39,15 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       );
     }
 
-    if (typeof is_active !== "boolean") {
-      return json(
-        { error: "is_active is required and must be a boolean" },
-        { status: 400 },
-      );
-    }
-
     logger.info("Creating webui prop");
     logger.info(`Name: ${name}`);
 
     const requestBody = {
       name,
       value,
-      description: description || "",
-      is_active,
     };
 
-    const endpoint = `/obp/v6.0.0/webui-props`;
+    const endpoint = `/obp/v6.0.0/management/webui_props`;
     logger.info(`POST ${endpoint}`);
 
     const response = await obp_requests.post(
