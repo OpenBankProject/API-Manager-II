@@ -55,8 +55,8 @@
         throw new Error(errorMessage);
       }
 
-      // Success - redirect back to the list
-      goto("/system/webui-props");
+      // Success - redirect back to the database filter view
+      goto("/system/webui-props?what=database");
     } catch (err) {
       const errorMsg =
         err instanceof Error ? err.message : "Failed to create webui prop";
@@ -66,7 +66,7 @@
   }
 
   function handleCancel() {
-    goto("/system/webui-props");
+    goto("/system/webui-props?what=database");
   }
 </script>
 
@@ -158,16 +158,14 @@
                     clip-rule="evenodd"
                   />
                 </svg>
-                Best Practices
+                Note
               </h3>
               <ul class="space-y-1 text-sm text-blue-800 dark:text-blue-200">
-                <li>• Use descriptive names prefixed with "webui_"</li>
-                <li>• The property will be created as active by default</li>
+                <li>• Names MUST start with "webui_"</li>
                 <li>
-                  • Common use cases: feature flags, legal documents,
-                  configuration values
+                  • Only "_", "." and alphanumeric characters allowed. No
+                  spaces.
                 </li>
-                <li>• You can edit or delete the property after creation</li>
               </ul>
             </div>
           </div>
