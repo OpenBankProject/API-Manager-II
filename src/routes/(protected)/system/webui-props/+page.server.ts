@@ -54,22 +54,25 @@ export async function load(event: RequestEvent) {
     });
   }
 
-  const props = propsResponse.webui_props;
+  const webui_props = propsResponse.webui_props;
 
   // Debug: Log first prop to see structure
-  if (props.length > 0) {
-    logger.debug("Sample prop structure:", JSON.stringify(props[0], null, 2));
+  if (webui_props.length > 0) {
+    logger.debug(
+      "Sample prop structure:",
+      JSON.stringify(webui_props[0], null, 2),
+    );
   }
 
-  // Sort props by name
-  props.sort((a, b) => {
+  // Sort webui_props by name
+  webui_props.sort((a, b) => {
     return a.name.localeCompare(b.name);
   });
 
-  logger.debug(`Total props after processing: ${props.length}`);
+  logger.debug(`Total webui_props after processing: ${webui_props.length}`);
 
   return {
-    props,
+    webui_props,
     filter,
   };
 }
