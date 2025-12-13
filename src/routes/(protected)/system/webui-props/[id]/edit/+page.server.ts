@@ -38,7 +38,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
   try {
     // First, get all props to find the one we want
     const propsResponse = await obp_requests.get(
-      `/obp/v6.0.0/webui-props?what=database`,
+      `/obp/v6.0.0/webui-props?what=active`,
       token,
     );
 

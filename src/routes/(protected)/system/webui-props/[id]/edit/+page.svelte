@@ -74,7 +74,7 @@
         {formName}
       </h1>
       <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-        Update the configuration property for the web interface
+        Update the configuration property
       </p>
     </div>
 

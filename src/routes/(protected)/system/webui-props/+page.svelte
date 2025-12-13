@@ -126,6 +126,9 @@
             <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
               {prop.name}
             </h2>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Source: {prop.source || "undefined"}
+            </p>
           </div>
 
           <!-- Value -->
@@ -139,21 +142,25 @@
               class="whitespace-pre-wrap break-words rounded-lg bg-gray-50 p-4 text-sm text-gray-900 dark:bg-gray-900/50 dark:text-gray-100">{prop.value}</pre>
           </div>
 
-          <!-- Action Buttons - Only show for database source with valid name -->
-          {#if prop.source === "database" && prop.name}
+          <!-- Action Buttons -->
+          {#if prop.name && (prop.source === "database" || prop.source === "active" || prop.source === "config")}
             <div class="flex gap-2">
+              <!-- Edit button for config, active and database -->
               <button
                 onclick={() => openEditModal(prop)}
                 class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:bg-blue-500 dark:hover:bg-blue-600"
               >
                 Edit
               </button>
-              <button
-                onclick={() => openDeleteModal(prop)}
-                class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:bg-red-500 dark:hover:bg-red-600"
-              >
-                Delete
-              </button>
+              <!-- Delete button only for database -->
+              {#if prop.source === "database"}
+                <button
+                  onclick={() => openDeleteModal(prop)}
+                  class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:bg-red-500 dark:hover:bg-red-600"
+                >
+                  Delete
+                </button>
+              {/if}
             </div>
           {/if}
         </div>
