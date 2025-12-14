@@ -23,7 +23,17 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
   try {
     const body = await request.json();
-    const { name, description, is_public } = body;
+    const {
+      name,
+      description,
+      metadata_view,
+      is_public,
+      which_alias_to_use,
+      hide_metadata_if_alias_used,
+      allowed_actions,
+      can_grant_access_to_views,
+      can_revoke_access_to_views,
+    } = body;
 
     if (!name || typeof name !== "string") {
       return json(
@@ -42,11 +52,27 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     logger.info("Creating system view");
     logger.info(`Name: ${name}`);
 
-    const requestBody = {
+    const requestBody: any = {
       name,
       description,
+      metadata_view: metadata_view || description,
       is_public: is_public || false,
+      which_alias_to_use: which_alias_to_use || "public",
+      hide_metadata_if_alias_used: hide_metadata_if_alias_used || false,
+      allowed_actions: allowed_actions || [],
     };
+
+    // Add optional fields if provided
+    if (can_grant_access_to_views && Array.isArray(can_grant_access_to_views)) {
+      requestBody.can_grant_access_to_views = can_grant_access_to_views;
+    }
+
+    if (
+      can_revoke_access_to_views &&
+      Array.isArray(can_revoke_access_to_views)
+    ) {
+      requestBody.can_revoke_access_to_views = can_revoke_access_to_views;
+    }
 
     const endpoint = `/obp/v6.0.0/system-views`;
     logger.info(`POST ${endpoint}`);

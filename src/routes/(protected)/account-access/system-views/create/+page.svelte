@@ -13,9 +13,119 @@
   // Form states
   let formName = $state("");
   let formDescription = $state("");
+  let formMetadataView = $state("");
   let formIsPublic = $state(false);
+  let formWhichAliasToUse = $state("public");
+  let formHideMetadataIfAliasUsed = $state(false);
   let formError = $state("");
   let isSubmitting = $state(false);
+
+  // All possible allowed actions
+  const allAllowedActions = [
+    "can_edit_owner_comment",
+    "can_see_transaction_this_bank_account",
+    "can_see_transaction_other_bank_account",
+    "can_see_transaction_metadata",
+    "can_see_transaction_amount",
+    "can_see_transaction_type",
+    "can_see_transaction_currency",
+    "can_see_transaction_start_date",
+    "can_see_transaction_finish_date",
+    "can_see_transaction_balance",
+    "can_see_comments",
+    "can_see_tags",
+    "can_see_images",
+    "can_see_bank_account_owners",
+    "can_see_bank_account_type",
+    "can_see_bank_account_balance",
+    "can_see_bank_account_currency",
+    "can_see_bank_account_label",
+    "can_see_bank_account_national_identifier",
+    "can_see_bank_account_swift_bic",
+    "can_see_bank_account_iban",
+    "can_see_bank_account_number",
+    "can_see_bank_account_bank_name",
+    "can_see_other_account_national_identifier",
+    "can_see_other_account_swift_bic",
+    "can_see_other_account_iban",
+    "can_see_other_account_bank_name",
+    "can_see_other_account_number",
+    "can_see_other_account_metadata",
+    "can_see_other_account_kind",
+    "can_see_more_info",
+    "can_see_url",
+    "can_see_image_url",
+    "can_see_open_corporates_url",
+    "can_see_corporate_location",
+    "can_see_physical_location",
+    "can_see_public_alias",
+    "can_see_private_alias",
+    "can_add_more_info",
+    "can_add_url",
+    "can_add_image_url",
+    "can_add_open_corporates_url",
+    "can_add_corporate_location",
+    "can_add_physical_location",
+    "can_add_public_alias",
+    "can_add_private_alias",
+    "can_delete_corporate_location",
+    "can_delete_physical_location",
+    "can_add_comment",
+    "can_delete_comment",
+    "can_add_tag",
+    "can_delete_tag",
+    "can_add_image",
+    "can_delete_image",
+    "can_add_where_tag",
+    "can_see_where_tag",
+    "can_delete_where_tag",
+    "can_see_bank_routing_scheme",
+    "can_see_bank_routing_address",
+    "can_see_bank_account_routing_scheme",
+    "can_see_bank_account_routing_address",
+    "can_see_other_bank_routing_scheme",
+    "can_see_other_bank_routing_address",
+    "can_see_other_account_routing_scheme",
+    "can_see_other_account_routing_address",
+    "can_query_available_funds",
+    "can_add_transaction_request_to_own_account",
+    "can_add_transaction_request_to_any_account",
+    "can_see_bank_account_credit_limit",
+    "can_create_direct_debit",
+    "can_create_standing_order",
+    "can_see_transaction_request_types",
+    "can_see_transaction_requests",
+    "can_see_available_views_for_bank_account",
+    "can_update_bank_account_label",
+    "can_create_custom_view",
+    "can_delete_custom_view",
+    "can_update_custom_view",
+    "can_see_views_with_permissions_for_one_user",
+    "can_see_views_with_permissions_for_all_users",
+    "can_grant_access_to_custom_views",
+    "can_revoke_access_to_custom_views",
+    "can_see_transaction_status",
+  ];
+
+  let selectedActions = $state<string[]>([]);
+  let grantAccessViews = $state("");
+  let revokeAccessViews = $state("");
+
+  function toggleAction(action: string) {
+    if (selectedActions.includes(action)) {
+      selectedActions = selectedActions.filter((a) => a !== action);
+    } else {
+      selectedActions = [...selectedActions, action];
+    }
+  }
+
+  function selectAllActions() {
+    selectedActions = [...allAllowedActions];
+  }
+
+  function deselectAllActions() {
+    selectedActions = [];
+  }
 
   async function handleSubmit(event: Event) {
     event.preventDefault();
@@ -34,16 +144,37 @@
     formError = "";
 
     try {
+      const requestBody: any = {
+        name: formName,
+        description: formDescription,
+        metadata_view: formMetadataView || formDescription,
+        is_public: formIsPublic,
+        which_alias_to_use: formWhichAliasToUse,
+        hide_metadata_if_alias_used: formHideMetadataIfAliasUsed,
+        allowed_actions: selectedActions,
+      };
+
+      // Add grant/revoke access views if provided
+      if (grantAccessViews.trim()) {
+        requestBody.can_grant_access_to_views = grantAccessViews
+          .split(",")
+          .map((v) => v.trim())
+          .filter((v) => v);
+      }
+
+      if (revokeAccessViews.trim()) {
+        requestBody.can_revoke_access_to_views = revokeAccessViews
+          .split(",")
+          .map((v) => v.trim())
+          .filter((v) => v);
+      }
+
       const response = await fetch("/api/system-views", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          name: formName,
-          description: formDescription,
-          is_public: formIsPublic,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -90,7 +221,7 @@
       </p>
     </div>
 
-    <div class="mx-auto max-w-2xl">
+    <div class="mx-auto max-w-4xl">
       <div
         class="rounded-lg bg-white p-6 shadow-md dark:bg-gray-800 dark:shadow-gray-900/50"
       >
@@ -120,9 +251,6 @@
                 placeholder="e.g., owner"
                 class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:focus:border-blue-400"
               />
-              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                A unique identifier for the system view
-              </p>
             </div>
 
             <!-- Description Field -->
@@ -137,32 +265,175 @@
                 id="description"
                 bind:value={formDescription}
                 required
-                rows="4"
+                rows="3"
                 placeholder="Describe the purpose and scope of this view"
                 class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:focus:border-blue-400"
               ></textarea>
+            </div>
+
+            <!-- Metadata View Field -->
+            <div>
+              <label
+                for="metadata_view"
+                class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Metadata View
+              </label>
+              <textarea
+                id="metadata_view"
+                bind:value={formMetadataView}
+                rows="2"
+                placeholder="Optional metadata description (defaults to description)"
+                class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:focus:border-blue-400"
+              ></textarea>
+            </div>
+
+            <!-- Two Column Layout for Settings -->
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <!-- Is Public -->
+              <div>
+                <label class="flex items-center">
+                  <input
+                    type="checkbox"
+                    bind:checked={formIsPublic}
+                    class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+                  />
+                  <span
+                    class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Public View
+                  </span>
+                </label>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Accessible to all users
+                </p>
+              </div>
+
+              <!-- Hide Metadata If Alias Used -->
+              <div>
+                <label class="flex items-center">
+                  <input
+                    type="checkbox"
+                    bind:checked={formHideMetadataIfAliasUsed}
+                    class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+                  />
+                  <span
+                    class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Hide Metadata If Alias Used
+                  </span>
+                </label>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Hide metadata when alias is shown
+                </p>
+              </div>
+            </div>
+
+            <!-- Which Alias to Use -->
+            <div>
+              <label
+                for="alias"
+                class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Which Alias to Use
+              </label>
+              <select
+                id="alias"
+                bind:value={formWhichAliasToUse}
+                class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:focus:border-blue-400"
+              >
+                <option value="public">Public</option>
+                <option value="private">Private</option>
+                <option value="none">None</option>
+              </select>
+            </div>
+
+            <!-- Grant Access to Views -->
+            <div>
+              <label
+                for="grant_access"
+                class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Can Grant Access to Views
+              </label>
+              <input
+                id="grant_access"
+                type="text"
+                bind:value={grantAccessViews}
+                placeholder="e.g., owner, public (comma-separated)"
+                class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:focus:border-blue-400"
+              />
               <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Explain what data this view provides access to
+                Comma-separated list of views
               </p>
             </div>
 
-            <!-- Is Public Checkbox -->
+            <!-- Revoke Access to Views -->
             <div>
-              <label class="flex items-center">
-                <input
-                  type="checkbox"
-                  bind:checked={formIsPublic}
-                  class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
-                />
-                <span
-                  class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Public View
-                </span>
+              <label
+                for="revoke_access"
+                class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Can Revoke Access to Views
               </label>
+              <input
+                id="revoke_access"
+                type="text"
+                bind:value={revokeAccessViews}
+                placeholder="e.g., owner, public (comma-separated)"
+                class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:focus:border-blue-400"
+              />
               <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                If checked, this view will be accessible to all users
+                Comma-separated list of views
               </p>
+            </div>
+
+            <!-- Allowed Actions -->
+            <div>
+              <div class="mb-2 flex items-center justify-between">
+                <label
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Allowed Actions ({selectedActions.length} selected)
+                </label>
+                <div class="flex gap-2">
+                  <button
+                    type="button"
+                    onclick={selectAllActions}
+                    class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                  >
+                    Select All
+                  </button>
+                  <button
+                    type="button"
+                    onclick={deselectAllActions}
+                    class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                  >
+                    Deselect All
+                  </button>
+                </div>
+              </div>
+              <div
+                class="max-h-96 overflow-y-auto rounded-lg border border-gray-300 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-900"
+              >
+                <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
+                  {#each allAllowedActions as action}
+                    <label class="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedActions.includes(action)}
+                        onchange={() => toggleAction(action)}
+                        class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+                      />
+                      <span
+                        class="ml-2 text-xs text-gray-700 dark:text-gray-300"
+                      >
+                        {action}
+                      </span>
+                    </label>
+                  {/each}
+                </div>
+              </div>
             </div>
           </div>
 
