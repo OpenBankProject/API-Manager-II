@@ -227,6 +227,14 @@ export const ROLE_REQUIREMENTS = {
       action: "create system views",
     },
   ],
+
+  getViewPermissions: [
+    {
+      role: "CanGetViewPermissionsAtAllBanks",
+      description: "Get view permissions at all banks",
+      action: "get view permissions at all banks",
+    },
+  ],
 } as const;
 
 /**
@@ -288,4 +296,21 @@ export function getDeleteWebUIPropsRoles(): RoleRequirement[] {
  */
 export function getCreateSystemViewRoles(): RoleRequirement[] {
   return [...ROLE_REQUIREMENTS.createSystemView];
+}
+
+/**
+ * Get role requirements for getting view permissions
+ */
+export function getGetViewPermissionsRoles(): RoleRequirement[] {
+  return [...ROLE_REQUIREMENTS.getViewPermissions];
+}
+
+/**
+ * Get role requirements for creating system views page (includes all needed roles)
+ */
+export function getCreateSystemViewPageRoles(): RoleRequirement[] {
+  return [
+    ...ROLE_REQUIREMENTS.createSystemView,
+    ...ROLE_REQUIREMENTS.getViewPermissions,
+  ];
 }
