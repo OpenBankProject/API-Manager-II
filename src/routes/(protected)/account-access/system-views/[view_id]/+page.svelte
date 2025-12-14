@@ -15,17 +15,30 @@
   let hasApiAccess = $derived(data.hasApiAccess);
   let error = $derived(data.error);
 
-  // Helper function to check if permission array has values
-  function hasPermission(permission: string[] | undefined): boolean {
-    return !!permission && permission.length > 0;
+  // Helper function to check if permission is enabled in allowed_actions array
+  function hasPermission(permissionKey: string): boolean {
+    if (!view) return false;
+    if (
+      !(view as any).allowed_actions ||
+      !Array.isArray((view as any).allowed_actions)
+    ) {
+      return false;
+    }
+    return (view as any).allowed_actions.includes(permissionKey);
   }
 
   // Group permissions by category
   let transactionPermissions = $derived.by(() => {
     if (!view) return [];
     return [
-      { label: "This Bank Account", key: "can_see_transaction_this_bank_account" },
-      { label: "Other Bank Account", key: "can_see_transaction_other_bank_account" },
+      {
+        label: "This Bank Account",
+        key: "can_see_transaction_this_bank_account",
+      },
+      {
+        label: "Other Bank Account",
+        key: "can_see_transaction_other_bank_account",
+      },
       { label: "Metadata", key: "can_see_transaction_metadata" },
       { label: "Label", key: "can_see_transaction_label" },
       { label: "Amount", key: "can_see_transaction_amount" },
@@ -45,7 +58,10 @@
       { label: "Balance", key: "can_see_bank_account_balance" },
       { label: "Currency", key: "can_see_bank_account_currency" },
       { label: "Label", key: "can_see_bank_account_label" },
-      { label: "National Identifier", key: "can_see_bank_account_national_identifier" },
+      {
+        label: "National Identifier",
+        key: "can_see_bank_account_national_identifier",
+      },
       { label: "SWIFT BIC", key: "can_see_bank_account_swift_bic" },
       { label: "IBAN", key: "can_see_bank_account_iban" },
       { label: "Number", key: "can_see_bank_account_number" },
@@ -71,7 +87,10 @@
   let counterpartyPermissions = $derived.by(() => {
     if (!view) return [];
     return [
-      { label: "National Identifier", key: "can_see_other_account_national_identifier" },
+      {
+        label: "National Identifier",
+        key: "can_see_other_account_national_identifier",
+      },
       { label: "SWIFT BIC", key: "can_see_other_account_swift_bic" },
       { label: "IBAN", key: "can_see_other_account_iban" },
       { label: "Bank Name", key: "can_see_other_account_bank_name" },
@@ -94,8 +113,14 @@
       { label: "Delete Image", key: "can_delete_image" },
       { label: "Edit Narrative", key: "can_edit_narrative" },
       { label: "Create Counterparty", key: "can_create_counterparty" },
-      { label: "Transaction Request (Own)", key: "can_add_transaction_request_to_own_account" },
-      { label: "Transaction Request (Any)", key: "can_add_transaction_request_to_any_account" },
+      {
+        label: "Transaction Request (Own)",
+        key: "can_add_transaction_request_to_own_account",
+      },
+      {
+        label: "Transaction Request (Any)",
+        key: "can_add_transaction_request_to_any_account",
+      },
     ];
   });
 </script>
@@ -107,7 +132,9 @@
 <div class="container mx-auto px-4 py-8">
   <!-- Breadcrumb Navigation -->
   <nav class="breadcrumb mb-6">
-    <a href="/account-access/system-views" class="breadcrumb-link">System Views</a>
+    <a href="/account-access/system-views" class="breadcrumb-link"
+      >System Views</a
+    >
     <span class="breadcrumb-separator">›</span>
     <span class="breadcrumb-current">{view?.short_name || "View Detail"}</span>
   </nav>
@@ -172,7 +199,9 @@
             </div>
             <div class="info-item">
               <div class="info-label">Visibility</div>
-              <div class="info-value">{view.is_public ? "Public" : "Private"}</div>
+              <div class="info-value">
+                {view.is_public ? "Public" : "Private"}
+              </div>
             </div>
             {#if view.alias}
               <div class="info-item">
@@ -183,7 +212,9 @@
             {#if view.hide_metadata_if_alias_used !== undefined}
               <div class="info-item">
                 <div class="info-label">Hide Metadata if Alias Used</div>
-                <div class="info-value">{view.hide_metadata_if_alias_used ? "Yes" : "No"}</div>
+                <div class="info-value">
+                  {view.hide_metadata_if_alias_used ? "Yes" : "No"}
+                </div>
               </div>
             {/if}
           </div>
@@ -198,7 +229,7 @@
           <div class="permissions-grid">
             {#each transactionPermissions as perm}
               <div class="permission-item">
-                {#if hasPermission((view as any)[perm.key])}
+                {#if hasPermission(perm.key)}
                   <CheckCircle size={16} class="permission-icon enabled" />
                 {:else}
                   <XCircle size={16} class="permission-icon disabled" />
@@ -218,7 +249,7 @@
           <div class="permissions-grid">
             {#each accountPermissions as perm}
               <div class="permission-item">
-                {#if hasPermission((view as any)[perm.key])}
+                {#if hasPermission(perm.key)}
                   <CheckCircle size={16} class="permission-icon enabled" />
                 {:else}
                   <XCircle size={16} class="permission-icon disabled" />
@@ -238,7 +269,7 @@
           <div class="permissions-grid">
             {#each counterpartyPermissions as perm}
               <div class="permission-item">
-                {#if hasPermission((view as any)[perm.key])}
+                {#if hasPermission(perm.key)}
                   <CheckCircle size={16} class="permission-icon enabled" />
                 {:else}
                   <XCircle size={16} class="permission-icon disabled" />
@@ -258,7 +289,7 @@
           <div class="permissions-grid">
             {#each otherPermissions as perm}
               <div class="permission-item">
-                {#if hasPermission((view as any)[perm.key])}
+                {#if hasPermission(perm.key)}
                   <CheckCircle size={16} class="permission-icon enabled" />
                 {:else}
                   <XCircle size={16} class="permission-icon disabled" />
@@ -278,7 +309,7 @@
           <div class="permissions-grid">
             {#each writePermissions as perm}
               <div class="permission-item">
-                {#if hasPermission((view as any)[perm.key])}
+                {#if hasPermission(perm.key)}
                   <CheckCircle size={16} class="permission-icon enabled" />
                 {:else}
                   <XCircle size={16} class="permission-icon disabled" />

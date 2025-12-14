@@ -9,6 +9,15 @@
   let hasApiAccess = $derived(data.hasApiAccess);
   let error = $derived(data.error);
 
+  // Debug logging
+  $effect(() => {
+    console.log("Views data:", views);
+    if (views.length > 0) {
+      console.log("First view:", views[0]);
+      console.log("First view id:", views[0].view_id);
+    }
+  });
+
   // Search functionality
   let searchQuery = $state("");
 
@@ -21,7 +30,7 @@
       (view: any) =>
         view.short_name.toLowerCase().includes(query) ||
         view.description.toLowerCase().includes(query) ||
-        view.id.toLowerCase().includes(query),
+        view.view_id.toLowerCase().includes(query),
     );
   });
 
@@ -121,8 +130,15 @@
           <div class="views-grid">
             {#each filteredViews as view}
               <a
-                href="/account-access/system-views/{view.id}"
+                href="/account-access/system-views/{view.view_id}"
                 class="view-card"
+                onclick={(e) => {
+                  console.log("Clicked view:", view);
+                  console.log(
+                    "Link href:",
+                    `/account-access/system-views/${view.view_id}`,
+                  );
+                }}
               >
                 <div class="view-card-header">
                   <div class="view-icon">
@@ -156,7 +172,7 @@
                   <div class="view-meta">
                     <div class="meta-item">
                       <Shield size={14} />
-                      <span>ID: {view.id}</span>
+                      <span>ID: {view.view_id}</span>
                     </div>
                   </div>
                 </div>
