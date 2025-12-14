@@ -159,17 +159,14 @@
             <div>
               <div class="header-title-row">
                 <h1 class="panel-title">{view.short_name}</h1>
-                {#if view.is_public}
-                  <span class="status-badge status-public">
-                    <CheckCircle size={14} />
-                    Public
-                  </span>
-                {:else}
-                  <span class="status-badge status-private">
-                    <XCircle size={14} />
-                    Private
-                  </span>
-                {/if}
+                <div class="view-status">
+                  {#if view.is_public}
+                    <span class="status-badge status-public">
+                      <CheckCircle size={14} />
+                      Public
+                    </span>
+                  {/if}
+                </div>
               </div>
               <div class="panel-subtitle">{view.description}</div>
             </div>
@@ -428,13 +425,15 @@
   }
 
   .status-public {
-    background: #d1fae5;
-    color: #065f46;
+    background: #10b981;
+    color: #ffffff;
+    font-weight: 600;
   }
 
   :global([data-mode="dark"]) .status-public {
-    background: rgba(16, 185, 129, 0.2);
-    color: rgb(var(--color-success-300));
+    background: #10b981;
+    color: #ffffff;
+    font-weight: 600;
   }
 
   .status-private {
