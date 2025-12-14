@@ -186,16 +186,17 @@
       <!-- Content -->
       <div class="panel-content">
         <!-- Basic Info Section -->
+        <!-- View Information -->
         <section class="info-section">
-          <h2 class="section-title">Basic Information</h2>
+          <h2 class="section-title">View Information</h2>
           <div class="info-grid">
             <div class="info-item">
               <div class="info-label">View ID</div>
-              <div class="info-value code">{view.id}</div>
+              <div class="info-value code">{view.short_name}</div>
             </div>
             <div class="info-item">
-              <div class="info-label">Short Name</div>
-              <div class="info-value">{view.short_name}</div>
+              <div class="info-label">Description</div>
+              <div class="info-value">{view.description}</div>
             </div>
             <div class="info-item">
               <div class="info-label">Visibility</div>
@@ -220,105 +221,61 @@
           </div>
         </section>
 
-        <!-- Transaction Permissions -->
+        <!-- Allowed Actions -->
         <section class="info-section">
           <h2 class="section-title">
             <Shield size={20} />
-            Transaction Permissions
+            Allowed Actions ({(view as any).allowed_actions?.length || 0})
           </h2>
-          <div class="permissions-grid">
-            {#each transactionPermissions as perm}
-              <div class="permission-item">
-                {#if hasPermission(perm.key)}
+          {#if (view as any).allowed_actions && (view as any).allowed_actions.length > 0}
+            <div class="permissions-grid">
+              {#each (view as any).allowed_actions as action}
+                <div class="permission-item">
                   <CheckCircle size={16} class="permission-icon enabled" />
-                {:else}
-                  <XCircle size={16} class="permission-icon disabled" />
-                {/if}
-                <span class="permission-label">{perm.label}</span>
-              </div>
-            {/each}
-          </div>
+                  <span class="permission-label">{action}</span>
+                </div>
+              {/each}
+            </div>
+          {:else}
+            <p class="text-gray-600 dark:text-gray-400">No actions allowed</p>
+          {/if}
         </section>
 
-        <!-- Bank Account Permissions -->
-        <section class="info-section">
-          <h2 class="section-title">
-            <Shield size={20} />
-            Bank Account Permissions
-          </h2>
-          <div class="permissions-grid">
-            {#each accountPermissions as perm}
-              <div class="permission-item">
-                {#if hasPermission(perm.key)}
+        <!-- Grant Access to Views -->
+        {#if (view as any).can_grant_access_to_views && (view as any).can_grant_access_to_views.length > 0}
+          <section class="info-section">
+            <h2 class="section-title">
+              <Shield size={20} />
+              Can Grant Access to Views
+            </h2>
+            <div class="permissions-grid">
+              {#each (view as any).can_grant_access_to_views as viewName}
+                <div class="permission-item">
                   <CheckCircle size={16} class="permission-icon enabled" />
-                {:else}
-                  <XCircle size={16} class="permission-icon disabled" />
-                {/if}
-                <span class="permission-label">{perm.label}</span>
-              </div>
-            {/each}
-          </div>
-        </section>
+                  <span class="permission-label">{viewName}</span>
+                </div>
+              {/each}
+            </div>
+          </section>
+        {/if}
 
-        <!-- Counterparty Permissions -->
-        <section class="info-section">
-          <h2 class="section-title">
-            <Shield size={20} />
-            Counterparty Permissions
-          </h2>
-          <div class="permissions-grid">
-            {#each counterpartyPermissions as perm}
-              <div class="permission-item">
-                {#if hasPermission(perm.key)}
+        <!-- Revoke Access to Views -->
+        {#if (view as any).can_revoke_access_to_views && (view as any).can_revoke_access_to_views.length > 0}
+          <section class="info-section">
+            <h2 class="section-title">
+              <Shield size={20} />
+              Can Revoke Access to Views
+            </h2>
+            <div class="permissions-grid">
+              {#each (view as any).can_revoke_access_to_views as viewName}
+                <div class="permission-item">
                   <CheckCircle size={16} class="permission-icon enabled" />
-                {:else}
-                  <XCircle size={16} class="permission-icon disabled" />
-                {/if}
-                <span class="permission-label">{perm.label}</span>
-              </div>
-            {/each}
-          </div>
-        </section>
-
-        <!-- Other Permissions -->
-        <section class="info-section">
-          <h2 class="section-title">
-            <Shield size={20} />
-            Other View Permissions
-          </h2>
-          <div class="permissions-grid">
-            {#each otherPermissions as perm}
-              <div class="permission-item">
-                {#if hasPermission(perm.key)}
-                  <CheckCircle size={16} class="permission-icon enabled" />
-                {:else}
-                  <XCircle size={16} class="permission-icon disabled" />
-                {/if}
-                <span class="permission-label">{perm.label}</span>
-              </div>
-            {/each}
-          </div>
-        </section>
-
-        <!-- Write/Modify Permissions -->
-        <section class="info-section">
-          <h2 class="section-title">
-            <AlertCircle size={20} />
-            Write & Modify Permissions
-          </h2>
-          <div class="permissions-grid">
-            {#each writePermissions as perm}
-              <div class="permission-item">
-                {#if hasPermission(perm.key)}
-                  <CheckCircle size={16} class="permission-icon enabled" />
-                {:else}
-                  <XCircle size={16} class="permission-icon disabled" />
-                {/if}
-                <span class="permission-label">{perm.label}</span>
-              </div>
-            {/each}
-          </div>
-        </section>
+                  <span class="permission-label">{viewName}</span>
+                </div>
+              {/each}
+            </div>
+          </section>
+        {/if}
       </div>
     </div>
   {/if}
