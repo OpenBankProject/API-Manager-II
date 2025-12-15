@@ -172,6 +172,12 @@
             </div>
           </div>
           <div class="header-actions">
+            <a
+              href="/account-access/system-views/{view.view_id}/edit"
+              class="btn-primary"
+            >
+              Update
+            </a>
             <a href="/account-access/system-views" class="btn-secondary">
               <ArrowLeft size={16} />
               Back to Views
@@ -449,7 +455,33 @@
   .header-actions {
     display: flex;
     gap: 0.75rem;
-    flex-shrink: 0;
+    align-items: center;
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #3b82f6;
+    color: white;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background 0.2s;
+  }
+
+  .btn-primary:hover {
+    background: #2563eb;
+  }
+
+  :global([data-mode="dark"]) .btn-primary {
+    background: #3b82f6;
+  }
+
+  :global([data-mode="dark"]) .btn-primary:hover {
+    background: #2563eb;
   }
 
   .btn-secondary {

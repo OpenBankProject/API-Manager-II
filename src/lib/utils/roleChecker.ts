@@ -228,6 +228,14 @@ export const ROLE_REQUIREMENTS = {
     },
   ],
 
+  updateSystemView: [
+    {
+      role: "CanUpdateSystemView",
+      description: "Update system views",
+      action: "update system views",
+    },
+  ],
+
   getViewPermissions: [
     {
       role: "CanGetViewPermissionsAtAllBanks",
@@ -311,6 +319,23 @@ export function getGetViewPermissionsRoles(): RoleRequirement[] {
 export function getCreateSystemViewPageRoles(): RoleRequirement[] {
   return [
     ...ROLE_REQUIREMENTS.createSystemView,
+    ...ROLE_REQUIREMENTS.getViewPermissions,
+  ];
+}
+
+/**
+ * Get role requirements for updating system views
+ */
+export function getUpdateSystemViewRoles(): RoleRequirement[] {
+  return [...ROLE_REQUIREMENTS.updateSystemView];
+}
+
+/**
+ * Get role requirements for updating system views page (includes all needed roles)
+ */
+export function getUpdateSystemViewPageRoles(): RoleRequirement[] {
+  return [
+    ...ROLE_REQUIREMENTS.updateSystemView,
     ...ROLE_REQUIREMENTS.getViewPermissions,
   ];
 }
