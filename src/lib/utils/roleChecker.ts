@@ -243,6 +243,22 @@ export const ROLE_REQUIREMENTS = {
       action: "get view permissions at all banks",
     },
   ],
+
+  getAbacRules: [
+    {
+      role: "CanGetAbacRule",
+      description: "Get ABAC rules",
+      action: "get ABAC rules",
+    },
+  ],
+
+  createAbacRule: [
+    {
+      role: "CanCreateAbacRule",
+      description: "Create ABAC rules",
+      action: "create ABAC rules",
+    },
+  ],
 } as const;
 
 /**
@@ -321,6 +337,20 @@ export function getCreateSystemViewPageRoles(): RoleRequirement[] {
     ...ROLE_REQUIREMENTS.createSystemView,
     ...ROLE_REQUIREMENTS.getViewPermissions,
   ];
+}
+
+/**
+ * Get role requirements for viewing ABAC rules
+ */
+export function getAbacRulesRoles(): RoleRequirement[] {
+  return [...ROLE_REQUIREMENTS.getAbacRules];
+}
+
+/**
+ * Get role requirements for creating ABAC rules
+ */
+export function getCreateAbacRuleRoles(): RoleRequirement[] {
+  return [...ROLE_REQUIREMENTS.createAbacRule];
 }
 
 /**

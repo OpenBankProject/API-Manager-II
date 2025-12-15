@@ -19,6 +19,7 @@ import {
   Box,
   Settings,
   FileText,
+  Lock,
 } from "@lucide/svelte";
 import { env } from "$env/dynamic/public";
 
@@ -289,4 +290,31 @@ export function getActiveDynamicEntitiesMenuItem(pathname: string) {
   });
 
   return found || dynamicEntitiesItems[0]; // fallback to first item
+}
+
+// ABAC navigation items
+function buildAbacItems(): NavigationItem[] {
+  const items: NavigationItem[] = [
+    {
+      href: "/abac/rules",
+      label: "Rules",
+      iconComponent: Lock,
+    },
+  ];
+
+  return items;
+}
+
+export const abacItems = buildAbacItems();
+
+export function getActiveAbacMenuItem(pathname: string) {
+  const found = abacItems.find((item) => {
+    // Skip external links for active menu detection
+    if (item.external) {
+      return false;
+    }
+    return pathname.startsWith(item.href);
+  });
+
+  return found || abacItems[0]; // fallback to first item
 }
