@@ -36,6 +36,7 @@
     "idle",
   );
   let validationError = $state<string | null>(null);
+  let validationDetails = $state<any>(null);
   let validationTimeout: ReturnType<typeof setTimeout> | null = null;
 
   // Available objects and their fields for ABAC rules
@@ -183,15 +184,18 @@
       if (result.valid) {
         validationStatus = "valid";
         validationError = null;
+        validationDetails = null;
       } else {
         validationStatus = "invalid";
         validationError =
           result.error || result.message || "Rule validation failed";
+        validationDetails = result;
       }
     } catch (err) {
       validationStatus = "invalid";
       validationError =
         err instanceof Error ? err.message : "Validation request failed";
+      validationDetails = err;
     }
   }
 
@@ -596,12 +600,36 @@
                     Rule code is valid
                   </p>
                 {:else if validationStatus === "invalid" && validationError}
-                  <p
-                    class="mt-1 text-xs text-red-600 dark:text-red-400 flex items-start gap-1"
+                  <div
+                    class="mt-2 rounded-lg border border-red-300 bg-red-50 p-3 dark:border-red-700 dark:bg-red-900/20"
                   >
-                    <XCircle size={12} class="mt-0.5 shrink-0" />
-                    <span>{validationError}</span>
-                  </p>
+                    <p
+                      class="text-xs text-red-600 dark:text-red-400 flex items-start gap-1 font-semibold mb-2"
+                    >
+                      <XCircle size={14} class="mt-0.5 shrink-0" />
+                      <span>Validation Error</span>
+                    </p>
+                    <div class="ml-5 space-y-2">
+                      <p class="text-xs text-red-700 dark:text-red-300">
+                        {validationError}
+                      </p>
+                      {#if validationDetails}
+                        <details class="text-xs">
+                          <summary
+                            class="cursor-pointer text-red-600 dark:text-red-400 hover:underline"
+                          >
+                            Show full error details
+                          </summary>
+                          <pre
+                            class="mt-2 overflow-x-auto rounded bg-red-100 dark:bg-red-950 p-2 text-xs text-red-900 dark:text-red-200">{JSON.stringify(
+                              validationDetails,
+                              null,
+                              2,
+                            )}</pre>
+                        </details>
+                      {/if}
+                    </div>
+                  </div>
                 {:else if validationStatus === "validating"}
                   <p
                     class="mt-1 text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1"

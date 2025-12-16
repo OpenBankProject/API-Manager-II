@@ -29,7 +29,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       return json(
         {
           valid: false,
-          error: "rule_code is required and must be a string"
+          error: "rule_code is required and must be a string",
         },
         { status: 400 },
       );
@@ -69,23 +69,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   } catch (err) {
     logger.error("Error validating ABAC rule:", err);
 
-    let errorMessage = "Failed to validate ABAC rule";
-    let validationError = null;
-
-    if (err instanceof Error) {
-      errorMessage = err.message;
-      // Try to extract validation errors from OBP error response
-      if ("obpErrorCode" in err) {
-        const obpError = err as any;
-        validationError = obpError.message || obpError.error;
-      }
-    }
-
-    // Return validation failure instead of server error
+    // Return full OBP error without sanitization
     return json({
       valid: false,
-      error: validationError || errorMessage,
+      error: err instanceof Error ? err.message : String(err),
       message: "Rule validation failed",
+      obpError: err,
+      fullError: JSON.stringify(err, Object.getOwnPropertyNames(err)),
     });
   }
 };
