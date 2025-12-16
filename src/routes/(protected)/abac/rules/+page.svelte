@@ -2,12 +2,16 @@
   import { goto } from "$app/navigation";
   import type { PageData } from "./$types";
   import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
-  import { Lock, Shield, Search, Edit } from "@lucide/svelte";
+  import { Lock, Shield, Search, Edit, Eye } from "@lucide/svelte";
 
   let { data } = $props<{ data: PageData }>();
 
   function handleCreateRule() {
     goto("/abac/rules/create");
+  }
+
+  function handleViewRule(ruleId: string) {
+    goto(`/abac/rules/${ruleId}`);
   }
 
   function handleEditRule(ruleId: string) {
@@ -130,14 +134,24 @@
                         {rule.rule_name || "Unnamed Rule"}
                       </h3>
                     </div>
-                    <button
-                      onclick={() => handleEditRule(rule.abac_rule_id)}
-                      class="edit-button"
-                      title="Edit rule"
-                    >
-                      <Edit size={16} />
-                      Edit
-                    </button>
+                    <div class="rule-actions">
+                      <button
+                        onclick={() => handleViewRule(rule.abac_rule_id)}
+                        class="action-button view-button"
+                        title="View rule details"
+                      >
+                        <Eye size={16} />
+                        View
+                      </button>
+                      <button
+                        onclick={() => handleEditRule(rule.abac_rule_id)}
+                        class="action-button edit-button"
+                        title="Edit rule"
+                      >
+                        <Edit size={16} />
+                        Edit
+                      </button>
+                    </div>
                   </div>
 
                   {#if rule.description}
@@ -440,11 +454,16 @@
     position: relative;
   }
 
-  .edit-button {
+  .rule-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: auto;
+  }
+
+  .action-button {
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
-    margin-left: auto;
     padding: 0.375rem 0.75rem;
     background: white;
     border: 1px solid #d1d5db;
@@ -456,20 +475,36 @@
     transition: all 0.2s;
   }
 
-  .edit-button:hover {
+  .action-button:hover {
     background: #f9fafb;
+  }
+
+  .view-button:hover {
+    border-color: #10b981;
+    color: #10b981;
+  }
+
+  .edit-button:hover {
     border-color: #3b82f6;
     color: #3b82f6;
   }
 
-  :global([data-mode="dark"]) .edit-button {
+  :global([data-mode="dark"]) .action-button {
     background: rgb(55, 65, 81);
     border-color: rgb(75, 85, 99);
     color: #d1d5db;
   }
 
-  :global([data-mode="dark"]) .edit-button:hover {
+  :global([data-mode="dark"]) .action-button:hover {
     background: rgb(75, 85, 99);
+  }
+
+  :global([data-mode="dark"]) .view-button:hover {
+    border-color: #10b981;
+    color: #10b981;
+  }
+
+  :global([data-mode="dark"]) .edit-button:hover {
     border-color: #3b82f6;
     color: #3b82f6;
   }
