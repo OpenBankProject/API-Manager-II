@@ -60,7 +60,7 @@
   // Extract parameter names from rule code
   function extractParametersFromCode(code: string): string[] {
     const paramPattern =
-      /\b(authenticatedUser|onBehalfOfUser|context|user|Bank|account|View|Transaction|Customer)\.\w+(\.\w+)*/g;
+      /\b(AuthenticatedUser|OnBehalfOfUser|Context|User|Bank|Account|View|Transaction|Customer)\.\w+(\.\w+)*/g;
     const matches = code.match(paramPattern) || [];
     return [...new Set(matches)];
   }
@@ -132,12 +132,12 @@
 
   // Suggested properties for each top-level object
   const suggestedProperties: Record<string, string[]> = {
-    authenticatedUser: ["user_id", "emailAddress", "bank_id", "username"],
-    onBehalfOfUser: ["user_id", "emailAddress", "bank_id", "username"],
-    context: ["timestamp", "ip_address", "method", "path"],
-    user: ["user_id", "emailAddress", "bank_id", "username"],
+    AuthenticatedUser: ["user_id", "emailAddress", "bank_id", "username"],
+    OnBehalfOfUser: ["user_id", "emailAddress", "bank_id", "username"],
+    Context: ["timestamp", "ip_address", "method", "path"],
+    User: ["user_id", "emailAddress", "bank_id", "username"],
     Bank: ["bank_id", "name", "full_name", "short_name"],
-    account: ["account_id", "owner_id", "bank_id", "type"],
+    Account: ["account_id", "owner_id", "bank_id", "type"],
     View: ["view_id", "name", "description", "is_public"],
     Transaction: ["transaction_id", "account_id", "amount", "type"],
     Customer: ["customer_id", "name", "emailAddress", "bank_id"],
@@ -304,42 +304,42 @@
           <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
             <button
               type="button"
-              onclick={() => addTopLevelObject("authenticatedUser")}
+              onclick={() => addTopLevelObject("AuthenticatedUser")}
               class="context-button"
             >
               <div class="flex items-center justify-center gap-2">
                 <div class="context-icon">AU</div>
-                <span>authenticatedUser</span>
+                <span>AuthenticatedUser</span>
               </div>
             </button>
             <button
               type="button"
-              onclick={() => addTopLevelObject("onBehalfOfUser")}
+              onclick={() => addTopLevelObject("OnBehalfOfUser")}
               class="context-button"
             >
               <div class="flex items-center justify-center gap-2">
                 <div class="context-icon">OB</div>
-                <span>onBehalfOfUser</span>
+                <span>OnBehalfOfUser</span>
               </div>
             </button>
             <button
               type="button"
-              onclick={() => addTopLevelObject("context")}
+              onclick={() => addTopLevelObject("Context")}
               class="context-button"
             >
               <div class="flex items-center justify-center gap-2">
                 <div class="context-icon">C</div>
-                <span>context</span>
+                <span>Context</span>
               </div>
             </button>
             <button
               type="button"
-              onclick={() => addTopLevelObject("user")}
+              onclick={() => addTopLevelObject("User")}
               class="context-button"
             >
               <div class="flex items-center justify-center gap-2">
                 <div class="context-icon">U</div>
-                <span>user</span>
+                <span>User</span>
               </div>
             </button>
             <button
@@ -354,12 +354,12 @@
             </button>
             <button
               type="button"
-              onclick={() => addTopLevelObject("account")}
+              onclick={() => addTopLevelObject("Account")}
               class="context-button"
             >
               <div class="flex items-center justify-center gap-2">
                 <div class="context-icon">A</div>
-                <span>account</span>
+                <span>Account</span>
               </div>
             </button>
             <button
@@ -405,7 +405,7 @@
               </p>
             </div>
           {:else}
-            {#each ["authenticatedUser", "onBehalfOfUser", "context", "user", "Bank", "account", "View", "Transaction", "Customer"] as topLevel}
+            {#each ["AuthenticatedUser", "OnBehalfOfUser", "Context", "User", "Bank", "Account", "View", "Transaction", "Customer"] as topLevel}
               {@const groupParams = Object.keys(parameters).filter((key) =>
                 key.startsWith(topLevel + "."),
               )}
