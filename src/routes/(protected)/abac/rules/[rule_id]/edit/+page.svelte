@@ -7,9 +7,12 @@
     formatErrorForDisplay,
     logErrorDetails,
   } from "$lib/utils/errorHandler";
-  import { Code, AlertCircle, Info, ArrowLeft } from "@lucide/svelte";
+  import { Code, AlertCircle, Info, ArrowLeft, Copy } from "@lucide/svelte";
 
   let { data }: { data: PageData } = $props();
+
+  // Reference to the textarea for insertion
+  let ruleCodeTextarea: HTMLTextAreaElement;
 
   // Form states matching the actual API structure - pre-populated from loaded data
   let formRuleName = $state(data.rule?.rule_name || "");
@@ -18,6 +21,149 @@
   let formIsActive = $state(data.rule?.is_active ?? true);
   let formError = $state("");
   let isSubmitting = $state(false);
+
+  // Available objects and their fields for ABAC rules
+  const availableObjects = [
+    {
+      name: "AuthenticatedUser",
+      description: "The user making the API call",
+      fields: [
+        { name: "user_id", type: "String", description: "User ID" },
+        { name: "username", type: "String", description: "Username" },
+        { name: "emailAddress", type: "String", description: "Email address" },
+        { name: "bank_id", type: "String", description: "User's bank ID" },
+        { name: "provider", type: "String", description: "Auth provider" },
+        { name: "provider_id", type: "String", description: "Provider ID" },
+      ],
+    },
+    {
+      name: "OnBehalfOfUser",
+      description: "User on whose behalf the action is performed",
+      fields: [
+        { name: "user_id", type: "String", description: "User ID" },
+        { name: "username", type: "String", description: "Username" },
+        { name: "emailAddress", type: "String", description: "Email address" },
+        { name: "bank_id", type: "String", description: "User's bank ID" },
+      ],
+    },
+    {
+      name: "User",
+      description: "Generic user object",
+      fields: [
+        { name: "user_id", type: "String", description: "User ID" },
+        { name: "username", type: "String", description: "Username" },
+        { name: "emailAddress", type: "String", description: "Email address" },
+        { name: "bank_id", type: "String", description: "User's bank ID" },
+      ],
+    },
+    {
+      name: "Bank",
+      description: "Bank object",
+      fields: [
+        { name: "bank_id", type: "String", description: "Bank ID" },
+        { name: "name", type: "String", description: "Bank name" },
+        { name: "full_name", type: "String", description: "Full bank name" },
+        { name: "short_name", type: "String", description: "Short bank name" },
+      ],
+    },
+    {
+      name: "Account",
+      description: "Bank account object",
+      fields: [
+        { name: "account_id", type: "String", description: "Account ID" },
+        { name: "bank_id", type: "String", description: "Bank ID" },
+        { name: "owner_id", type: "String", description: "Account owner ID" },
+        { name: "type", type: "String", description: "Account type" },
+        { name: "label", type: "String", description: "Account label" },
+      ],
+    },
+    {
+      name: "View",
+      description: "Account view object",
+      fields: [
+        { name: "view_id", type: "String", description: "View ID" },
+        { name: "name", type: "String", description: "View name" },
+        {
+          name: "description",
+          type: "String",
+          description: "View description",
+        },
+        { name: "is_public", type: "Boolean", description: "Is public" },
+      ],
+    },
+    {
+      name: "Transaction",
+      description: "Transaction object",
+      fields: [
+        {
+          name: "transaction_id",
+          type: "String",
+          description: "Transaction ID",
+        },
+        { name: "account_id", type: "String", description: "Account ID" },
+        { name: "bank_id", type: "String", description: "Bank ID" },
+        { name: "amount", type: "Number", description: "Transaction amount" },
+        { name: "type", type: "String", description: "Transaction type" },
+      ],
+    },
+    {
+      name: "Customer",
+      description: "Customer object",
+      fields: [
+        { name: "customer_id", type: "String", description: "Customer ID" },
+        { name: "bank_id", type: "String", description: "Bank ID" },
+        { name: "name", type: "String", description: "Customer name" },
+        { name: "emailAddress", type: "String", description: "Email address" },
+      ],
+    },
+    {
+      name: "Context",
+      description: "Request context",
+      fields: [
+        { name: "timestamp", type: "Date", description: "Request timestamp" },
+        {
+          name: "ip_address",
+          type: "String",
+          description: "Client IP address",
+        },
+        { name: "method", type: "String", description: "HTTP method" },
+        { name: "path", type: "String", description: "Request path" },
+      ],
+    },
+  ];
+
+  let expandedObjects = $state<Set<string>>(new Set());
+
+  function toggleObject(objectName: string) {
+    if (expandedObjects.has(objectName)) {
+      expandedObjects.delete(objectName);
+    } else {
+      expandedObjects.add(objectName);
+    }
+    expandedObjects = new Set(expandedObjects);
+  }
+
+  function insertFieldReference(objectName: string, fieldName: string) {
+    const reference = `${objectName}.${fieldName}`;
+
+    if (ruleCodeTextarea) {
+      const start = ruleCodeTextarea.selectionStart;
+      const end = ruleCodeTextarea.selectionEnd;
+      const text = formRuleCode;
+
+      formRuleCode = text.substring(0, start) + reference + text.substring(end);
+
+      // Set cursor position after inserted text
+      setTimeout(() => {
+        if (ruleCodeTextarea) {
+          const newPosition = start + reference.length;
+          ruleCodeTextarea.selectionStart = newPosition;
+          ruleCodeTextarea.selectionEnd = newPosition;
+          ruleCodeTextarea.focus();
+        }
+      }, 0);
+    }
+  }
 
   // Example rule codes for guidance
   const exampleRuleCodes = [
@@ -136,232 +282,317 @@
       </p>
     </div>
 
-    <div class="mx-auto max-w-3xl">
-      <div
-        class="rounded-lg bg-white p-6 shadow-md dark:bg-gray-800 dark:shadow-gray-900/50"
-      >
-        {#if formError}
-          <div
-            class="mb-4 flex items-start gap-3 rounded-lg border border-red-300 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20"
-          >
-            <AlertCircle
-              class="mt-0.5 flex-shrink-0 text-red-600 dark:text-red-400"
-              size={20}
-            />
-            <p class="text-sm text-red-800 dark:text-red-200">{formError}</p>
-          </div>
-        {/if}
-
-        <!-- Info Banner -->
+    <div class="grid gap-6 lg:grid-cols-3">
+      <!-- Object Browser Sidebar -->
+      <div class="lg:col-span-1">
         <div
-          class="mb-6 flex items-start gap-3 rounded-lg border border-blue-300 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20"
+          class="rounded-lg bg-white p-4 shadow-md dark:bg-gray-800 sticky top-4"
         >
-          <Info
-            class="mt-0.5 flex-shrink-0 text-blue-600 dark:text-blue-400"
-            size={20}
-          />
-          <div class="text-sm text-blue-800 dark:text-blue-200">
-            <p class="font-medium">About ABAC Rules</p>
-            <p class="mt-1">
-              ABAC rules use code expressions to define access control logic.
-              You can reference user attributes, resource properties, and use
-              logical operators to create flexible authorization rules.
-            </p>
-          </div>
-        </div>
+          <h3
+            class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3"
+          >
+            Available Objects
+          </h3>
+          <p class="text-xs text-gray-600 dark:text-gray-400 mb-4">
+            Click fields to insert into rule code
+          </p>
 
-        <form onsubmit={handleSubmit}>
-          <div class="space-y-6">
-            <!-- Rule Name Field -->
-            <div>
-              <label
-                for="rule_name"
-                class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                Rule Name <span class="text-red-600">*</span>
-              </label>
-              <input
-                id="rule_name"
-                type="text"
-                bind:value={formRuleName}
-                required
-                placeholder="e.g., admin_only"
-                class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:focus:border-blue-400"
-              />
-              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                A unique identifier for this rule
-              </p>
-            </div>
-
-            <!-- Rule Code Field -->
-            <div>
-              <div class="mb-2 flex items-center justify-between">
-                <label
-                  for="rule_code"
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Rule Code <span class="text-red-600">*</span>
-                </label>
+          <div class="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
+            {#each availableObjects as obj}
+              <div class="border border-gray-200 dark:border-gray-700 rounded">
                 <button
                   type="button"
-                  onclick={() => (showExamples = !showExamples)}
-                  class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                  onclick={() => toggleObject(obj.name)}
+                  class="w-full px-3 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between"
                 >
-                  {showExamples ? "Hide" : "Show"} Examples
-                </button>
-              </div>
-
-              {#if showExamples}
-                <div
-                  class="mb-3 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900"
-                >
-                  <p
-                    class="mb-2 text-xs font-medium text-gray-700 dark:text-gray-300"
+                  <div>
+                    <div class="font-mono text-blue-600 dark:text-blue-400">
+                      {obj.name}
+                    </div>
+                    <div
+                      class="text-gray-500 dark:text-gray-400 text-xs mt-0.5"
+                    >
+                      {obj.description}
+                    </div>
+                  </div>
+                  <span class="text-gray-400"
+                    >{expandedObjects.has(obj.name) ? "−" : "+"}</span
                   >
-                    Example Rule Codes:
-                  </p>
-                  <div class="space-y-2">
-                    {#each exampleRuleCodes as example}
-                      <div
-                        class="rounded border border-gray-200 bg-white p-2 dark:border-gray-600 dark:bg-gray-800"
+                </button>
+
+                {#if expandedObjects.has(obj.name)}
+                  <div
+                    class="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"
+                  >
+                    {#each obj.fields as field}
+                      <button
+                        type="button"
+                        onclick={() =>
+                          insertFieldReference(obj.name, field.name)}
+                        class="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 border-b border-gray-200 dark:border-gray-700 last:border-b-0"
                       >
-                        <div class="mb-1 flex items-center justify-between">
-                          <span
-                            class="text-xs font-medium text-gray-700 dark:text-gray-300"
-                          >
-                            {example.title}
-                          </span>
-                          <button
-                            type="button"
-                            onclick={() => insertExample(example.code)}
-                            class="text-xs text-blue-600 hover:underline dark:text-blue-400"
-                          >
-                            Use this
-                          </button>
+                        <div class="flex items-start gap-2">
+                          <Copy
+                            size={12}
+                            class="text-gray-400 mt-0.5 flex-shrink-0"
+                          />
+                          <div class="flex-1 min-w-0">
+                            <div
+                              class="font-mono text-xs text-gray-900 dark:text-gray-100"
+                            >
+                              {field.name}
+                            </div>
+                            <div
+                              class="text-xs text-gray-500 dark:text-gray-400 mt-0.5"
+                            >
+                              {field.description}
+                            </div>
+                            <div
+                              class="text-xs text-gray-400 dark:text-gray-500 mt-0.5"
+                            >
+                              {field.type}
+                            </div>
+                          </div>
                         </div>
-                        <code
-                          class="block text-xs text-gray-600 dark:text-gray-400"
-                        >
-                          {example.code}
-                        </code>
-                        <p
-                          class="mt-1 text-xs text-gray-500 dark:text-gray-500"
-                        >
-                          {example.description}
-                        </p>
-                      </div>
+                      </button>
                     {/each}
                   </div>
-                </div>
-              {/if}
-
-              <div class="relative">
-                <Code class="absolute left-3 top-3 text-gray-400" size={18} />
-                <textarea
-                  id="rule_code"
-                  bind:value={formRuleCode}
-                  required
-                  rows="4"
-                  placeholder="e.g., user.emailAddress.contains('admin')"
-                  class="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 font-mono text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:focus:border-blue-400"
-                ></textarea>
+                {/if}
               </div>
-              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                A code expression that evaluates the access control logic (e.g.,
-                checking user attributes, roles, or resource properties)
-              </p>
-            </div>
+            {/each}
+          </div>
+        </div>
+      </div>
 
-            <!-- Description Field -->
-            <div>
-              <label
-                for="description"
-                class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                Description
-              </label>
-              <textarea
-                id="description"
-                bind:value={formDescription}
-                rows="3"
-                placeholder="Only allow access to users with admin email"
-                class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:focus:border-blue-400"
-              ></textarea>
-              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                A human-readable description of what this rule does
-              </p>
-            </div>
-
-            <!-- Is Active Checkbox -->
+      <!-- Main Form -->
+      <div class="lg:col-span-2">
+        <div
+          class="rounded-lg bg-white p-6 shadow-md dark:bg-gray-800 dark:shadow-gray-900/50"
+        >
+          {#if formError}
             <div
-              class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900"
+              class="mb-4 flex items-start gap-3 rounded-lg border border-red-300 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20"
             >
-              <label class="flex items-start">
-                <input
-                  type="checkbox"
-                  bind:checked={formIsActive}
-                  class="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
-                />
-                <div class="ml-3">
-                  <span
-                    class="text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Rule is Active
-                  </span>
-                  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    When active, this rule will be evaluated for access control
-                    decisions. Inactive rules are ignored but remain in the
-                    system.
-                  </p>
-                </div>
-              </label>
+              <AlertCircle
+                class="mt-0.5 flex-shrink-0 text-red-600 dark:text-red-400"
+                size={20}
+              />
+              <p class="text-sm text-red-800 dark:text-red-200">{formError}</p>
+            </div>
+          {/if}
+
+          <!-- Info Banner -->
+          <div
+            class="mb-6 flex items-start gap-3 rounded-lg border border-blue-300 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20"
+          >
+            <Info
+              class="mt-0.5 flex-shrink-0 text-blue-600 dark:text-blue-400"
+              size={20}
+            />
+            <div class="text-sm text-blue-800 dark:text-blue-200">
+              <p class="font-medium">About ABAC Rules</p>
+              <p class="mt-1">
+                ABAC rules use code expressions to define access control logic.
+                You can reference user attributes, resource properties, and use
+                logical operators to create flexible authorization rules.
+              </p>
             </div>
           </div>
 
-          <!-- Form Actions -->
-          <div class="mt-8 flex justify-end gap-3">
-            <button
-              type="button"
-              onclick={handleCancel}
-              disabled={isSubmitting}
-              class="rounded-lg border border-gray-300 bg-white px-6 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              class="rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
-            >
-              {#if isSubmitting}
-                <span class="flex items-center">
-                  <svg
-                    class="mr-2 h-4 w-4 animate-spin"
-                    fill="none"
-                    viewBox="0 0 24 24"
+          <form onsubmit={handleSubmit}>
+            <div class="space-y-6">
+              <!-- Rule Name Field -->
+              <div>
+                <label
+                  for="rule_name"
+                  class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Rule Name <span class="text-red-600">*</span>
+                </label>
+                <input
+                  id="rule_name"
+                  type="text"
+                  bind:value={formRuleName}
+                  required
+                  placeholder="e.g., admin_only"
+                  class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:focus:border-blue-400"
+                />
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  A unique identifier for this rule
+                </p>
+              </div>
+
+              <!-- Rule Code Field -->
+              <div>
+                <div class="mb-2 flex items-center justify-between">
+                  <label
+                    for="rule_code"
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
-                    <circle
-                      class="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      stroke-width="4"
-                    ></circle>
-                    <path
-                      class="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Updating...
-                </span>
-              {:else}
-                Update ABAC Rule
-              {/if}
-            </button>
-          </div>
-        </form>
+                    Rule Code <span class="text-red-600">*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onclick={() => (showExamples = !showExamples)}
+                    class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                  >
+                    {showExamples ? "Hide" : "Show"} Examples
+                  </button>
+                </div>
+
+                {#if showExamples}
+                  <div
+                    class="mb-3 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900"
+                  >
+                    <p
+                      class="mb-2 text-xs font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Example Rule Codes:
+                    </p>
+                    <div class="space-y-2">
+                      {#each exampleRuleCodes as example}
+                        <div
+                          class="rounded border border-gray-200 bg-white p-2 dark:border-gray-600 dark:bg-gray-800"
+                        >
+                          <div class="mb-1 flex items-center justify-between">
+                            <span
+                              class="text-xs font-medium text-gray-700 dark:text-gray-300"
+                            >
+                              {example.title}
+                            </span>
+                            <button
+                              type="button"
+                              onclick={() => insertExample(example.code)}
+                              class="text-xs text-blue-600 hover:underline dark:text-blue-400"
+                            >
+                              Use this
+                            </button>
+                          </div>
+                          <code
+                            class="block text-xs text-gray-600 dark:text-gray-400"
+                          >
+                            {example.code}
+                          </code>
+                          <p
+                            class="mt-1 text-xs text-gray-500 dark:text-gray-500"
+                          >
+                            {example.description}
+                          </p>
+                        </div>
+                      {/each}
+                    </div>
+                  </div>
+                {/if}
+
+                <div class="relative">
+                  <Code class="absolute left-3 top-3 text-gray-400" size={18} />
+                  <textarea
+                    id="rule_code"
+                    bind:this={ruleCodeTextarea}
+                    bind:value={formRuleCode}
+                    required
+                    rows="6"
+                    placeholder="e.g., AuthenticatedUser.emailAddress.contains('admin')"
+                    class="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 font-mono text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:focus:border-blue-400"
+                  ></textarea>
+                </div>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Click fields from the sidebar to insert references, or type
+                  your own expression
+                </p>
+              </div>
+
+              <!-- Description Field -->
+              <div>
+                <label
+                  for="description"
+                  class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Description
+                </label>
+                <textarea
+                  id="description"
+                  bind:value={formDescription}
+                  rows="3"
+                  placeholder="Only allow access to users with admin email"
+                  class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:focus:border-blue-400"
+                ></textarea>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  A human-readable description of what this rule does
+                </p>
+              </div>
+
+              <!-- Is Active Checkbox -->
+              <div
+                class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900"
+              >
+                <label class="flex items-start">
+                  <input
+                    type="checkbox"
+                    bind:checked={formIsActive}
+                    class="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+                  />
+                  <div class="ml-3">
+                    <span
+                      class="text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Rule is Active
+                    </span>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      When active, this rule will be evaluated for access
+                      control decisions. Inactive rules are ignored but remain
+                      in the system.
+                    </p>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="mt-8 flex justify-end gap-3">
+              <button
+                type="button"
+                onclick={handleCancel}
+                disabled={isSubmitting}
+                class="rounded-lg border border-gray-300 bg-white px-6 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                class="rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
+              >
+                {#if isSubmitting}
+                  <span class="flex items-center">
+                    <svg
+                      class="mr-2 h-4 w-4 animate-spin"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        class="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"
+                      ></circle>
+                      <path
+                        class="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Updating...
+                  </span>
+                {:else}
+                  Update ABAC Rule
+                {/if}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   </div>
