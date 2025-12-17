@@ -533,72 +533,6 @@
             Click fields to insert into rule code
           </p>
 
-          {#if schemaNotes.length > 0}
-            <div
-              class="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-900/20"
-            >
-              <p
-                class="text-xs font-semibold text-blue-800 dark:text-blue-200 mb-2"
-              >
-                Important Notes
-              </p>
-              <ul class="text-xs text-blue-700 dark:text-blue-300 space-y-1">
-                {#each schemaNotes as note}
-                  <li class="list-disc ml-4">{note}</li>
-                {/each}
-              </ul>
-            </div>
-          {/if}
-
-          {#if schemaOperators.length > 0}
-            <div
-              class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900"
-            >
-              <p
-                class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Available Operators
-              </p>
-              <div class="flex flex-wrap gap-1">
-                {#each schemaOperators as operator}
-                  <code
-                    class="inline-block px-2 py-0.5 text-xs bg-gray-200 dark:bg-gray-800 rounded font-mono text-gray-800 dark:text-gray-200"
-                  >
-                    {operator}
-                  </code>
-                {/each}
-              </div>
-            </div>
-          {/if}
-
-          {#if schemaExamples.length > 0}
-            <div
-              class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/20"
-            >
-              <p
-                class="text-xs font-semibold text-green-800 dark:text-green-200 mb-2"
-              >
-                Examples
-              </p>
-              <div class="space-y-1">
-                {#each schemaExamples as example}
-                  <button
-                    type="button"
-                    onclick={() => {
-                      formRuleCode = example;
-                      if (ruleCodeTextarea) {
-                        ruleCodeTextarea.focus();
-                      }
-                    }}
-                    class="block w-full text-left px-2 py-1 text-xs font-mono bg-green-100 dark:bg-green-950 rounded hover:bg-green-200 dark:hover:bg-green-900 text-green-900 dark:text-green-100"
-                  >
-                    {example}
-                  </button>
-                {/each}
-              </div>
-            </div>
-          {/if}
-
           {#if schemaLoading}
             <div class="flex items-center justify-center py-8">
               <Loader2 class="animate-spin text-blue-500" size={24} />
@@ -656,7 +590,7 @@
             </div>
           {/if}
 
-          <div class="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
+          <div class="space-y-2 max-h-[calc(100vh-400px)] overflow-y-auto mb-4">
             {#each availableObjects as obj}
               <div class="border border-gray-200 dark:border-gray-700 rounded">
                 <button
@@ -720,6 +654,72 @@
               </div>
             {/each}
           </div>
+
+          {#if schemaOperators.length > 0}
+            <div
+              class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900"
+            >
+              <p
+                class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2"
+              >
+                Available Operators
+              </p>
+              <div class="flex flex-wrap gap-1">
+                {#each schemaOperators as operator}
+                  <code
+                    class="inline-block px-2 py-0.5 text-xs bg-gray-200 dark:bg-gray-800 rounded font-mono text-gray-800 dark:text-gray-200"
+                  >
+                    {operator}
+                  </code>
+                {/each}
+              </div>
+            </div>
+          {/if}
+
+          {#if schemaExamples.length > 0}
+            <div
+              class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/20"
+            >
+              <p
+                class="text-xs font-semibold text-green-800 dark:text-green-200 mb-2"
+              >
+                Examples
+              </p>
+              <div class="space-y-1">
+                {#each schemaExamples as example}
+                  <button
+                    type="button"
+                    onclick={() => {
+                      formRuleCode = example;
+                      if (ruleCodeTextarea) {
+                        ruleCodeTextarea.focus();
+                      }
+                    }}
+                    class="block w-full text-left px-2 py-1 text-xs font-mono bg-green-100 dark:bg-green-950 rounded hover:bg-green-200 dark:hover:bg-green-900 text-green-900 dark:text-green-100"
+                  >
+                    {example}
+                  </button>
+                {/each}
+              </div>
+            </div>
+          {/if}
+
+          {#if schemaNotes.length > 0}
+            <div
+              class="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-900/20"
+            >
+              <p
+                class="text-xs font-semibold text-blue-800 dark:text-blue-200 mb-2"
+              >
+                Notes
+              </p>
+              <ul class="text-xs text-blue-700 dark:text-blue-300 space-y-1">
+                {#each schemaNotes as note}
+                  <li class="list-disc ml-4">{note}</li>
+                {/each}
+              </ul>
+            </div>
+          {/if}
         </div>
       </div>
 
