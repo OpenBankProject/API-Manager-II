@@ -224,7 +224,7 @@
           </li>
           <li>
             <strong>type:</strong> Can be "string", "number", "integer", "boolean",
-            "DATE_WITH_DAY"
+            "json", "DATE_WITH_DAY"
           </li>
           <li>
             <strong>required:</strong> Array of required field names (optional)
