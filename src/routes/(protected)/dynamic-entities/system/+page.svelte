@@ -57,10 +57,14 @@
     }),
   );
 
-  async function deleteEntity(entityId: string, cascade: boolean = false) {
+  async function deleteEntity(
+    entityId: string,
+    entityName: string,
+    cascade: boolean = false,
+  ) {
     const confirmMessage = cascade
-      ? "Are you sure you want to delete this system dynamic entity AND ALL ITS DATA (cascade)? This cannot be undone!"
-      : "Are you sure you want to delete this system dynamic entity?";
+      ? `Are you sure you want to delete the system dynamic entity "${entityName}" AND ALL ITS DATA (cascade)? This cannot be undone!`
+      : `Are you sure you want to delete the system dynamic entity "${entityName}"?`;
 
     if (!confirm(confirmMessage)) {
       return;
@@ -394,8 +398,13 @@
                     </button>
                     <button
                       type="button"
+                      ell
                       onclick={() =>
-                        deleteEntity(entity.dynamicEntityId, false)}
+                        deleteEntity(
+                          entity.dynamicEntityId,
+                          getEntityName(entity),
+                          false,
+                        )}
                       class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
                       title="Delete Entity Definition"
                     >
@@ -415,7 +424,12 @@
                     </button>
                     <button
                       type="button"
-                      onclick={() => deleteEntity(entity.dynamicEntityId, true)}
+                      onclick={() =>
+                        deleteEntity(
+                          entity.dynamicEntityId,
+                          getEntityName(entity),
+                          true,
+                        )}
                       class="text-red-800 hover:text-red-950 dark:text-red-500 dark:hover:text-red-400"
                       title="Delete Entity + All Data (CASCADE)"
                     >
