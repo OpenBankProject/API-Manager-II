@@ -1,10 +1,13 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
+  import type { PageData } from "./$types";
   import {
     extractErrorFromResponse,
     formatErrorForDisplay,
     logErrorDetails,
   } from "$lib/utils/errorHandler";
+
+  let { data }: { data: PageData } = $props();
 
   let entityName = $state("");
   let entityDescription = $state("");
@@ -239,6 +242,32 @@
             <strong>example:</strong> Example value for the field (optional)
           </li>
         </ul>
+        {#if data.externalLinks?.API_EXPLORER_URL}
+          <div class="mt-3 border-t border-blue-300 pt-3 dark:border-blue-700">
+            <a
+              href="{data.externalLinks
+                .API_EXPLORER_URL}/resource-docs/OBPv6.0.0?operationid=OBPv4.0.0-createSystemDynamicEntity"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center text-xs font-medium text-blue-700 hover:text-blue-900 hover:underline dark:text-blue-300 dark:hover:text-blue-100"
+            >
+              View API Documentation on API Explorer
+              <svg
+                class="ml-1 h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                />
+              </svg>
+            </a>
+          </div>
+        {/if}
       </div>
 
       <!-- Actions -->
