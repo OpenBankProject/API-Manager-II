@@ -16,6 +16,7 @@
     CheckCircle,
     XCircle,
     Loader2,
+    RefreshCw,
   } from "@lucide/svelte";
 
   let { data }: { data: PageData } = $props();
@@ -43,6 +44,9 @@
 
   // Available objects and their fields for ABAC rules - fetched from OBP
   let availableObjects = $state<any[]>([]);
+  let schemaExamples = $state<string[]>([]);
+  let schemaOperators = $state<string[]>([]);
+  let schemaNotes = $state<string[]>([]);
   let schemaLoading = $state(true);
   let schemaError = $state<string | null>(null);
 
@@ -54,31 +58,122 @@
       const response = await fetch("/api/abac-rules/schema");
       const schema = await response.json();
 
+      console.log("!!! SCHEMA FETCH RESPONSE !!!");
+      console.log("Response status:", response.status);
+      console.log("Response OK:", response.ok);
+      console.log("Full schema response:", schema);
+
       if (!response.ok) {
-        // Show full error from API
-        const errorMsg =
-          schema.error || schema.message || "Failed to fetch ABAC schema";
-        const fullDetails = schema.fullError
-          ? JSON.parse(schema.fullError)
-          : schema;
-        console.error("ABAC Schema fetch error:", fullDetails);
-        throw new Error(
-          `${errorMsg}\n\nFull error: ${JSON.stringify(fullDetails, null, 2)}`,
-        );
+        // DON'T FILTER - Show EVERYTHING from the error
+        console.error("!!! SCHEMA FETCH FAILED !!!");
+        console.error("Full error object:", schema);
+        console.error("Error message:", schema.errorMessage);
+        console.error("Error stack:", schema.errorStack);
+        console.error("Raw error:", schema.rawError);
+        console.error("Stringified:", schema.stringified);
+        console.error("Endpoint:", schema.endpoint);
+
+        // Create detailed error message with ALL information
+        const errorParts = [
+          `Status: ${response.status}`,
+          `Error: ${schema.error || schema.errorMessage || "Unknown"}`,
+          `API Manager Proxy: /api/abac-rules/schema`,
+          `OBP Endpoint: ${schema.endpoint || "/obp/v6.0.0/management/abac-rules-schema"}`,
+          `\n\nFull Details:\n${JSON.stringify(schema, null, 2)}`,
+        ];
+
+        throw new Error(errorParts.join("\n"));
       }
 
       // Transform OBP schema to our format
-      if (schema.objects && Array.isArray(schema.objects)) {
-        availableObjects = schema.objects;
+      // OBP returns: {parameters, object_types, examples, available_operators, notes}
+      console.log("!!! SCHEMA TRANSFORMATION !!!");
+      console.log("Schema has object_types?", !!schema.object_types);
+      console.log("Is object_types array?", Array.isArray(schema.object_types));
+      console.log("Number of object_types:", schema.object_types?.length);
+      console.log("Schema has parameters?", !!schema.parameters);
+      console.log("Number of parameters:", schema.parameters?.length);
+
+      if (schema.object_types && Array.isArray(schema.object_types)) {
+        console.log(
+          "First object_type sample:",
+          JSON.stringify(schema.object_types[0], null, 2),
+        );
+
+        // Transform OBP format to our UI format
+        availableObjects = schema.object_types.map((objType: any) => {
+          console.log(`Processing object type: ${objType.name}`);
+          console.log(`  - Has properties? ${!!objType.properties}`);
+          console.log(
+            `  - Properties count: ${objType.properties?.length || 0}`,
+          );
+
+          const fields = (objType.properties || []).map((prop: any) => ({
+            name: prop.name,
+            type: prop.type,
+            description: prop.description,
+          }));
+
+          console.log(`  - Transformed fields count: ${fields.length}`);
+
+          return {
+            name: objType.name,
+            description: objType.description,
+            fields: fields,
+          };
+        });
+
+        console.log("!!! TRANSFORMATION COMPLETE !!!");
+        console.log("Available objects count:", availableObjects.length);
+        console.log(
+          "Available object names:",
+          availableObjects.map((o) => o.name),
+        );
+        console.log(
+          "Full transformed objects:",
+          JSON.stringify(availableObjects, null, 2),
+        );
+
+        // Log additional schema information
+        if (schema.parameters) {
+          console.log("!!! PARAMETERS !!!");
+          console.log("Parameters:", schema.parameters);
+        }
+        if (schema.examples) {
+          console.log("!!! EXAMPLES !!!");
+          console.log("Examples:", schema.examples);
+        }
+        if (schema.available_operators) {
+          console.log("!!! AVAILABLE OPERATORS !!!");
+          console.log("Operators:", schema.available_operators);
+        }
+        if (schema.notes) {
+          console.log("!!! NOTES !!!");
+          console.log("Notes:", schema.notes);
+        }
+
+        // Store examples, operators, and notes for UI display
+        schemaExamples = schema.examples || [];
+        schemaOperators = schema.available_operators || [];
+        schemaNotes = schema.notes || [];
       } else {
         // Fallback to hardcoded if schema format is unexpected
         console.warn("Unexpected schema format:", schema);
+        console.warn(
+          "Expected object_types array but got:",
+          typeof schema.object_types,
+        );
         availableObjects = defaultObjects;
       }
       schemaLoading = false;
     } catch (err) {
-      console.error("Error fetching ABAC schema:", err);
-      schemaError = err instanceof Error ? err.message : String(err);
+      console.error("!!! EXCEPTION IN SCHEMA FETCH !!!");
+      console.error("Error type:", typeof err);
+      console.error("Error constructor:", err?.constructor?.name);
+      console.error("Error object:", err);
+      console.error("Error string:", String(err));
+
+      schemaError = String(err);
       // Use hardcoded fallback
       availableObjects = defaultObjects;
       schemaLoading = false;
@@ -417,14 +512,92 @@
         <div
           class="rounded-lg bg-white p-4 shadow-md dark:bg-gray-800 sticky top-4"
         >
-          <h3
-            class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3"
-          >
-            Available Objects
-          </h3>
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+              Available Objects
+            </h3>
+            <button
+              type="button"
+              onclick={() => fetchSchema()}
+              class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              title="Refresh schema"
+              disabled={schemaLoading}
+            >
+              <RefreshCw
+                size={16}
+                class={schemaLoading ? "animate-spin" : ""}
+              />
+            </button>
+          </div>
           <p class="text-xs text-gray-600 dark:text-gray-400 mb-4">
             Click fields to insert into rule code
           </p>
+
+          {#if schemaNotes.length > 0}
+            <div
+              class="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-900/20"
+            >
+              <p
+                class="text-xs font-semibold text-blue-800 dark:text-blue-200 mb-2"
+              >
+                Important Notes
+              </p>
+              <ul class="text-xs text-blue-700 dark:text-blue-300 space-y-1">
+                {#each schemaNotes as note}
+                  <li class="list-disc ml-4">{note}</li>
+                {/each}
+              </ul>
+            </div>
+          {/if}
+
+          {#if schemaOperators.length > 0}
+            <div
+              class="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900"
+            >
+              <p
+                class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2"
+              >
+                Available Operators
+              </p>
+              <div class="flex flex-wrap gap-1">
+                {#each schemaOperators as operator}
+                  <code
+                    class="inline-block px-2 py-0.5 text-xs bg-gray-200 dark:bg-gray-800 rounded font-mono text-gray-800 dark:text-gray-200"
+                  >
+                    {operator}
+                  </code>
+                {/each}
+              </div>
+            </div>
+          {/if}
+
+          {#if schemaExamples.length > 0}
+            <div
+              class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/20"
+            >
+              <p
+                class="text-xs font-semibold text-green-800 dark:text-green-200 mb-2"
+              >
+                Examples
+              </p>
+              <div class="space-y-1">
+                {#each schemaExamples as example}
+                  <button
+                    type="button"
+                    onclick={() => {
+                      formRuleCode = example;
+                      if (ruleCodeTextarea) {
+                        ruleCodeTextarea.focus();
+                      }
+                    }}
+                    class="block w-full text-left px-2 py-1 text-xs font-mono bg-green-100 dark:bg-green-950 rounded hover:bg-green-200 dark:hover:bg-green-900 text-green-900 dark:text-green-100"
+                  >
+                    {example}
+                  </button>
+                {/each}
+              </div>
+            </div>
+          {/if}
 
           {#if schemaLoading}
             <div class="flex items-center justify-center py-8">
@@ -439,7 +612,7 @@
             >
               <div class="flex items-start justify-between mb-2">
                 <p class="text-xs text-red-800 dark:text-red-200 font-semibold">
-                  Schema Fetch Error
+                  Schema Fetch Error - FULL UNFILTERED ERROR BELOW
                 </p>
                 <button
                   type="button"
@@ -461,28 +634,25 @@
                   {/if}
                 </button>
               </div>
-              <p class="text-xs text-red-700 dark:text-red-300 mb-2">
-                {schemaError}
-              </p>
-              <details class="text-xs">
-                <summary
-                  class="cursor-pointer text-red-600 dark:text-red-400 hover:underline"
+              <div class="text-xs text-red-700 dark:text-red-300 mb-2">
+                <pre
+                  class="whitespace-pre-wrap font-mono text-xs bg-red-100 dark:bg-red-950 p-2 rounded">{schemaError}</pre>
+              </div>
+              <div class="mt-2 space-y-2">
+                <p class="text-xs text-yellow-600 dark:text-yellow-400">
+                  Using fallback schema
+                </p>
+                <button
+                  type="button"
+                  onclick={() => fetchSchema()}
+                  class="px-3 py-1 text-xs bg-red-100 hover:bg-red-200 dark:bg-red-900 dark:hover:bg-red-800 rounded border border-red-300 dark:border-red-700"
                 >
-                  Show full error details
-                </summary>
-                <div class="mt-2">
-                  <p class="text-xs text-yellow-600 dark:text-yellow-400 mb-2">
-                    Using fallback schema
-                  </p>
-                  <button
-                    type="button"
-                    onclick={() => fetchSchema()}
-                    class="mt-2 px-3 py-1 text-xs bg-red-100 hover:bg-red-200 dark:bg-red-900 dark:hover:bg-red-800 rounded border border-red-300 dark:border-red-700"
-                  >
-                    Retry fetch schema
-                  </button>
-                </div>
-              </details>
+                  Retry fetch schema
+                </button>
+                <p class="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                  Check browser console for additional error details
+                </p>
+              </div>
             </div>
           {/if}
 

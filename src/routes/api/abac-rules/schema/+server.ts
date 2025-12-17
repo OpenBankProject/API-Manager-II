@@ -21,11 +21,10 @@ export const GET: RequestHandler = async ({ locals }) => {
     return json({ error: "No API access token available" }, { status: 401 });
   }
 
+  const endpoint = `/obp/v6.0.0/management/abac-rules-schema`;
+
   try {
     logger.info("Fetching ABAC rule schema from OBP");
-
-    // Call the OBP API to get the schema
-    const endpoint = `/obp/v6.0.0/management/abac-rules/schema`;
     logger.info(`Calling endpoint: ${endpoint}`);
     logger.info(`Using access token: ${accessToken ? "present" : "missing"}`);
 
@@ -38,42 +37,58 @@ export const GET: RequestHandler = async ({ locals }) => {
 
     return json(response);
   } catch (err) {
-    logger.error("Error fetching ABAC rule schema:", err);
+    // DON'T SWALLOW ERRORS - Log everything
+    logger.error("!!! FULL ERROR FETCHING ABAC RULE SCHEMA !!!");
+    logger.error("Raw error object:", err);
     logger.error("Error type:", typeof err);
     logger.error("Error constructor:", err?.constructor?.name);
+    logger.error("Error string:", String(err));
 
     if (err && typeof err === "object") {
       logger.error("Error keys:", Object.keys(err));
+      logger.error("Error enumerable properties:", JSON.stringify(err));
       logger.error(
-        "Error properties:",
+        "Error all properties:",
         JSON.stringify(err, Object.getOwnPropertyNames(err), 2),
       );
     }
 
-    let errorMessage = "Failed to fetch ABAC rule schema";
-    let statusCode = 500;
-
     if (err instanceof Error) {
-      errorMessage = err.message;
-      logger.error("Error message:", errorMessage);
+      logger.error("Error message:", err.message);
       logger.error("Error stack:", err.stack);
-
-      // Check for OBP-specific error properties
-      if ("statusCode" in err) {
-        statusCode = (err as any).statusCode;
-        logger.error("OBP status code:", statusCode);
-      }
-      if ("obpErrorCode" in err) {
-        logger.error("OBP error code:", (err as any).obpErrorCode);
-      }
+      logger.error("Error name:", err.name);
     }
 
+    // Check for any custom properties
+    const errObj = err as any;
+    if (errObj) {
+      logger.error("statusCode:", errObj.statusCode);
+      logger.error("obpErrorCode:", errObj.obpErrorCode);
+      logger.error("response:", errObj.response);
+      logger.error("data:", errObj.data);
+    }
+
+    // Extract OBP error details if available
+    let obpErrorCode = errObj?.obpErrorCode || errObj?.code || undefined;
+    let obpMessage = errObj?.message || errObj?.error || undefined;
+    let statusCode = errObj?.statusCode || errObj?.status || 500;
+
+    // Return EVERYTHING - don't filter or sanitize
     return json(
       {
-        error: errorMessage,
+        success: false,
+        error: String(err),
+        errorMessage: err instanceof Error ? err.message : "Unknown error",
+        errorName: err instanceof Error ? err.name : undefined,
+        errorStack: err instanceof Error ? err.stack : undefined,
+        obpErrorCode: obpErrorCode,
+        obpMessage: obpMessage,
         statusCode: statusCode,
-        obpError: err,
-        fullError: JSON.stringify(err, Object.getOwnPropertyNames(err)),
+        rawError: err,
+        stringified: JSON.stringify(err, Object.getOwnPropertyNames(err)),
+        endpoint: endpoint,
+        obpEndpoint: endpoint,
+        proxyEndpoint: "/api/abac-rules/schema",
       },
       { status: statusCode },
     );
