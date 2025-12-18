@@ -170,7 +170,10 @@ const checkAuthorization: Handle = async ({ event, resolve }) => {
 export const handle: Handle = sequence(
   sveltekitSessionHandle({
     secret: "secret",
-    store: new RedisStore({ client }),
+    store: new RedisStore({
+      client,
+      prefix: "obp-api-manager-ii-session:",
+    }),
   }),
   checkAuthorization,
   // add other handles here if needed
