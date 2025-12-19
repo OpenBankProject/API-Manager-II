@@ -9,13 +9,18 @@
     Trash2,
     CheckCircle,
     XCircle,
+    AlertCircle,
   } from "@lucide/svelte";
+  import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
 
   let { data } = $props<{ data: PageData }>();
 
   let group = $derived(data.group);
+  let entitlements = $derived(data.entitlements || []);
   let hasApiAccess = $derived(data.hasApiAccess);
   let error = $derived(data.error);
+  let userEntitlements = $derived(data.userEntitlements || []);
+  let requiredRoles = $derived(data.requiredRoles || []);
 </script>
 
 <svelte:head>
@@ -23,6 +28,9 @@
 </svelte:head>
 
 <div class="container mx-auto px-4 py-8">
+  <!-- Role Check -->
+  <PageRoleCheck {userEntitlements} {requiredRoles} />
+
   <!-- Breadcrumb Navigation -->
   <nav class="breadcrumb mb-6">
     <a href="/rbac/groups" class="breadcrumb-link">Groups</a>
@@ -134,16 +142,41 @@
           {/if}
         </section>
 
-        <!-- Members Section (placeholder) -->
+        <!-- Entitlements Section -->
         <section class="info-section">
           <h2 class="section-title">
-            <Users size={20} />
-            Members
+            <Shield size={20} />
+            Entitlements ({entitlements.length})
           </h2>
-          <div class="empty-state-small">
-            <Users size={32} />
-            <p>Member management coming soon</p>
-          </div>
+          {#if entitlements.length > 0}
+            <div class="entitlements-grid">
+              {#each entitlements as entitlement}
+                <div class="entitlement-card">
+                  <div class="entitlement-name">
+                    {entitlement.role_name}
+                  </div>
+                  <div class="entitlement-details">
+                    {#if entitlement.bank_id}
+                      <span class="entitlement-detail">
+                        <Building2 size={12} />
+                        {entitlement.bank_id}
+                      </span>
+                    {/if}
+                    {#if entitlement.user_id}
+                      <span class="entitlement-detail">
+                        User: {entitlement.username || entitlement.user_id}
+                      </span>
+                    {/if}
+                  </div>
+                </div>
+              {/each}
+            </div>
+          {:else}
+            <div class="empty-state-small">
+              <AlertCircle size={32} />
+              <p>No entitlements assigned to this group</p>
+            </div>
+          {/if}
         </section>
       </div>
     </div>
@@ -535,6 +568,64 @@
     font-size: 0.875rem;
   }
 
+  .entitlements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .entitlement-card {
+    padding: 0.875rem;
+    background: #fafafa;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+
+  .entitlement-card:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+  }
+
+  :global([data-mode="dark"]) .entitlement-card {
+    background: rgb(var(--color-surface-900));
+    border-color: rgb(var(--color-surface-700));
+  }
+
+  :global([data-mode="dark"]) .entitlement-card:hover {
+    background: rgb(var(--color-surface-800));
+    border-color: rgb(var(--color-surface-600));
+  }
+
+  .entitlement-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0.5rem;
+  }
+
+  :global([data-mode="dark"]) .entitlement-name {
+    color: var(--color-surface-100);
+  }
+
+  .entitlement-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .entitlement-detail {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+
+  :global([data-mode="dark"]) .entitlement-detail {
+    color: var(--color-surface-400);
+  }
+
   @media (max-width: 768px) {
     .header-content {
       flex-direction: column;
@@ -557,6 +648,10 @@
     }
 
     .roles-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .entitlements-grid {
       grid-template-columns: 1fr;
     }
 

@@ -15,6 +15,14 @@ interface Group {
   list_of_roles?: string[];
 }
 
+interface Entitlement {
+  entitlement_id: string;
+  role_name: string;
+  bank_id: string;
+  user_id?: string;
+  username?: string;
+}
+
 export const load: PageServerLoad = async ({ locals, params }) => {
   const session = locals.session;
 
@@ -32,10 +40,25 @@ export const load: PageServerLoad = async ({ locals, params }) => {
   const sessionOAuth = SessionOAuthHelper.getSessionOAuth(session);
   const accessToken = sessionOAuth?.accessToken;
 
+  // Get user entitlements from session for role checking
+  const userEntitlements = (session.data.user as any)?.entitlements?.list || [];
+
+  // Define required roles for viewing group details
+  const requiredRoles = [
+    {
+      role: "CanGetEntitlementsForAnyBank",
+      description: "View entitlements for any bank",
+      action: "view entitlements",
+    },
+  ];
+
   if (!accessToken) {
     logger.warn("No access token available for group detail page");
     return {
       group: null,
+      entitlements: [],
+      userEntitlements,
+      requiredRoles,
       hasApiAccess: false,
       error: "No API access token available",
     };
@@ -51,8 +74,29 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 
     logger.info(`Response: Group ${response.group_name}`);
 
+    // Fetch group entitlements
+    logger.info("=== FETCHING GROUP ENTITLEMENTS ===");
+    const entitlementsEndpoint = `/obp/v6.0.0/management/groups/${group_id}/entitlements`;
+    logger.info(`Request: ${entitlementsEndpoint}`);
+
+    let entitlements: Entitlement[] = [];
+    try {
+      const entitlementsResponse = await obp_requests.get(
+        entitlementsEndpoint,
+        accessToken,
+      );
+      entitlements = entitlementsResponse.list || [];
+      logger.info(`Response: ${entitlements.length} entitlements found`);
+    } catch (err) {
+      logger.error("Error fetching group entitlements:", err);
+      // Continue without entitlements rather than failing the whole page
+    }
+
     return {
       group: response,
+      entitlements,
+      userEntitlements,
+      requiredRoles,
       hasApiAccess: true,
     };
   } catch (err) {
@@ -60,6 +104,9 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 
     return {
       group: null,
+      entitlements: [],
+      userEntitlements,
+      requiredRoles,
       hasApiAccess: false,
       error: err instanceof Error ? err.message : "Failed to load group",
     };
