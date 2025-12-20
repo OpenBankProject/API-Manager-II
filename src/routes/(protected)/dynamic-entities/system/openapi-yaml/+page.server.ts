@@ -6,8 +6,11 @@ import { OBP_API_URL } from "$lib/config";
 
 const logger = createLogger("OpenAPIYAMLPageServer");
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, url }) => {
   const session = locals.session;
+
+  // Get tags parameter from URL
+  const tags = url.searchParams.get("tags");
 
   if (!session?.data?.user) {
     throw error(401, "Unauthorized");
@@ -22,10 +25,14 @@ export const load: PageServerLoad = async ({ locals }) => {
 
   try {
     logger.info("=== FETCHING DYNAMIC ENTITY OPENAPI YAML ===");
-    const url = `${OBP_API_URL}/resource-docs/OBPv6.0.0/openapi.yaml?content=dynamic`;
-    logger.info(`Request: ${url}`);
+    let apiUrl = `${OBP_API_URL}/resource-docs/OBPv6.0.0/openapi.yaml?content=dynamic`;
+    if (tags) {
+      apiUrl += `&tags=${encodeURIComponent(tags)}`;
+      logger.info(`Filtering by tags: ${tags}`);
+    }
+    logger.info(`Request: ${apiUrl}`);
 
-    const response = await fetch(url, {
+    const response = await fetch(apiUrl, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
