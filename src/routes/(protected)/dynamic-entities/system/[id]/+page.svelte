@@ -236,8 +236,9 @@
           </svg>
           Manage Data (CRUD)
         </a>
+        <!-- Note: By default OBP adds a leading _ to the tags so they don't conflict with tags of OBP static entities -->
         <a
-          href="/dynamic-entities/system/openapi-json?tags={entityName}"
+          href="/dynamic-entities/system/openapi-json?tags=_{entityName}"
           target="_blank"
           rel="noopener noreferrer"
           class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
@@ -259,7 +260,7 @@
           OpenAPI JSON
         </a>
         <a
-          href="/dynamic-entities/system/openapi-yaml?tags={entityName}"
+          href="/dynamic-entities/system/openapi-yaml?tags=_{entityName}"
           target="_blank"
           rel="noopener noreferrer"
           class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
