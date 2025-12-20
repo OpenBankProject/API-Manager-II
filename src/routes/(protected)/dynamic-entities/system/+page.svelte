@@ -14,8 +14,9 @@
     $page.data.externalLinks?.API_EXPLORER_URL ||
     "https://apiexplorer-ii-sandbox.openbankproject.com";
 
-  // Construct API Explorer URL for dynamic entities
+  // Construct API Explorer URLs for dynamic entities
   const apiExplorerDynamicEntityUrl = `${apiExplorerUrl}/resource-docs/OBPdynamic-entity`;
+  const apiExplorerResourceDocsUrl = `${apiExplorerUrl}/resource-docs/OBPv6.0.0?operationid=OBPv1.4.0-getResourceDocsObp`;
 
   let searchQuery = $state("");
 
@@ -187,7 +188,7 @@
             d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
           />
         </svg>
-        API Explorer
+        API Explorer CRUD
       </a>
       <a
         href="/dynamic-entities/system/openapi-json"
@@ -232,6 +233,28 @@
           />
         </svg>
         OpenAPI YAML
+      </a>
+      <a
+        href={apiExplorerResourceDocsUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center rounded-lg border border-purple-300 bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 dark:border-purple-600 dark:bg-purple-500 dark:hover:bg-purple-600"
+        title="Open API Explorer Resource Docs"
+      >
+        <svg
+          class="mr-2 h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+          />
+        </svg>
+        API Explorer Resource Docs
       </a>
     </div>
   </div>
