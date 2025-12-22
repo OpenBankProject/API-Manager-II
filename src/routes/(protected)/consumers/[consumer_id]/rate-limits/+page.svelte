@@ -1,0 +1,460 @@
+<script lang="ts">
+  let { data } = $props();
+  const consumer = data.consumer;
+  const rateLimits = data.rateLimits;
+  const currentUsage = data.currentUsage;
+  const activeLimit = data.activeLimit;
+
+  function formatShortDate(dateString: string): string {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    } catch {
+      return "Unknown";
+    }
+  }
+
+  function isLimitActive(limit: any): boolean {
+    const now = new Date();
+    const fromDate = new Date(limit.from_date);
+    const toDate = new Date(limit.to_date);
+    return now >= fromDate && now <= toDate;
+  }
+
+  function formatNumber(value: string | number | undefined): string {
+    if (value === undefined || value === null || value === "") {
+      return "Unlimited";
+    }
+    const num = typeof value === "string" ? parseInt(value, 10) : value;
+    if (isNaN(num) || num <= 0) {
+      return "Unlimited";
+    }
+    return num.toLocaleString();
+  }
+
+  function getUsagePercentage(used: number, limit: string | number): number {
+    const limitNum = typeof limit === "string" ? parseInt(limit, 10) : limit;
+    if (isNaN(limitNum) || limitNum <= 0) {
+      return 0;
+    }
+    return Math.min((used / limitNum) * 100, 100);
+  }
+
+  function getUsageColor(percentage: number): string {
+    if (percentage >= 90) return "bg-red-500";
+    if (percentage >= 75) return "bg-orange-500";
+    if (percentage >= 50) return "bg-yellow-500";
+    return "bg-green-500";
+  }
+</script>
+
+<svelte:head>
+  <title>Rate Limits - {consumer.app_name}</title>
+</svelte:head>
+
+<div class="mb-6">
+  <a
+    href="/consumers"
+    class="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+  >
+    ← Back to Consumers
+  </a>
+</div>
+
+<!-- Consumer Header -->
+<div class="mb-6">
+  <div class="flex items-start justify-between">
+    <div>
+      <h1 class="text-gray-900 dark:text-gray-100">
+        Rate Limits: {consumer.app_name}
+      </h1>
+      <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+        Consumer ID: <code
+          class="rounded bg-gray-100 px-2 py-0.5 text-xs dark:bg-gray-900"
+          >{consumer.consumer_id}</code
+        >
+      </p>
+    </div>
+    <div class="flex items-center gap-2">
+      <span
+        class="rounded-full px-3 py-1 text-xs font-medium {consumer.enabled
+          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+          : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'}"
+      >
+        {consumer.enabled ? "Enabled" : "Disabled"}
+      </span>
+      <span
+        class="rounded-full px-3 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
+      >
+        {consumer.app_type}
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- Current Usage Card -->
+{#if currentUsage && activeLimit}
+  <div
+    class="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-6 dark:border-blue-700 dark:bg-blue-900/20"
+  >
+    <div class="mb-4 flex items-center justify-between">
+      <h2 class="text-lg font-semibold text-blue-900 dark:text-blue-100">
+        Current Usage (Active Limit)
+      </h2>
+      <span
+        class="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-400"
+      >
+        Active
+      </span>
+    </div>
+
+    <div class="mb-4 text-sm text-blue-800 dark:text-blue-200">
+      Valid from {formatShortDate(activeLimit.from_date)} to {formatShortDate(
+        activeLimit.to_date,
+      )}
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+      <!-- Per Second -->
+      {#if activeLimit.per_second_call_limit}
+        <div>
+          <div class="mb-1 text-xs text-blue-700 dark:text-blue-300">
+            Per Second
+          </div>
+          <div class="text-sm font-medium text-blue-900 dark:text-blue-100">
+            {currentUsage.calls_made || 0} / {formatNumber(
+              activeLimit.per_second_call_limit,
+            )}
+          </div>
+          <div
+            class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-blue-200 dark:bg-blue-800"
+          >
+            <div
+              class="{getUsageColor(
+                getUsagePercentage(
+                  currentUsage.calls_made || 0,
+                  activeLimit.per_second_call_limit,
+                ),
+              )} h-full transition-all"
+              style="width: {getUsagePercentage(
+                currentUsage.calls_made || 0,
+                activeLimit.per_second_call_limit,
+              )}%"
+            ></div>
+          </div>
+        </div>
+      {/if}
+
+      <!-- Per Minute -->
+      {#if activeLimit.per_minute_call_limit}
+        <div>
+          <div class="mb-1 text-xs text-blue-700 dark:text-blue-300">
+            Per Minute
+          </div>
+          <div class="text-sm font-medium text-blue-900 dark:text-blue-100">
+            {currentUsage.calls_made || 0} / {formatNumber(
+              activeLimit.per_minute_call_limit,
+            )}
+          </div>
+          <div
+            class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-blue-200 dark:bg-blue-800"
+          >
+            <div
+              class="{getUsageColor(
+                getUsagePercentage(
+                  currentUsage.calls_made || 0,
+                  activeLimit.per_minute_call_limit,
+                ),
+              )} h-full transition-all"
+              style="width: {getUsagePercentage(
+                currentUsage.calls_made || 0,
+                activeLimit.per_minute_call_limit,
+              )}%"
+            ></div>
+          </div>
+        </div>
+      {/if}
+
+      <!-- Per Hour -->
+      {#if activeLimit.per_hour_call_limit}
+        <div>
+          <div class="mb-1 text-xs text-blue-700 dark:text-blue-300">
+            Per Hour
+          </div>
+          <div class="text-sm font-medium text-blue-900 dark:text-blue-100">
+            {currentUsage.calls_made || 0} / {formatNumber(
+              activeLimit.per_hour_call_limit,
+            )}
+          </div>
+          <div
+            class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-blue-200 dark:bg-blue-800"
+          >
+            <div
+              class="{getUsageColor(
+                getUsagePercentage(
+                  currentUsage.calls_made || 0,
+                  activeLimit.per_hour_call_limit,
+                ),
+              )} h-full transition-all"
+              style="width: {getUsagePercentage(
+                currentUsage.calls_made || 0,
+                activeLimit.per_hour_call_limit,
+              )}%"
+            ></div>
+          </div>
+        </div>
+      {/if}
+
+      <!-- Per Day -->
+      {#if activeLimit.per_day_call_limit}
+        <div>
+          <div class="mb-1 text-xs text-blue-700 dark:text-blue-300">
+            Per Day
+          </div>
+          <div class="text-sm font-medium text-blue-900 dark:text-blue-100">
+            {currentUsage.calls_made || 0} / {formatNumber(
+              activeLimit.per_day_call_limit,
+            )}
+          </div>
+          <div
+            class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-blue-200 dark:bg-blue-800"
+          >
+            <div
+              class="{getUsageColor(
+                getUsagePercentage(
+                  currentUsage.calls_made || 0,
+                  activeLimit.per_day_call_limit,
+                ),
+              )} h-full transition-all"
+              style="width: {getUsagePercentage(
+                currentUsage.calls_made || 0,
+                activeLimit.per_day_call_limit,
+              )}%"
+            ></div>
+          </div>
+        </div>
+      {/if}
+
+      <!-- Per Week -->
+      {#if activeLimit.per_week_call_limit}
+        <div>
+          <div class="mb-1 text-xs text-blue-700 dark:text-blue-300">
+            Per Week
+          </div>
+          <div class="text-sm font-medium text-blue-900 dark:text-blue-100">
+            {currentUsage.calls_made || 0} / {formatNumber(
+              activeLimit.per_week_call_limit,
+            )}
+          </div>
+          <div
+            class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-blue-200 dark:bg-blue-800"
+          >
+            <div
+              class="{getUsageColor(
+                getUsagePercentage(
+                  currentUsage.calls_made || 0,
+                  activeLimit.per_week_call_limit,
+                ),
+              )} h-full transition-all"
+              style="width: {getUsagePercentage(
+                currentUsage.calls_made || 0,
+                activeLimit.per_week_call_limit,
+              )}%"
+            ></div>
+          </div>
+        </div>
+      {/if}
+
+      <!-- Per Month -->
+      {#if activeLimit.per_month_call_limit}
+        <div>
+          <div class="mb-1 text-xs text-blue-700 dark:text-blue-300">
+            Per Month
+          </div>
+          <div class="text-sm font-medium text-blue-900 dark:text-blue-100">
+            {currentUsage.calls_made || 0} / {formatNumber(
+              activeLimit.per_month_call_limit,
+            )}
+          </div>
+          <div
+            class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-blue-200 dark:bg-blue-800"
+          >
+            <div
+              class="{getUsageColor(
+                getUsagePercentage(
+                  currentUsage.calls_made || 0,
+                  activeLimit.per_month_call_limit,
+                ),
+              )} h-full transition-all"
+              style="width: {getUsagePercentage(
+                currentUsage.calls_made || 0,
+                activeLimit.per_month_call_limit,
+              )}%"
+            ></div>
+          </div>
+        </div>
+      {/if}
+    </div>
+  </div>
+{/if}
+
+<!-- Rate Limits Section -->
+<div
+  class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+>
+  <div class="mb-4 flex items-center justify-between">
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+      Rate Limit Records
+      {#if rateLimits.length > 0}
+        <span class="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
+          ({rateLimits.length})
+        </span>
+      {/if}
+    </h2>
+    <a
+      href="/consumers/{consumer.consumer_id}/rate-limits/create"
+      class="inline-flex items-center rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:bg-blue-500 dark:hover:bg-blue-600"
+    >
+      <svg
+        class="mr-1.5 h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M12 4v16m8-8H4"
+        />
+      </svg>
+      Create Rate Limit
+    </a>
+  </div>
+
+  {#if rateLimits.length > 0}
+    <div class="space-y-3">
+      {#each rateLimits as limit (limit.rate_limiting_id)}
+        <div
+          class="rounded-lg border p-4 {isLimitActive(limit)
+            ? 'border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/30'
+            : 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900/50'}"
+        >
+          <div class="mb-3 flex items-start justify-between">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-gray-600 dark:text-gray-400">
+                  Rate Limit ID: {limit.rate_limiting_id}
+                </span>
+                {#if isLimitActive(limit)}
+                  <span
+                    class="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                  >
+                    Active
+                  </span>
+                {/if}
+              </div>
+              <div class="mt-1 text-xs text-gray-500 dark:text-gray-500">
+                Valid: {formatShortDate(limit.from_date)} → {formatShortDate(
+                  limit.to_date,
+                )}
+              </div>
+            </div>
+            <a
+              href="/consumers/{consumer.consumer_id}/rate-limits/{limit.rate_limiting_id}/edit"
+              class="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              Edit
+            </a>
+          </div>
+
+          <div
+            class="grid grid-cols-2 gap-2 text-xs sm:grid-cols-3 lg:grid-cols-6"
+          >
+            <div>
+              <div class="text-gray-600 dark:text-gray-400">Per Second</div>
+              <div class="font-medium text-gray-900 dark:text-gray-100">
+                {formatNumber(limit.per_second_call_limit)}
+              </div>
+            </div>
+            <div>
+              <div class="text-gray-600 dark:text-gray-400">Per Minute</div>
+              <div class="font-medium text-gray-900 dark:text-gray-100">
+                {formatNumber(limit.per_minute_call_limit)}
+              </div>
+            </div>
+            <div>
+              <div class="text-gray-600 dark:text-gray-400">Per Hour</div>
+              <div class="font-medium text-gray-900 dark:text-gray-100">
+                {formatNumber(limit.per_hour_call_limit)}
+              </div>
+            </div>
+            <div>
+              <div class="text-gray-600 dark:text-gray-400">Per Day</div>
+              <div class="font-medium text-gray-900 dark:text-gray-100">
+                {formatNumber(limit.per_day_call_limit)}
+              </div>
+            </div>
+            <div>
+              <div class="text-gray-600 dark:text-gray-400">Per Week</div>
+              <div class="font-medium text-gray-900 dark:text-gray-100">
+                {formatNumber(limit.per_week_call_limit)}
+              </div>
+            </div>
+            <div>
+              <div class="text-gray-600 dark:text-gray-400">Per Month</div>
+              <div class="font-medium text-gray-900 dark:text-gray-100">
+                {formatNumber(limit.per_month_call_limit)}
+              </div>
+            </div>
+          </div>
+        </div>
+      {/each}
+    </div>
+  {:else}
+    <div class="rounded-lg bg-gray-100 p-8 text-center dark:bg-gray-900/50">
+      <svg
+        class="mx-auto mb-4 h-12 w-12 text-gray-400"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+      <p class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+        No rate limits configured
+      </p>
+      <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+        Create a rate limit to control API call frequency for this consumer.
+      </p>
+      <a
+        href="/consumers/{consumer.consumer_id}/rate-limits/create"
+        class="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:bg-blue-500 dark:hover:bg-blue-600"
+      >
+        <svg
+          class="mr-2 h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 4v16m8-8H4"
+          />
+        </svg>
+        Create Rate Limit
+      </a>
+    </div>
+  {/if}
+</div>

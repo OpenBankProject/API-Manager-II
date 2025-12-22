@@ -434,7 +434,7 @@
             {/if}
           </Navigation.Group>
 
-          <!-- System Group -->
+          <!-- System Menu -->
           <Navigation.Group>
             <button
               type="button"
