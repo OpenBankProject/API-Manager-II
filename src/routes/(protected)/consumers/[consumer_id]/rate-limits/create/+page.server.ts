@@ -117,20 +117,20 @@ export const actions = {
       });
     }
 
-    // Build request body - format dates as ISO 8601 with time
-    // Convert YYYY-MM-DD to YYYY-MM-DDT00:00:00.000Z
-    const fromDateISO = `${from_date}T00:00:00.000Z`;
-    const toDateISO = `${to_date}T23:59:59.999Z`;
+    // Build request body - format dates as ISO 8601 with time (no milliseconds)
+    // Convert YYYY-MM-DD to YYYY-MM-DDTHH:MM:SSZ
+    const fromDateISO = `${from_date}T00:00:00Z`;
+    const toDateISO = `${to_date}T23:59:59Z`;
 
     const requestBody: any = {
       from_date: fromDateISO,
       to_date: toDateISO,
-      per_second_call_limit: per_second_call_limit || "",
-      per_minute_call_limit: per_minute_call_limit || "",
-      per_hour_call_limit: per_hour_call_limit || "",
-      per_day_call_limit: per_day_call_limit || "",
-      per_week_call_limit: per_week_call_limit || "",
-      per_month_call_limit: per_month_call_limit || "",
+      per_second_call_limit: per_second_call_limit || "-1",
+      per_minute_call_limit: per_minute_call_limit || "-1",
+      per_hour_call_limit: per_hour_call_limit || "-1",
+      per_day_call_limit: per_day_call_limit || "-1",
+      per_week_call_limit: per_week_call_limit || "-1",
+      per_month_call_limit: per_month_call_limit || "-1",
     };
 
     try {
