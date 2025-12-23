@@ -2,6 +2,7 @@ import { createLogger } from "$lib/utils/logger";
 import { obp_requests } from "$lib/obp/requests";
 import { error, fail, redirect } from "@sveltejs/kit";
 import type { RequestEvent } from "@sveltejs/kit";
+import { SessionOAuthHelper } from "$lib/oauth/sessionHelper";
 
 const logger = createLogger("CreateConsumerRateLimitServer");
 
@@ -16,7 +17,16 @@ interface Consumer {
 }
 
 export async function load(event: RequestEvent) {
-  const token = event.locals.session.data.oauth?.access_token;
+  const session = event.locals.session;
+
+  if (!session?.data?.user) {
+    throw error(401, "Unauthorized");
+  }
+
+  // Get the OAuth session data
+  const sessionOAuth = SessionOAuthHelper.getSessionOAuth(session);
+  const token = sessionOAuth?.accessToken;
+
   if (!token) {
     error(401, {
       message: "Unauthorized: No access token found in session.",
@@ -60,7 +70,18 @@ export async function load(event: RequestEvent) {
 
 export const actions = {
   default: async (event: RequestEvent) => {
-    const token = event.locals.session.data.oauth?.access_token;
+    const session = event.locals.session;
+
+    if (!session?.data?.user) {
+      return fail(401, {
+        error: "Unauthorized",
+      });
+    }
+
+    // Get the OAuth session data
+    const sessionOAuth = SessionOAuthHelper.getSessionOAuth(session);
+    const token = sessionOAuth?.accessToken;
+
     if (!token) {
       return fail(401, {
         error: "Unauthorized: No access token found in session.",
