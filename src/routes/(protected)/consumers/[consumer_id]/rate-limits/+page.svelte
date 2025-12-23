@@ -53,19 +53,32 @@
   }
 
   function formatUsageValue(usageData: any, period: string): string {
-    const periodData = usageData[period];
-    const status = periodData.status;
-    const value = periodData.calls_made;
-
-    if (status === "ACTIVE") {
+    const value = usageData[period];
+    if (value === undefined || value === null) {
+      return "0";
+    }
+    // Handle nested object structure with calls_made property
+    if (typeof value === "object" && value.calls_made !== undefined) {
+      return String(value.calls_made);
+    }
+    // Handle simple numeric value
+    if (typeof value === "number") {
       return String(value);
     }
-
-    return status;
+    return "0";
   }
 
   function isUsageActive(usageData: any, period: string): boolean {
-    return usageData[period]?.status === "ACTIVE";
+    const value = usageData[period];
+    if (value === undefined || value === null) {
+      return false;
+    }
+    // Handle nested object structure
+    if (typeof value === "object" && value.status !== undefined) {
+      return value.status === "ACTIVE";
+    }
+    // Handle simple numeric value
+    return true;
   }
 </script>
 

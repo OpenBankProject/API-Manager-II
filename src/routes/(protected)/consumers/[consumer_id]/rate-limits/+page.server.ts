@@ -160,7 +160,9 @@ export async function load(event: RequestEvent) {
           `/obp/v6.0.0/management/consumers/${consumerId}/consumer/current-usage`,
           token,
         );
-        logger.debug(`Retrieved current usage for consumer`);
+        logger.debug(
+          `Retrieved current usage: ${JSON.stringify(currentUsage)}`,
+        );
       } catch (e) {
         logger.warn(`Could not fetch current usage for consumer:`, e);
       }
