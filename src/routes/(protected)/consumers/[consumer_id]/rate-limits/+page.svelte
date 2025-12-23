@@ -51,6 +51,22 @@
     if (percentage >= 50) return "bg-yellow-500";
     return "bg-green-500";
   }
+
+  function formatUsageValue(usageData: any, period: string): string {
+    const periodData = usageData[period];
+    const status = periodData.status;
+    const value = periodData.calls_made;
+
+    if (status === "ACTIVE") {
+      return String(value);
+    }
+
+    return status;
+  }
+
+  function isUsageActive(usageData: any, period: string): boolean {
+    return usageData[period]?.status === "ACTIVE";
+  }
 </script>
 
 <svelte:head>
@@ -199,7 +215,7 @@
             Per Second
           </div>
           <div class="text-sm font-medium text-blue-900 dark:text-blue-100">
-            {currentUsage.calls_made || 0} / {formatNumber(
+            {formatUsageValue(currentUsage, "per_second")} / {formatNumber(
               activeLimit.per_second_call_limit,
             )}
           </div>
@@ -207,16 +223,20 @@
             class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-blue-200 dark:bg-blue-800"
           >
             <div
-              class="{getUsageColor(
-                getUsagePercentage(
-                  currentUsage.calls_made || 0,
-                  activeLimit.per_second_call_limit,
-                ),
-              )} h-full transition-all"
-              style="width: {getUsagePercentage(
-                currentUsage.calls_made || 0,
-                activeLimit.per_second_call_limit,
-              )}%"
+              class="{isUsageActive(currentUsage, 'per_second')
+                ? getUsageColor(
+                    getUsagePercentage(
+                      currentUsage.per_second || 0,
+                      activeLimit.per_second_call_limit,
+                    ),
+                  )
+                : 'bg-gray-400'} h-full transition-all"
+              style="width: {isUsageActive(currentUsage, 'per_second')
+                ? getUsagePercentage(
+                    currentUsage.per_second || 0,
+                    activeLimit.per_second_call_limit,
+                  )
+                : 0}%"
             ></div>
           </div>
         </div>
@@ -229,7 +249,7 @@
             Per Minute
           </div>
           <div class="text-sm font-medium text-blue-900 dark:text-blue-100">
-            {currentUsage.calls_made || 0} / {formatNumber(
+            {formatUsageValue(currentUsage, "per_minute")} / {formatNumber(
               activeLimit.per_minute_call_limit,
             )}
           </div>
@@ -237,16 +257,20 @@
             class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-blue-200 dark:bg-blue-800"
           >
             <div
-              class="{getUsageColor(
-                getUsagePercentage(
-                  currentUsage.calls_made || 0,
-                  activeLimit.per_minute_call_limit,
-                ),
-              )} h-full transition-all"
-              style="width: {getUsagePercentage(
-                currentUsage.calls_made || 0,
-                activeLimit.per_minute_call_limit,
-              )}%"
+              class="{isUsageActive(currentUsage, 'per_minute')
+                ? getUsageColor(
+                    getUsagePercentage(
+                      currentUsage.per_minute || 0,
+                      activeLimit.per_minute_call_limit,
+                    ),
+                  )
+                : 'bg-gray-400'} h-full transition-all"
+              style="width: {isUsageActive(currentUsage, 'per_minute')
+                ? getUsagePercentage(
+                    currentUsage.per_minute || 0,
+                    activeLimit.per_minute_call_limit,
+                  )
+                : 0}%"
             ></div>
           </div>
         </div>
@@ -259,7 +283,7 @@
             Per Hour
           </div>
           <div class="text-sm font-medium text-blue-900 dark:text-blue-100">
-            {currentUsage.calls_made || 0} / {formatNumber(
+            {formatUsageValue(currentUsage, "per_hour")} / {formatNumber(
               activeLimit.per_hour_call_limit,
             )}
           </div>
@@ -267,16 +291,20 @@
             class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-blue-200 dark:bg-blue-800"
           >
             <div
-              class="{getUsageColor(
-                getUsagePercentage(
-                  currentUsage.calls_made || 0,
-                  activeLimit.per_hour_call_limit,
-                ),
-              )} h-full transition-all"
-              style="width: {getUsagePercentage(
-                currentUsage.calls_made || 0,
-                activeLimit.per_hour_call_limit,
-              )}%"
+              class="{isUsageActive(currentUsage, 'per_hour')
+                ? getUsageColor(
+                    getUsagePercentage(
+                      currentUsage.per_hour || 0,
+                      activeLimit.per_hour_call_limit,
+                    ),
+                  )
+                : 'bg-gray-400'} h-full transition-all"
+              style="width: {isUsageActive(currentUsage, 'per_hour')
+                ? getUsagePercentage(
+                    currentUsage.per_hour || 0,
+                    activeLimit.per_hour_call_limit,
+                  )
+                : 0}%"
             ></div>
           </div>
         </div>
@@ -289,7 +317,7 @@
             Per Day
           </div>
           <div class="text-sm font-medium text-blue-900 dark:text-blue-100">
-            {currentUsage.calls_made || 0} / {formatNumber(
+            {formatUsageValue(currentUsage, "per_day")} / {formatNumber(
               activeLimit.per_day_call_limit,
             )}
           </div>
@@ -297,16 +325,20 @@
             class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-blue-200 dark:bg-blue-800"
           >
             <div
-              class="{getUsageColor(
-                getUsagePercentage(
-                  currentUsage.calls_made || 0,
-                  activeLimit.per_day_call_limit,
-                ),
-              )} h-full transition-all"
-              style="width: {getUsagePercentage(
-                currentUsage.calls_made || 0,
-                activeLimit.per_day_call_limit,
-              )}%"
+              class="{isUsageActive(currentUsage, 'per_day')
+                ? getUsageColor(
+                    getUsagePercentage(
+                      currentUsage.per_day || 0,
+                      activeLimit.per_day_call_limit,
+                    ),
+                  )
+                : 'bg-gray-400'} h-full transition-all"
+              style="width: {isUsageActive(currentUsage, 'per_day')
+                ? getUsagePercentage(
+                    currentUsage.per_day || 0,
+                    activeLimit.per_day_call_limit,
+                  )
+                : 0}%"
             ></div>
           </div>
         </div>
@@ -319,7 +351,7 @@
             Per Week
           </div>
           <div class="text-sm font-medium text-blue-900 dark:text-blue-100">
-            {currentUsage.calls_made || 0} / {formatNumber(
+            {formatUsageValue(currentUsage, "per_week")} / {formatNumber(
               activeLimit.per_week_call_limit,
             )}
           </div>
@@ -327,16 +359,20 @@
             class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-blue-200 dark:bg-blue-800"
           >
             <div
-              class="{getUsageColor(
-                getUsagePercentage(
-                  currentUsage.calls_made || 0,
-                  activeLimit.per_week_call_limit,
-                ),
-              )} h-full transition-all"
-              style="width: {getUsagePercentage(
-                currentUsage.calls_made || 0,
-                activeLimit.per_week_call_limit,
-              )}%"
+              class="{isUsageActive(currentUsage, 'per_week')
+                ? getUsageColor(
+                    getUsagePercentage(
+                      currentUsage.per_week || 0,
+                      activeLimit.per_week_call_limit,
+                    ),
+                  )
+                : 'bg-gray-400'} h-full transition-all"
+              style="width: {isUsageActive(currentUsage, 'per_week')
+                ? getUsagePercentage(
+                    currentUsage.per_week || 0,
+                    activeLimit.per_week_call_limit,
+                  )
+                : 0}%"
             ></div>
           </div>
         </div>
@@ -349,7 +385,7 @@
             Per Month
           </div>
           <div class="text-sm font-medium text-blue-900 dark:text-blue-100">
-            {currentUsage.calls_made || 0} / {formatNumber(
+            {formatUsageValue(currentUsage, "per_month")} / {formatNumber(
               activeLimit.per_month_call_limit,
             )}
           </div>
@@ -357,16 +393,20 @@
             class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-blue-200 dark:bg-blue-800"
           >
             <div
-              class="{getUsageColor(
-                getUsagePercentage(
-                  currentUsage.calls_made || 0,
-                  activeLimit.per_month_call_limit,
-                ),
-              )} h-full transition-all"
-              style="width: {getUsagePercentage(
-                currentUsage.calls_made || 0,
-                activeLimit.per_month_call_limit,
-              )}%"
+              class="{isUsageActive(currentUsage, 'per_month')
+                ? getUsageColor(
+                    getUsagePercentage(
+                      currentUsage.per_month || 0,
+                      activeLimit.per_month_call_limit,
+                    ),
+                  )
+                : 'bg-gray-400'} h-full transition-all"
+              style="width: {isUsageActive(currentUsage, 'per_month')
+                ? getUsagePercentage(
+                    currentUsage.per_month || 0,
+                    activeLimit.per_month_call_limit,
+                  )
+                : 0}%"
             ></div>
           </div>
         </div>
