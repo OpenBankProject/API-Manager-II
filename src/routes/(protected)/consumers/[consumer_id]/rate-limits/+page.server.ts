@@ -162,15 +162,13 @@ export async function load(event: RequestEvent) {
     // Fetch current usage if consumer is enabled
     if (consumer.enabled) {
       try {
+        const callCountersEndpoint = `/obp/v6.0.0/management/consumers/${consumerId}/call-counters`;
         logger.debug(
-          `Attempting to fetch call-counters for consumer ${consumerId}`,
+          `Attempting to fetch call-counters: ${callCountersEndpoint}`,
         );
-        currentUsage = await obp_requests.get(
-          `/obp/v6.0.0/management/consumers/${consumerId}/call-counters`,
-          token,
-        );
+        currentUsage = await obp_requests.get(callCountersEndpoint, token);
         logger.debug(
-          `Retrieved current usage: ${JSON.stringify(currentUsage)}`,
+          `Retrieved Call Counts: ${JSON.stringify(currentUsage, null, 2)}`,
         );
         if (!currentUsage) {
           logger.warn(
