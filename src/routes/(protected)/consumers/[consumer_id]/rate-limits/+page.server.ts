@@ -99,7 +99,7 @@ export async function load(event: RequestEvent) {
 
   let consumer: Consumer | undefined = undefined;
   let rateLimits: RateLimit[] = [];
-  let currentUsage: CurrentUsageOrError | undefined = undefined;
+  let callCounters: CurrentUsageOrError | undefined = undefined;
   let activeRateLimits: ActiveRateLimits | undefined = undefined;
   let rateLimitingInfo: RateLimitingInfo | undefined = undefined;
 
@@ -159,18 +159,18 @@ export async function load(event: RequestEvent) {
       logger.error(`Error fetching active rate limits:`, e);
     }
 
-    // Fetch current usage if consumer is enabled
+    // Fetch call counters if consumer is enabled
     if (consumer.enabled) {
       try {
         const callCountersEndpoint = `/obp/v6.0.0/management/consumers/${consumerId}/call-counters`;
         logger.debug(
           `Attempting to fetch call-counters: ${callCountersEndpoint}`,
         );
-        currentUsage = await obp_requests.get(callCountersEndpoint, token);
+        callCounters = await obp_requests.get(callCountersEndpoint, token);
         logger.debug(
-          `Retrieved Call Counts: ${JSON.stringify(currentUsage, null, 2)}`,
+          `Retrieved Call Counts: ${JSON.stringify(callCounters, null, 2)}`,
         );
-        if (!currentUsage) {
+        if (!callCounters) {
           logger.warn(
             `Call-counters endpoint returned undefined/null for consumer ${consumerId}`,
           );
@@ -182,7 +182,7 @@ export async function load(event: RequestEvent) {
         );
         logger.error(`Error details: ${JSON.stringify(e)}`);
         // Set to ERROR so UI can display error message
-        currentUsage = "ERROR";
+        callCounters = "ERROR";
       }
     } else {
       logger.debug(
@@ -203,7 +203,7 @@ export async function load(event: RequestEvent) {
   return {
     consumer,
     rateLimits,
-    currentUsage,
+    callCounters,
     activeRateLimits,
     rateLimitingInfo,
   };

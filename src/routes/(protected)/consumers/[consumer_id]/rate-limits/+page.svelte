@@ -2,12 +2,12 @@
   let { data } = $props();
   const consumer = data.consumer;
   const rateLimits = data.rateLimits;
-  const currentUsage = data.currentUsage;
+  const callCounters = data.callCounters;
   const activeRateLimits = data.activeRateLimits;
   const rateLimitingInfo = data.rateLimitingInfo;
 
   // Debug logging
-  console.log("Current Usage Data:", currentUsage);
+  console.log("Call Counters Data:", callCounters);
   console.log("Active Rate Limits:", activeRateLimits);
 
   function formatShortDate(dateString: string): string {
@@ -48,11 +48,11 @@
 
   function formatNumber(value: string | number | undefined): string {
     if (value === undefined || value === null || value === "") {
-      return "Unlimited";
+      return "formatNumber Undefined";
     }
     const num = typeof value === "string" ? parseInt(value, 10) : value;
-    if (isNaN(num) || num <= 0) {
-      return "Unlimited";
+    if (isNaN(num) || num < 0) {
+      return "formatNumber Undefined 2";
     }
     return num.toLocaleString();
   }
@@ -75,11 +75,11 @@
   function formatUsageValue(usageData: any, period: string): string {
     // If we got an ERROR from the API, don't lie with fake data
     if (usageData === "ERROR") {
-      return "ERROR";
+      return "UNKNOWN";
     }
     const value = usageData[period];
     if (value === undefined || value === null) {
-      return "ERROR";
+      return "UNKNOWN";
     }
     // Handle nested object structure with calls_made property
     if (typeof value === "object" && value.calls_made !== undefined) {
@@ -89,7 +89,7 @@
     if (typeof value === "number") {
       return String(value);
     }
-    return "ERROR";
+    return "UNKNOWN";
   }
 
   function getCallsMade(usageData: any, period: string): number {
@@ -269,7 +269,7 @@
           Per Second
         </div>
         <div class="text-sm font-medium text-blue-900 dark:text-blue-100">
-          {formatUsageValue(currentUsage, "per_second")}
+          {formatUsageValue(callCounters, "per_second")}
           {#if activeRateLimits}
             / {formatNumber(activeRateLimits.active_per_second_rate_limit)}
           {/if}
@@ -284,7 +284,7 @@
           Per Minute
         </div>
         <div class="text-sm font-medium text-blue-900 dark:text-blue-100">
-          {formatUsageValue(currentUsage, "per_minute")}
+          {formatUsageValue(callCounters, "per_minute")}
           {#if activeRateLimits}
             / {formatNumber(activeRateLimits.active_per_minute_rate_limit)}
           {/if}
@@ -299,7 +299,7 @@
           Per Hour
         </div>
         <div class="text-sm font-medium text-blue-900 dark:text-blue-100">
-          {formatUsageValue(currentUsage, "per_hour")}
+          {formatUsageValue(callCounters, "per_hour")}
           {#if activeRateLimits}
             / {formatNumber(activeRateLimits.active_per_hour_rate_limit)}
           {/if}
@@ -312,7 +312,7 @@
       <div>
         <div class="mb-1 text-xs text-blue-700 dark:text-blue-300">Per Day</div>
         <div class="text-sm font-medium text-blue-900 dark:text-blue-100">
-          {formatUsageValue(currentUsage, "per_day")}
+          {formatUsageValue(callCounters, "per_day")}
           {#if activeRateLimits}
             / {formatNumber(activeRateLimits.active_per_day_rate_limit)}
           {/if}
@@ -327,7 +327,7 @@
           Per Week
         </div>
         <div class="text-sm font-medium text-blue-900 dark:text-blue-100">
-          {formatUsageValue(currentUsage, "per_week")}
+          {formatUsageValue(callCounters, "per_week")}
           {#if activeRateLimits}
             / {formatNumber(activeRateLimits.active_per_week_rate_limit)}
           {/if}
@@ -342,7 +342,7 @@
           Per Month
         </div>
         <div class="text-sm font-medium text-blue-900 dark:text-blue-100">
-          {formatUsageValue(currentUsage, "per_month")}
+          {formatUsageValue(callCounters, "per_month")}
           {#if activeRateLimits}
             / {formatNumber(activeRateLimits.active_per_month_rate_limit)}
           {/if}
