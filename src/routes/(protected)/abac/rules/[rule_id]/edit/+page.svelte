@@ -100,8 +100,91 @@
           JSON.stringify(schema.object_types[0], null, 2),
         );
 
-        // Transform OBP format to our UI format
-        availableObjects = schema.object_types.map((objType: any) => {
+        // Create a map of object_types for lookup
+        const objectTypeMap = new Map();
+        schema.object_types.forEach((objType: any) => {
+          objectTypeMap.set(objType.name, objType);
+        });
+
+        // Helper function to extract base type from Option[] or List[] wrappers
+        const extractBaseType = (typeString: string): string => {
+          // Handle Option[Type] -> Type
+          const optionMatch = typeString.match(/^Option\[(.+)\]$/);
+          if (optionMatch) {
+            return optionMatch[1];
+          }
+          // Handle List[Type] -> Type
+          const listMatch = typeString.match(/^List\[(.+)\]$/);
+          if (listMatch) {
+            return listMatch[1];
+          }
+          // Return as-is if no wrapper
+          return typeString;
+        };
+
+        // Transform parameters into objects
+        const parameterObjects: any[] = [];
+        if (schema.parameters && Array.isArray(schema.parameters)) {
+          console.log("!!! PROCESSING PARAMETERS !!!");
+          console.log("Parameters count:", schema.parameters.length);
+          console.log(
+            "First parameter sample:",
+            JSON.stringify(schema.parameters[0], null, 2),
+          );
+
+          schema.parameters.forEach((param: any) => {
+            console.log(`Processing parameter: ${param.name}`);
+            console.log(`  - Type: ${param.type}`);
+            console.log(`  - Required: ${param.required}`);
+            console.log(`  - Description: ${param.description}`);
+
+            // Extract base type from Option[] or List[] wrappers
+            const baseType = extractBaseType(param.type);
+            console.log(`  - Base type: ${baseType}`);
+
+            // Get the referenced object type
+            const referencedType = objectTypeMap.get(baseType);
+
+            if (referencedType) {
+              const fields = (referencedType.properties || []).map(
+                (prop: any) => ({
+                  name: prop.name,
+                  type: prop.type,
+                  description: prop.description,
+                }),
+              );
+
+              // Determine type label
+              let typeLabel = param.type;
+              if (param.type.startsWith("Option[")) {
+                typeLabel += " (Optional)";
+              } else if (param.type.startsWith("List[")) {
+                typeLabel += " (List)";
+              }
+
+              parameterObjects.push({
+                name: param.name,
+                description: `${param.description} - Type: ${typeLabel}`,
+                fields: fields,
+                isParameter: true,
+                parameterType: param.type,
+                baseType: baseType,
+                required: param.required,
+                category: param.category,
+              });
+              console.log(
+                `  - Created parameter object with ${fields.length} fields`,
+              );
+            } else {
+              console.warn(
+                `  - Referenced type '${baseType}' not found in object_types for parameter '${param.name}' (original type: ${param.type})`,
+              );
+            }
+          });
+        }
+
+        // Transform object_types
+        const objectTypeObjects = schema.object_types.map((objType: any) => {
           console.log(`Processing object type: ${objType.name}`);
           console.log(`  - Has properties? ${!!objType.properties}`);
           console.log(
@@ -120,11 +203,17 @@
             name: objType.name,
             description: objType.description,
             fields: fields,
+            isParameter: false,
           };
         });
 
+        // Combine parameters and object types, with parameters first
+        availableObjects = [...parameterObjects, ...objectTypeObjects];
+
         console.log("!!! TRANSFORMATION COMPLETE !!!");
-        console.log("Available objects count:", availableObjects.length);
+        console.log("Parameter objects count:", parameterObjects.length);
+        console.log("Object type objects count:", objectTypeObjects.length);
+        console.log("Total available objects count:", availableObjects.length);
         console.log(
           "Available object names:",
           availableObjects.map((o) => o.name),
@@ -136,7 +225,7 @@
 
         // Log additional schema information
         if (schema.parameters) {
-          console.log("!!! PARAMETERS !!!");
+          console.log("!!! PARAMETERS (raw) !!!");
           console.log("Parameters:", schema.parameters);
         }
         if (schema.examples) {
@@ -462,9 +551,6 @@
                   class="whitespace-pre-wrap font-mono text-xs bg-red-100 dark:bg-red-950 p-2 rounded">{schemaError}</pre>
               </div>
               <div class="mt-2 space-y-2">
-                <p class="text-xs text-yellow-600 dark:text-yellow-400">
-                  Using fallback schema
-                </p>
                 <button
                   type="button"
                   onclick={() => fetchSchema()}
@@ -480,16 +566,58 @@
           {/if}
 
           <div class="space-y-2 max-h-[calc(100vh-400px)] overflow-y-auto mb-4">
-            {#each availableObjects as obj}
+            {#each availableObjects as obj, index}
+              {#if index > 0 && availableObjects[index - 1].isParameter && !obj.isParameter}
+                <div class="pt-4 pb-2">
+                  <div class="flex items-center gap-2 mb-2">
+                    <div class="flex-1 h-px bg-gray-300 dark:bg-gray-600"></div>
+                    <span
+                      class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide"
+                    >
+                      Object Types
+                    </span>
+                    <div class="flex-1 h-px bg-gray-300 dark:bg-gray-600"></div>
+                  </div>
+                </div>
+              {/if}
+              {#if index === 0 && obj.isParameter}
+                <div class="pb-2">
+                  <div class="flex items-center gap-2 mb-2">
+                    <div class="flex-1 h-px bg-gray-300 dark:bg-gray-600"></div>
+                    <span
+                      class="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wide"
+                    >
+                      Parameters (Available in Rules)
+                    </span>
+                    <div class="flex-1 h-px bg-gray-300 dark:bg-gray-600"></div>
+                  </div>
+                </div>
+              {/if}
               <div class="border border-gray-200 dark:border-gray-700 rounded">
                 <button
                   type="button"
                   onclick={() => toggleObject(obj.name)}
                   class="w-full px-3 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between"
                 >
-                  <div>
-                    <div class="font-mono text-blue-600 dark:text-blue-400">
-                      {obj.name}
+                  <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                      <div class="font-mono text-blue-600 dark:text-blue-400">
+                        {obj.name}
+                      </div>
+                      {#if obj.isParameter}
+                        <span
+                          class="px-1.5 py-0.5 text-xs font-semibold rounded bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
+                        >
+                          Parameter
+                        </span>
+                        {#if obj.category}
+                          <span
+                            class="px-1.5 py-0.5 text-xs rounded bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                          >
+                            {obj.category}
+                          </span>
+                        {/if}
+                      {/if}
                     </div>
                     <div
                       class="text-gray-500 dark:text-gray-400 text-xs mt-0.5"
