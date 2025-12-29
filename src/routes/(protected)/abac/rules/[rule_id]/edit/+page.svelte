@@ -157,13 +157,14 @@
         schemaOperators = schema.available_operators || [];
         schemaNotes = schema.notes || [];
       } else {
-        // Fallback to hardcoded if schema format is unexpected
-        console.warn("Unexpected schema format:", schema);
-        console.warn(
+        // No fallback - just log the error
+        console.error("Unexpected schema format:", schema);
+        console.error(
           "Expected object_types array but got:",
           typeof schema.object_types,
         );
-        availableObjects = defaultObjects;
+        schemaError =
+          "Unexpected schema format received from API. Expected 'object_types' array.";
       }
       schemaLoading = false;
     } catch (err) {
@@ -174,8 +175,6 @@
       console.error("Error string:", String(err));
 
       schemaError = String(err);
-      // Use hardcoded fallback
-      availableObjects = defaultObjects;
       schemaLoading = false;
     }
   }
@@ -184,116 +183,6 @@
   $effect(() => {
     fetchSchema();
   });
-
-  // Fallback hardcoded objects in case API fails
-  const defaultObjects = [
-    {
-      name: "AuthenticatedUser",
-      description: "The user making the API call",
-      fields: [
-        { name: "user_id", type: "String", description: "User ID" },
-        { name: "username", type: "String", description: "Username" },
-        { name: "emailAddress", type: "String", description: "Email address" },
-        { name: "bank_id", type: "String", description: "User's bank ID" },
-        { name: "provider", type: "String", description: "Auth provider" },
-        { name: "provider_id", type: "String", description: "Provider ID" },
-      ],
-    },
-    {
-      name: "OnBehalfOfUser",
-      description: "User on whose behalf the action is performed",
-      fields: [
-        { name: "user_id", type: "String", description: "User ID" },
-        { name: "username", type: "String", description: "Username" },
-        { name: "emailAddress", type: "String", description: "Email address" },
-        { name: "bank_id", type: "String", description: "User's bank ID" },
-      ],
-    },
-    {
-      name: "User",
-      description: "Generic user object",
-      fields: [
-        { name: "user_id", type: "String", description: "User ID" },
-        { name: "username", type: "String", description: "Username" },
-        { name: "emailAddress", type: "String", description: "Email address" },
-        { name: "bank_id", type: "String", description: "User's bank ID" },
-      ],
-    },
-    {
-      name: "Bank",
-      description: "Bank object",
-      fields: [
-        { name: "bank_id", type: "String", description: "Bank ID" },
-        { name: "name", type: "String", description: "Bank name" },
-        { name: "full_name", type: "String", description: "Full bank name" },
-        { name: "short_name", type: "String", description: "Short bank name" },
-      ],
-    },
-    {
-      name: "Account",
-      description: "Bank account object",
-      fields: [
-        { name: "account_id", type: "String", description: "Account ID" },
-        { name: "bank_id", type: "String", description: "Bank ID" },
-        { name: "owner_id", type: "String", description: "Account owner ID" },
-        { name: "type", type: "String", description: "Account type" },
-        { name: "label", type: "String", description: "Account label" },
-      ],
-    },
-    {
-      name: "View",
-      description: "Account view object",
-      fields: [
-        { name: "view_id", type: "String", description: "View ID" },
-        { name: "name", type: "String", description: "View name" },
-        {
-          name: "description",
-          type: "String",
-          description: "View description",
-        },
-        { name: "is_public", type: "Boolean", description: "Is public" },
-      ],
-    },
-    {
-      name: "Transaction",
-      description: "Transaction object",
-      fields: [
-        {
-          name: "transaction_id",
-          type: "String",
-          description: "Transaction ID",
-        },
-        { name: "account_id", type: "String", description: "Account ID" },
-        { name: "bank_id", type: "String", description: "Bank ID" },
-        { name: "amount", type: "Number", description: "Transaction amount" },
-        { name: "type", type: "String", description: "Transaction type" },
-      ],
-    },
-    {
-      name: "Customer",
-      description: "Customer object",
-      fields: [
-        { name: "customer_id", type: "String", description: "Customer ID" },
-        { name: "bank_id", type: "String", description: "Bank ID" },
-        { name: "name", type: "String", description: "Customer name" },
-        { name: "emailAddress", type: "String", description: "Email address" },
-      ],
-    },
-    {
-      name: "Context",
-      description: "Request context",
-      fields: [
-        { name: "timestamp", type: "Date", description: "Request timestamp" },
-        {
-          name: "ip_address",
-          type: "String",
-          description: "Client IP address",
-        },
-        { name: "method", type: "String", description: "HTTP method" },
-        { name: "path", type: "String", description: "Request path" },
-      ],
-    },
-  ];
 
   let expandedObjects = $state<Set<string>>(new Set());
 
