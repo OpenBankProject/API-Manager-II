@@ -509,10 +509,10 @@ In-Memory Status:
           {/if}
         </div>
         <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          <strong>Note:</strong> Invalidating a cache namespace increments its version
-          counter. This makes all existing keys with the old version unreachable,
-          providing instant cache invalidation without deleting individual keys.
-          Key counts shown below reflect only the latest version of each namespace.
+          <strong>Note:</strong> Invalidating a cache namespace works by incrementing
+          its version counter which forms part of the namespace key prefix, thus
+          hiding old keys which will expire in due course based on their TTL. Key
+          counts shown below reflect only the latest version of each namespace.
         </p>
       </div>
 
