@@ -20,6 +20,7 @@ import {
   Settings,
   FileText,
   Lock,
+  HardDrive,
 } from "@lucide/svelte";
 import { env } from "$env/dynamic/public";
 
@@ -75,6 +76,7 @@ export function getActiveMenuItem(pathname: string) {
 // System navigation items
 function buildSystemItems(): NavigationItem[] {
   const items: NavigationItem[] = [
+    { href: "/system/cache", label: "Cache", iconComponent: HardDrive },
     { href: "/system/log-cache", label: "LogCache", iconComponent: Database },
     {
       href: "/system/migrations",
