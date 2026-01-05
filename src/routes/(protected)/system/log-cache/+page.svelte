@@ -21,7 +21,7 @@
   const logLevels = [
     { value: "", label: "ALL" },
     { value: "ERROR", label: "ERROR" },
-    { value: "WARN", label: "WARN" },
+    { value: "WARNING", label: "WARNING" },
     { value: "INFO", label: "INFO" },
     { value: "DEBUG", label: "DEBUG" },
   ];
@@ -144,6 +144,7 @@
       case "ERROR":
         return "log-level-error";
       case "WARN":
+      case "WARNING":
         return "log-level-warn";
       case "INFO":
         return "log-level-info";
