@@ -486,8 +486,9 @@
 
   .roles-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 1rem;
+    max-width: 100%;
   }
 
   .role-card {
@@ -499,6 +500,7 @@
     border: 1px solid #e5e7eb;
     border-radius: 6px;
     transition: all 0.2s;
+    min-width: 0;
   }
 
   .role-card:hover {
@@ -537,6 +539,10 @@
     font-size: 0.875rem;
     font-weight: 500;
     color: #111827;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    min-width: 0;
   }
 
   :global([data-mode="dark"]) .role-name {
