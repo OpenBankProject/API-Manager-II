@@ -271,7 +271,7 @@ export const ROLE_REQUIREMENTS = {
   // System Management
   getLogCache: [
     {
-      role: "CanGetLogCache",
+      role: "CanGetSystemLogCacheAll",
       description: "View system log cache",
       action: "view log cache",
     },
