@@ -42,8 +42,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       throw error(404, "System dynamic entity not found");
     }
 
+    // Get user entitlements from session for role checking
+    const userEntitlements =
+      (session.data.user as any)?.entitlements?.list || [];
+
     return {
       entity,
+      userEntitlements,
     };
   } catch (err) {
     logger.error("Error fetching system dynamic entity:", err);

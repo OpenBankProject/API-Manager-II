@@ -11,6 +11,7 @@
   let { data }: { data: PageData } = $props();
 
   const entity = data.entity;
+  let userEntitlements = $derived(data.userEntitlements || []);
   const apiExplorerUrl =
     $page.data.externalLinks?.API_EXPLORER_URL ||
     "https://apiexplorer-ii-sandbox.openbankproject.com";
@@ -41,6 +42,38 @@
   const properties = schema?.properties || {};
   const requiredFields = schema?.required || [];
   const description = schema?.description || "No description available";
+
+  // Define required roles for CRUD operations on this dynamic entity
+  let requiredRoles = $derived.by(() => {
+    if (!entityName || entityName === "Unknown") return [];
+    return [
+      {
+        operation: "Create",
+        role: `CanCreateDynamicEntity_System${entityName}`,
+        description: `Create new ${entityName} records`,
+      },
+      {
+        operation: "Read",
+        role: `CanGetDynamicEntity_System${entityName}`,
+        description: `View ${entityName} records`,
+      },
+      {
+        operation: "Update",
+        role: `CanUpdateDynamicEntity_System${entityName}`,
+        description: `Update existing ${entityName} records`,
+      },
+      {
+        operation: "Delete",
+        role: `CanDeleteDynamicEntity_System${entityName}`,
+        description: `Delete ${entityName} records`,
+      },
+    ];
+  });
+
+  // Check if user has a specific role
+  function userHasRole(roleName: string): boolean {
+    return userEntitlements.some((ent: any) => ent.role_name === roleName);
+  }
 
   // Construct API Explorer URL for this dynamic entity
   // Format: /resource-docs/OBPdynamic-entity?operationid=OBPv4.0.0-dynamicEntity_create<ENTITY_NAME>_
@@ -354,6 +387,84 @@
         </dd>
       </div>
     </dl>
+  </div>
+
+  <!-- Required Roles Section -->
+  <div
+    class="mb-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+  >
+    <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
+      Required Roles for CRUD Operations
+    </h2>
+    <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+      These roles are required to perform operations on {entityName} records:
+    </p>
+    <div class="space-y-3">
+      {#each requiredRoles as roleReq}
+        <div
+          class="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900"
+        >
+          <div class="flex-1">
+            <div class="flex items-center gap-2">
+              <span
+                class="text-sm font-semibold text-gray-900 dark:text-gray-100"
+              >
+                {roleReq.operation}
+              </span>
+              {#if userHasRole(roleReq.role)}
+                <span
+                  class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                >
+                  <svg
+                    class="h-3 w-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  You have this role
+                </span>
+              {/if}
+            </div>
+            <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+              {roleReq.description}
+            </p>
+            <p class="mt-1 font-mono text-xs text-gray-500 dark:text-gray-500">
+              {roleReq.role}
+            </p>
+          </div>
+          {#if !userHasRole(roleReq.role)}
+            <a
+              href="/rbac/entitlement-requests/create?role={encodeURIComponent(
+                roleReq.role,
+              )}"
+              class="ml-4 inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+            >
+              <svg
+                class="h-3 w-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              Request Entitlement
+            </a>
+          {/if}
+        </div>
+      {/each}
+    </div>
   </div>
 
   <!-- Schema Properties -->

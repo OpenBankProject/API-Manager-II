@@ -75,9 +75,14 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       }
     }
 
+    // Get user entitlements from session for role checking
+    const userEntitlements =
+      (session.data.user as any)?.entitlements?.list || [];
+
     return {
       entity,
       dataRecords,
+      userEntitlements,
     };
   } catch (err) {
     logger.error("Error fetching system dynamic entity:", err);
