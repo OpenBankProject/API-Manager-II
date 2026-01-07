@@ -73,6 +73,9 @@
   let requestSuccess = $state<Record<string, boolean>>({});
   let requestErrors = $state<Record<string, string>>({});
 
+  // Collapsible state for Required Roles section
+  let rolesCollapsed = $state(true);
+
   async function handleRequestEntitlement(roleName: string) {
     if (requestingRoles[roleName]) return;
 
@@ -665,132 +668,159 @@
   <!-- Required Roles Section -->
   <div class="mb-6">
     <div
-      class="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800"
+      class="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
     >
-      <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
-        Required Roles for CRUD Operations
-      </h2>
-      <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-        These roles are required to perform operations on {entityName} records:
-      </p>
-      <div class="space-y-3">
-        {#each requiredRoles as roleReq}
-          <div
-            class="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900"
-          >
-            <div class="flex-1">
-              <div class="flex items-center gap-2">
-                <span
-                  class="text-sm font-semibold text-gray-900 dark:text-gray-100"
-                >
-                  {roleReq.operation}
-                </span>
-                {#if userHasRole(roleReq.role)}
-                  <span
-                    class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                  >
-                    <svg
-                      class="h-3 w-3"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    You have this role
-                  </span>
-                {/if}
-              </div>
-              <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
-                {roleReq.description}
-              </p>
-              <p
-                class="mt-1 font-mono text-xs text-gray-500 dark:text-gray-500"
+      <button
+        onclick={() => (rolesCollapsed = !rolesCollapsed)}
+        class="flex w-full items-center justify-between p-6 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
+      >
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            Required Roles for CRUD Operations
+          </h2>
+          <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            These roles are required to perform operations on {entityName} records
+          </p>
+        </div>
+        <svg
+          class="h-5 w-5 text-gray-500 transition-transform dark:text-gray-400"
+          class:rotate-180={!rolesCollapsed}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </button>
+      {#if !rolesCollapsed}
+        <div class="border-t border-gray-200 p-6 dark:border-gray-700">
+          <div class="space-y-3">
+            {#each requiredRoles as roleReq}
+              <div
+                class="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900"
               >
-                {roleReq.role}
-              </p>
-            </div>
-            {#if !userHasRole(roleReq.role)}
-              <div class="ml-4 flex flex-col items-end gap-1">
-                {#if requestSuccess[roleReq.role]}
-                  <div
-                    class="flex items-center gap-1 rounded-lg bg-green-100 px-3 py-2 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                  >
-                    <svg
-                      class="h-3 w-3"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                <div class="flex-1">
+                  <div class="flex items-center gap-2">
+                    <span
+                      class="text-sm font-semibold text-gray-900 dark:text-gray-100"
                     >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    Request Submitted
-                  </div>
-                {:else}
-                  <button
-                    onclick={() => handleRequestEntitlement(roleReq.role)}
-                    disabled={requestingRoles[roleReq.role]}
-                    class="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
-                  >
-                    {#if requestingRoles[roleReq.role]}
-                      <svg
-                        class="h-3 w-3 animate-spin"
-                        fill="none"
-                        viewBox="0 0 24 24"
+                      {roleReq.operation}
+                    </span>
+                    {#if userHasRole(roleReq.role)}
+                      <span
+                        class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300"
                       >
-                        <circle
-                          class="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
+                        <svg
+                          class="h-3 w-3"
+                          fill="none"
                           stroke="currentColor"
-                          stroke-width="4"
-                        />
-                        <path
-                          class="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        />
-                      </svg>
-                      Requesting...
-                    {:else}
-                      <svg
-                        class="h-3 w-3"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M12 4v16m8-8H4"
-                        />
-                      </svg>
-                      Request Entitlement
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        You have this role
+                      </span>
                     {/if}
-                  </button>
-                {/if}
-                {#if requestErrors[roleReq.role]}
-                  <div class="max-w-xs text-xs text-red-600 dark:text-red-400">
-                    {requestErrors[roleReq.role]}
+                  </div>
+                  <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                    {roleReq.description}
+                  </p>
+                  <p
+                    class="mt-1 font-mono text-xs text-gray-500 dark:text-gray-500"
+                  >
+                    {roleReq.role}
+                  </p>
+                </div>
+                {#if !userHasRole(roleReq.role)}
+                  <div class="ml-4 flex flex-col items-end gap-1">
+                    {#if requestSuccess[roleReq.role]}
+                      <div
+                        class="flex items-center gap-1 rounded-lg bg-green-100 px-3 py-2 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                      >
+                        <svg
+                          class="h-3 w-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        Request Submitted
+                      </div>
+                    {:else}
+                      <button
+                        onclick={() => handleRequestEntitlement(roleReq.role)}
+                        disabled={requestingRoles[roleReq.role]}
+                        class="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
+                      >
+                        {#if requestingRoles[roleReq.role]}
+                          <svg
+                            class="h-3 w-3 animate-spin"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              class="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              stroke-width="4"
+                            />
+                            <path
+                              class="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            />
+                          </svg>
+                          Requesting...
+                        {:else}
+                          <svg
+                            class="h-3 w-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M12 4v16m8-8H4"
+                            />
+                          </svg>
+                          Request Entitlement
+                        {/if}
+                      </button>
+                    {/if}
+                    {#if requestErrors[roleReq.role]}
+                      <div
+                        class="max-w-xs text-xs text-red-600 dark:text-red-400"
+                      >
+                        {requestErrors[roleReq.role]}
+                      </div>
+                    {/if}
                   </div>
                 {/if}
               </div>
-            {/if}
+            {/each}
           </div>
-        {/each}
-      </div>
+        </div>
+      {/if}
     </div>
   </div>
 
