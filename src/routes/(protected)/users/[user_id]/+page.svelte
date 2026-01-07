@@ -354,8 +354,14 @@
 
   .entitlements-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    .entitlements-grid {
+      grid-template-columns: 1fr;
+    }
   }
 
   .entitlement-card {
@@ -380,6 +386,9 @@
   .entitlement-name {
     font-weight: 600;
     color: #111827;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
   }
 
   :global([data-mode="dark"]) .entitlement-name {
