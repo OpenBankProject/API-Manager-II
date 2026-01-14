@@ -124,6 +124,11 @@ export const ROLE_REQUIREMENTS = {
 
   createEntitlement: [
     {
+      role: "SuperAdmin",
+      description: "Super administrator with all permissions",
+      action: "create entitlements",
+    },
+    {
       role: "CanCreateEntitlementAtAnyBank",
       description: "Create entitlements for users",
       action: "create entitlements",
@@ -131,6 +136,11 @@ export const ROLE_REQUIREMENTS = {
   ],
 
   deleteEntitlement: [
+    {
+      role: "SuperAdmin",
+      description: "Super administrator with all permissions",
+      action: "delete entitlements",
+    },
     {
       role: "CanDeleteEntitlementAtAnyBank",
       description: "Delete entitlements from users",

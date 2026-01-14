@@ -22,6 +22,26 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     return json({ error: "No API access token available" }, { status: 401 });
   }
 
+  // Check if user has required entitlements
+  const userEntitlements = (session.data.user as any)?.entitlements?.list || [];
+  const hasPermission = userEntitlements.some(
+    (ent: any) =>
+      ent.role_name === "SuperAdmin" ||
+      ent.role_name === "CanCreateEntitlementAtAnyBank" ||
+      ent.role_name === "CanCreateEntitlementAtOneBank",
+  );
+
+  if (!hasPermission) {
+    logger.warn("User does not have permission to create entitlements");
+    return json(
+      {
+        error:
+          "Insufficient permissions. Required: SuperAdmin, CanCreateEntitlementAtAnyBank, or CanCreateEntitlementAtOneBank",
+      },
+      { status: 403 },
+    );
+  }
+
   try {
     const body = await request.json();
     const { user_id, role_name, bank_id } = body;

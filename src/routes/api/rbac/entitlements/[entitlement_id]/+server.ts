@@ -28,6 +28,26 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
     return json({ error: "No API access token available" }, { status: 401 });
   }
 
+  // Check if user has required entitlements
+  const userEntitlements = (session.data.user as any)?.entitlements?.list || [];
+  const hasPermission = userEntitlements.some(
+    (ent: any) =>
+      ent.role_name === "SuperAdmin" ||
+      ent.role_name === "CanDeleteEntitlementAtAnyBank" ||
+      ent.role_name === "CanDeleteEntitlementAtOneBank",
+  );
+
+  if (!hasPermission) {
+    logger.warn("User does not have permission to delete entitlements");
+    return json(
+      {
+        error:
+          "Insufficient permissions. Required: SuperAdmin, CanDeleteEntitlementAtAnyBank, or CanDeleteEntitlementAtOneBank",
+      },
+      { status: 403 },
+    );
+  }
+
   try {
     logger.info("=== DELETE ENTITLEMENT ===");
     logger.info(`Entitlement ID: ${entitlement_id}`);
