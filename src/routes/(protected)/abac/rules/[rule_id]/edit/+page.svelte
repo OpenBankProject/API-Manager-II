@@ -898,6 +898,7 @@
                     bind:value={formRuleCode}
                     required
                     rows="6"
+                    spellcheck="false"
                     placeholder="e.g., AuthenticatedUser.emailAddress.contains('admin')"
                     class="w-full rounded-lg border {validationStatus ===
                     'invalid'

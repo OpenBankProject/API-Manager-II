@@ -263,6 +263,7 @@
                   bind:value={formRuleCode}
                   required
                   rows="4"
+                  spellcheck="false"
                   placeholder="e.g., user.emailAddress.contains('admin')"
                   class="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 font-mono text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:focus:border-blue-400"
                 ></textarea>
