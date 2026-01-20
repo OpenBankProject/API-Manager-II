@@ -51,7 +51,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     for (const entity of entities) {
       // In v6.0.0, the entity name is in the entity_name field
       const entityName = entity.entity_name || "Unknown";
-      const schema = entity.definition;
+      const schema = entity.schema;
 
       logger.info(
         `Checking entity: ${entityName} (ID: ${entity.dynamic_entity_id})`,

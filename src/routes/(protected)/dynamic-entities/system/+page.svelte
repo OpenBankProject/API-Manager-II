@@ -28,8 +28,8 @@
 
   // Helper function to get schema object
   function getSchema(entity: any): any {
-    // In v6.0.0, the schema is in the definition field
-    return entity.definition || null;
+    // In v6.0.0, the schema is in the schema field
+    return entity.schema || null;
   }
 
   const filteredEntities = $derived(
