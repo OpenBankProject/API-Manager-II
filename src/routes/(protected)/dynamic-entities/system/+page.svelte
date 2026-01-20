@@ -28,9 +28,8 @@
 
   // Helper function to get schema object
   function getSchema(entity: any): any {
-    // In v6.0.0, the schema is under the entity_name key
-    const entityName = entity.entity_name;
-    return entityName ? entity[entityName] : null;
+    // In v6.0.0, the schema is in the definition field
+    return entity.definition || null;
   }
 
   const filteredEntities = $derived(
@@ -435,7 +434,7 @@
                   </span>
                 </td>
                 <td class="whitespace-nowrap px-6 py-4 text-sm">
-                  {#if entity.hasPersonalEntity}
+                  {#if entity.has_personal_entity}
                     <span
                       class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200"
                     >

@@ -22,10 +22,10 @@
     return entity.entity_name || "Unknown";
   }
 
-  // Helper function to get schema object (in v6.0.0, schema is under the entity_name key)
+  // Helper function to get schema object
   function getSchema(entity: any): any {
-    const entityName = entity.entity_name;
-    return entityName ? entity[entityName] : null;
+    // In v6.0.0, the schema is in the definition field
+    return entity.definition || null;
   }
 
   const schema = getSchema(entity);
@@ -190,8 +190,8 @@
     if (entityName && entityName !== "Unknown") {
       exportDef[entityName] = schema;
     }
-    // Include hasPersonalEntity field
-    exportDef.hasPersonalEntity = entity.hasPersonalEntity || false;
+    // Include has_personal_entity field
+    exportDef.has_personal_entity = entity.has_personal_entity || false;
     return exportDef;
   }
 
@@ -402,7 +402,7 @@
           Has Personal Entity
         </dt>
         <dd class="mt-1 text-sm">
-          {#if entity.hasPersonalEntity}
+          {#if entity.has_personal_entity}
             <span
               class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200"
             >
@@ -428,7 +428,7 @@
     </dl>
   </div>
 
-  {#if entity.hasPersonalEntity}
+  {#if entity.has_personal_entity}
     <!-- Allowed Operations Section (for Personal Entities) -->
     <div
       class="mb-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800"

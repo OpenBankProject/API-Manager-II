@@ -76,7 +76,7 @@
         required: schema.required || [],
         properties: schema.properties,
       };
-      payload.hasPersonalEntity = hasPersonalEntity;
+      payload.has_personal_entity = hasPersonalEntity;
 
       const response = await fetch(`/api/dynamic-entities/system/create`, {
         method: "POST",

@@ -14,10 +14,10 @@
     return entity.entity_name || "Unknown";
   }
 
-  // Helper function to get schema object (in v6.0.0, schema is under the entity_name key)
+  // Helper function to get schema object
   function getSchema(entity: any): any {
-    const entityName = entity.entity_name;
-    return entityName ? entity[entityName] : null;
+    // In v6.0.0, the schema is in the definition field
+    return entity.definition || null;
   }
 
   // Make all derived values reactive
