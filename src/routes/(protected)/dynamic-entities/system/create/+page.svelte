@@ -32,6 +32,7 @@
   },
   "required": ["name"]
 }`);
+  let hasPersonalEntity = $state(false);
   let isSubmitting = $state(false);
   let schemaError = $state("");
 
@@ -75,6 +76,7 @@
         required: schema.required || [],
         properties: schema.properties,
       };
+      payload.hasPersonalEntity = hasPersonalEntity;
 
       const response = await fetch(`/api/dynamic-entities/system/create`, {
         method: "POST",
@@ -186,6 +188,35 @@
           placeholder="e.g., Musical instrument entity"
           class="mt-2 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
         />
+      </div>
+
+      <!-- Has Personal Entity -->
+      <div>
+        <div class="flex items-start">
+          <div class="flex h-6 items-center">
+            <input
+              type="checkbox"
+              id="hasPersonalEntity"
+              bind:checked={hasPersonalEntity}
+              class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600"
+            />
+          </div>
+          <div class="ml-3">
+            <label
+              for="hasPersonalEntity"
+              class="text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Has Personal Entity
+            </label>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              When enabled, each user can create their own personal instances of
+              this entity type. Personal entity records are private to the user
+              who created them, while the system entity definition remains
+              shared. Leave unchecked if records should only exist at the system
+              level. For shared data, leave this unchecked.
+            </p>
+          </div>
+        </div>
       </div>
 
       <!-- Schema JSON -->
