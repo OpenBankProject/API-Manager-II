@@ -35,8 +35,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     );
     const entities = entitiesResponse.dynamic_entities || [];
 
-    // Find the specific entity by dynamicEntityId
-    const entity = entities.find((e: any) => e.dynamicEntityId === id);
+    // Find the specific entity by dynamic_entity_id
+    const entity = entities.find((e: any) => e.dynamic_entity_id === id);
 
     if (!entity) {
       throw error(404, "System dynamic entity not found");

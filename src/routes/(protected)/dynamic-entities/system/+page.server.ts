@@ -38,22 +38,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 
     // Sort entities alphabetically by entity name
     entities.sort((a: any, b: any) => {
-      const getEntityName = (entity: any): string => {
-        const metadataFields = [
-          "entityName",
-          "userId",
-          "dynamicEntityId",
-          "hasPersonalEntity",
-          "record_count",
-        ];
-        const keys = Object.keys(entity).filter(
-          (key) => !metadataFields.includes(key),
-        );
-        return keys[0] || "";
-      };
-
-      const nameA = getEntityName(a).toLowerCase();
-      const nameB = getEntityName(b).toLowerCase();
+      const nameA = (a.entity_name || "").toLowerCase();
+      const nameB = (b.entity_name || "").toLowerCase();
       return nameA.localeCompare(nameB);
     });
 

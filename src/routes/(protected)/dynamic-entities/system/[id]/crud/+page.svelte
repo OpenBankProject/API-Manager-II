@@ -9,30 +9,20 @@
   let entity = $derived(data.entity);
   let userEntitlements = $derived(data.userEntitlements || []);
 
-  // Helper function to extract the schema key
-  function getSchemaKey(entity: any): string {
-    const metadataFields = [
-      "entityName",
-      "userId",
-      "dynamicEntityId",
-      "hasPersonalEntity",
-    ];
-    const keys = Object.keys(entity).filter(
-      (key) => !metadataFields.includes(key),
-    );
-    return keys[0] || null;
+  // Helper function to get the entity name (in v6.0.0, this is in the entity_name field)
+  function getEntityName(entity: any): string {
+    return entity.entity_name || "Unknown";
   }
 
-  // Helper function to get schema object
+  // Helper function to get schema object (in v6.0.0, schema is under the entity_name key)
   function getSchema(entity: any): any {
-    const schemaKey = getSchemaKey(entity);
-    return schemaKey ? entity[schemaKey] : null;
+    const entityName = entity.entity_name;
+    return entityName ? entity[entityName] : null;
   }
 
   // Make all derived values reactive
   let schema = $derived(getSchema(entity));
-  let schemaKey = $derived(getSchemaKey(entity));
-  let entityName = $derived(schemaKey || "Unknown");
+  let entityName = $derived(getEntityName(entity));
   let properties = $derived(schema?.properties || {});
   let requiredFields = $derived(schema?.required || []);
 
@@ -348,7 +338,7 @@
       );
 
       const response = await fetch(
-        `/api/dynamic-entities/${entity.dynamicEntityId}/data`,
+        `/api/dynamic-entities/${entity.dynamic_entity_id}/data`,
         {
           method: "POST",
           headers: {
@@ -377,7 +367,7 @@
 
       // Refetch all records to ensure correct data structure
       const refetchResponse = await fetch(
-        `/api/dynamic-entities/${entity.dynamicEntityId}/data`,
+        `/api/dynamic-entities/${entity.dynamic_entity_id}/data`,
         {
           credentials: "include",
         },
@@ -429,7 +419,7 @@
       const convertedData = convertFormDataToApiFormat(formData);
 
       const response = await fetch(
-        `/api/dynamic-entities/${entity.dynamicEntityId}/data/${recordId}`,
+        `/api/dynamic-entities/${entity.dynamic_entity_id}/data/${recordId}`,
         {
           method: "PUT",
           headers: {
@@ -458,7 +448,7 @@
 
       // Refetch all records to ensure correct data structure
       const refetchResponse = await fetch(
-        `/api/dynamic-entities/${entity.dynamicEntityId}/data`,
+        `/api/dynamic-entities/${entity.dynamic_entity_id}/data`,
         {
           credentials: "include",
         },
@@ -505,7 +495,7 @@
 
     try {
       const response = await fetch(
-        `/api/dynamic-entities/${entity.dynamicEntityId}/data/${recordId}`,
+        `/api/dynamic-entities/${entity.dynamic_entity_id}/data/${recordId}`,
         {
           method: "DELETE",
           credentials: "include",
@@ -528,7 +518,7 @@
 
       // Refetch all records to ensure correct data structure
       const refetchResponse = await fetch(
-        `/api/dynamic-entities/${entity.dynamicEntityId}/data`,
+        `/api/dynamic-entities/${entity.dynamic_entity_id}/data`,
         {
           credentials: "include",
         },
@@ -593,7 +583,7 @@
       </a>
       <span class="text-gray-400">/</span>
       <a
-        href="/dynamic-entities/system/{entity.dynamicEntityId}"
+        href="/dynamic-entities/system/{entity.dynamic_entity_id}"
         class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
       >
         {entityName}

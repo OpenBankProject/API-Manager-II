@@ -22,30 +22,15 @@
 
   // Helper function to extract entity name from the entity object
   function getEntityName(entity: any): string {
-    // The entity name is the schema key (Piano, Guitar, etc.)
-    return getSchemaKey(entity) || "Unknown";
-  }
-
-  // Helper function to extract the schema key (FooBar, Guitar, Piano, etc.)
-  function getSchemaKey(entity: any): string | null {
-    // Find the first key that's not a known metadata field
-    const metadataFields = [
-      "entityName",
-      "userId",
-      "dynamicEntityId",
-      "hasPersonalEntity",
-      "record_count",
-    ];
-    const keys = Object.keys(entity).filter(
-      (key) => !metadataFields.includes(key),
-    );
-    return keys[0] || null;
+    // In v6.0.0, the entity name is in the entity_name field
+    return entity.entity_name || "Unknown";
   }
 
   // Helper function to get schema object
   function getSchema(entity: any): any {
-    const schemaKey = getSchemaKey(entity);
-    return schemaKey ? entity[schemaKey] : null;
+    // In v6.0.0, the schema is under the entity_name key
+    const entityName = entity.entity_name;
+    return entityName ? entity[entityName] : null;
   }
 
   const filteredEntities = $derived(
@@ -54,7 +39,7 @@
 
       const query = searchQuery.toLowerCase();
       const entityName = getEntityName(entity).toLowerCase();
-      const entityId = (entity.dynamicEntityId || "").toLowerCase();
+      const entityId = (entity.dynamic_entity_id || "").toLowerCase();
       const schema = getSchema(entity);
       const description = schema?.description?.toLowerCase() || "";
 
@@ -415,7 +400,7 @@
               <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                 <td class="whitespace-nowrap px-6 py-4 text-sm font-medium">
                   <a
-                    href="/dynamic-entities/system/{entity.dynamicEntityId}"
+                    href="/dynamic-entities/system/{entity.dynamic_entity_id}"
                     class="text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
                   >
                     {getEntityName(entity)}
@@ -470,7 +455,7 @@
                       type="button"
                       onclick={() =>
                         goto(
-                          `/dynamic-entities/system/${entity.dynamicEntityId}`,
+                          `/dynamic-entities/system/${entity.dynamic_entity_id}`,
                         )}
                       class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
                       title="View Details"
@@ -499,7 +484,7 @@
                       type="button"
                       onclick={() =>
                         deleteEntity(
-                          entity.dynamicEntityId,
+                          entity.dynamic_entity_id,
                           getEntityName(entity),
                           false,
                         )}
@@ -524,7 +509,7 @@
                       type="button"
                       onclick={() =>
                         deleteEntity(
-                          entity.dynamicEntityId,
+                          entity.dynamic_entity_id,
                           getEntityName(entity),
                           true,
                         )}

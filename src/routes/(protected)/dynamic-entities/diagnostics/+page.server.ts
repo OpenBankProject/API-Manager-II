@@ -7,7 +7,7 @@ import { obp_requests } from "$lib/obp/requests";
 const logger = createLogger("DynamicEntityDiagnosticsPageServer");
 
 interface EntityDiagnostic {
-  dynamicEntityId: string;
+  dynamic_entity_id: string;
   entityName: string;
   recordCount: number;
   error?: string;
@@ -49,21 +49,12 @@ export const load: PageServerLoad = async ({ locals }) => {
     const diagnostics: EntityDiagnostic[] = [];
 
     for (const entity of entities) {
-      // Extract entity name from the schema key
-      const metadataFields = [
-        "userId",
-        "dynamicEntityId",
-        "hasPersonalEntity",
-        "entityName",
-      ];
-      const keys = Object.keys(entity).filter(
-        (key) => !metadataFields.includes(key),
-      );
-      const entityName = keys[0] || "Unknown";
+      // In v6.0.0, the entity name is in the entity_name field
+      const entityName = entity.entity_name || "Unknown";
       const schema = entity[entityName];
 
       logger.info(
-        `Checking entity: ${entityName} (ID: ${entity.dynamicEntityId})`,
+        `Checking entity: ${entityName} (ID: ${entity.dynamic_entity_id})`,
       );
 
       // v6.0.0 API MUST provide record_count in the entity definition
@@ -102,7 +93,7 @@ export const load: PageServerLoad = async ({ locals }) => {
       }
 
       diagnostics.push({
-        dynamicEntityId: entity.dynamicEntityId,
+        dynamic_entity_id: entity.dynamic_entity_id,
         entityName,
         recordCount,
         error: fetchError,

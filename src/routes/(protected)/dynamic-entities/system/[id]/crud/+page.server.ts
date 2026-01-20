@@ -34,20 +34,16 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     );
     const entities = entitiesResponse.dynamic_entities || [];
 
-    // Find the specific entity by dynamicEntityId
-    const entity = entities.find((e: any) => e.dynamicEntityId === id);
+    // Find the specific entity by dynamic_entity_id
+    const entity = entities.find((e: any) => e.dynamic_entity_id === id);
 
     if (!entity) {
       throw error(404, "System dynamic entity not found");
     }
 
     // Fetch data records for this entity
-    // Extract entity name from the schema key (Piano, Guitar, etc.)
-    const metadataFields = ["userId", "dynamicEntityId", "hasPersonalEntity"];
-    const keys = Object.keys(entity).filter(
-      (key) => !metadataFields.includes(key),
-    );
-    const entityName = keys[0] || null;
+    // In v6.0.0, the entity name is in the entity_name field
+    const entityName = entity.entity_name || null;
     let dataRecords = [];
 
     if (entityName) {

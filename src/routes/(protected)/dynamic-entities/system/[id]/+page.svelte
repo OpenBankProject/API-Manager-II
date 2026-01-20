@@ -17,29 +17,19 @@
     $page.data.externalLinks?.API_EXPLORER_URL ||
     "https://apiexplorer-ii-sandbox.openbankproject.com";
 
-  // Helper function to extract the schema key (FooBar, Guitar, Piano, etc.)
-  function getSchemaKey(entity: any): string | null {
-    const metadataFields = [
-      "entityName",
-      "userId",
-      "dynamicEntityId",
-      "hasPersonalEntity",
-    ];
-    const keys = Object.keys(entity).filter(
-      (key) => !metadataFields.includes(key),
-    );
-    return keys[0] || null;
+  // Helper function to get the entity name (in v6.0.0, this is in the entity_name field)
+  function getEntityName(entity: any): string {
+    return entity.entity_name || "Unknown";
   }
 
-  // Helper function to get schema object
+  // Helper function to get schema object (in v6.0.0, schema is under the entity_name key)
   function getSchema(entity: any): any {
-    const schemaKey = getSchemaKey(entity);
-    return schemaKey ? entity[schemaKey] : null;
+    const entityName = entity.entity_name;
+    return entityName ? entity[entityName] : null;
   }
 
   const schema = getSchema(entity);
-  const schemaKey = getSchemaKey(entity);
-  const entityName: string = schemaKey || "Unknown";
+  const entityName: string = getEntityName(entity);
   const properties = schema?.properties || {};
   const requiredFields = schema?.required || [];
   const description = schema?.description || "No description available";
@@ -137,7 +127,7 @@
 
     try {
       const response = await fetch(
-        `/api/dynamic-entities/${entity.dynamicEntityId}`,
+        `/api/dynamic-entities/${entity.dynamic_entity_id}`,
         {
           method: "DELETE",
         },
@@ -197,8 +187,8 @@
   function createExportDefinition(): any {
     // Create the request body needed to recreate this entity
     const exportDef: any = {};
-    if (schemaKey) {
-      exportDef[schemaKey] = schema;
+    if (entityName && entityName !== "Unknown") {
+      exportDef[entityName] = schema;
     }
     // Include hasPersonalEntity field
     exportDef.hasPersonalEntity = entity.hasPersonalEntity || false;
@@ -298,7 +288,7 @@
           API Explorer
         </a>
         <a
-          href="/dynamic-entities/system/{entity.dynamicEntityId}/crud"
+          href="/dynamic-entities/system/{entity.dynamic_entity_id}/crud"
           class="inline-flex items-center rounded-lg border border-blue-300 bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 dark:border-blue-600 dark:bg-blue-500 dark:hover:bg-blue-600"
         >
           <svg
@@ -388,7 +378,7 @@
           Schema Key
         </dt>
         <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
-          {schemaKey}
+          {entityName}
         </dd>
       </div>
       <div>
@@ -396,7 +386,7 @@
           Entity ID
         </dt>
         <dd class="mt-1 font-mono text-sm text-gray-900 dark:text-gray-100">
-          {entity.dynamicEntityId}
+          {entity.dynamic_entity_id}
         </dd>
       </div>
       <div>
@@ -404,7 +394,7 @@
           User ID
         </dt>
         <dd class="mt-1 font-mono text-sm text-gray-900 dark:text-gray-100">
-          {entity.userId}
+          {entity.user_id}
         </dd>
       </div>
       <div>
@@ -438,29 +428,31 @@
     </dl>
   </div>
 
-  <!-- Required Roles Section -->
-  <div
-    class="mb-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800"
-  >
-    <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
-      Required Roles for CRUD Operations
-    </h2>
-    <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-      These roles are required to perform operations on {entityName} records:
-    </p>
-    <div class="space-y-3">
-      {#each requiredRoles as roleReq}
-        <div
-          class="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900"
-        >
-          <div class="flex-1">
-            <div class="flex items-center gap-2">
-              <span
-                class="text-sm font-semibold text-gray-900 dark:text-gray-100"
-              >
-                {roleReq.operation}
-              </span>
-              {#if userHasRole(roleReq.role)}
+  {#if entity.hasPersonalEntity}
+    <!-- Allowed Operations Section (for Personal Entities) -->
+    <div
+      class="mb-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+    >
+      <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
+        Allowed Operations
+      </h2>
+      <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+        This is a personal entity. Any authenticated user can perform CRUD
+        operations on their own {entityName} records without requiring specific
+        roles.
+      </p>
+      <div class="space-y-3">
+        {#each ["Create", "Read", "Update", "Delete"] as operation}
+          <div
+            class="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20"
+          >
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <span
+                  class="text-sm font-semibold text-gray-900 dark:text-gray-100"
+                >
+                  {operation}
+                </span>
                 <span
                   class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300"
                 >
@@ -477,66 +469,44 @@
                       d="M5 13l4 4L19 7"
                     />
                   </svg>
-                  You have this role
+                  No role required
                 </span>
-              {/if}
+              </div>
+              <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                {operation} your own personal {entityName} records
+              </p>
             </div>
-            <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
-              {roleReq.description}
-            </p>
-            <p class="mt-1 font-mono text-xs text-gray-500 dark:text-gray-500">
-              {roleReq.role}
-            </p>
           </div>
-          {#if !userHasRole(roleReq.role)}
-            <div class="ml-4 flex flex-col items-end gap-1">
-              {#if requestSuccess[roleReq.role]}
-                <div
-                  class="flex items-center gap-1 rounded-lg bg-green-100 px-3 py-2 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300"
+        {/each}
+      </div>
+    </div>
+  {:else}
+    <!-- Required Roles Section (for System-only Entities) -->
+    <div
+      class="mb-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+    >
+      <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
+        Required Roles for CRUD Operations
+      </h2>
+      <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+        These roles are required to perform operations on {entityName} records:
+      </p>
+      <div class="space-y-3">
+        {#each requiredRoles as roleReq}
+          <div
+            class="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900"
+          >
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <span
+                  class="text-sm font-semibold text-gray-900 dark:text-gray-100"
                 >
-                  <svg
-                    class="h-3 w-3"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                  {roleReq.operation}
+                </span>
+                {#if userHasRole(roleReq.role)}
+                  <span
+                    class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300"
                   >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                  Request Submitted
-                </div>
-              {:else}
-                <button
-                  onclick={() => handleRequestEntitlement(roleReq.role)}
-                  disabled={requestingRoles[roleReq.role]}
-                  class="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
-                >
-                  {#if requestingRoles[roleReq.role]}
-                    <svg
-                      class="h-3 w-3 animate-spin"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        class="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        stroke-width="4"
-                      />
-                      <path
-                        class="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
-                    Requesting...
-                  {:else}
                     <svg
                       class="h-3 w-3"
                       fill="none"
@@ -547,24 +517,98 @@
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         stroke-width="2"
-                        d="M12 4v16m8-8H4"
+                        d="M5 13l4 4L19 7"
                       />
                     </svg>
-                    Request Entitlement
-                  {/if}
-                </button>
-              {/if}
-              {#if requestErrors[roleReq.role]}
-                <div class="max-w-xs text-xs text-red-600 dark:text-red-400">
-                  {requestErrors[roleReq.role]}
-                </div>
-              {/if}
+                    You have this role
+                  </span>
+                {/if}
+              </div>
+              <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                {roleReq.description}
+              </p>
+              <p class="mt-1 font-mono text-xs text-gray-500 dark:text-gray-500">
+                {roleReq.role}
+              </p>
             </div>
-          {/if}
-        </div>
-      {/each}
+            {#if !userHasRole(roleReq.role)}
+              <div class="ml-4 flex flex-col items-end gap-1">
+                {#if requestSuccess[roleReq.role]}
+                  <div
+                    class="flex items-center gap-1 rounded-lg bg-green-100 px-3 py-2 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                  >
+                    <svg
+                      class="h-3 w-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    Request Submitted
+                  </div>
+                {:else}
+                  <button
+                    onclick={() => handleRequestEntitlement(roleReq.role)}
+                    disabled={requestingRoles[roleReq.role]}
+                    class="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
+                  >
+                    {#if requestingRoles[roleReq.role]}
+                      <svg
+                        class="h-3 w-3 animate-spin"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          class="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          stroke-width="4"
+                        />
+                        <path
+                          class="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                      Requesting...
+                    {:else}
+                      <svg
+                        class="h-3 w-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 4v16m8-8H4"
+                        />
+                      </svg>
+                      Request Entitlement
+                    {/if}
+                  </button>
+                {/if}
+                {#if requestErrors[roleReq.role]}
+                  <div class="max-w-xs text-xs text-red-600 dark:text-red-400">
+                    {requestErrors[roleReq.role]}
+                  </div>
+                {/if}
+              </div>
+            {/if}
+          </div>
+        {/each}
+      </div>
     </div>
-  </div>
+  {/if}
 
   <!-- Schema Properties -->
   <div

@@ -17,16 +17,12 @@ async function getEntityName(
       accessToken,
     );
     const entities = entitiesResponse.dynamic_entities || [];
-    const entity = entities.find((e: any) => e.dynamicEntityId === entityId);
+    const entity = entities.find((e: any) => e.dynamic_entity_id === entityId);
 
     if (!entity) return null;
 
-    // The entity name is the schema key (Piano, Guitar, etc.)
-    const metadataFields = ["userId", "dynamicEntityId", "hasPersonalEntity"];
-    const keys = Object.keys(entity).filter(
-      (key) => !metadataFields.includes(key),
-    );
-    return keys[0] || null;
+    // In v6.0.0, the entity name is in the entity_name field
+    return entity.entity_name || null;
   } catch (err) {
     logger.error("Error fetching entity name:", err);
     return null;

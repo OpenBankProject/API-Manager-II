@@ -16,7 +16,7 @@
       const query = searchQuery.toLowerCase();
       return (
         diag.entityName.toLowerCase().includes(query) ||
-        diag.dynamicEntityId.toLowerCase().includes(query)
+        diag.dynamic_entity_id.toLowerCase().includes(query)
       );
     }),
   );
@@ -48,7 +48,7 @@
   async function copyDiagnostic(diag: any) {
     const diagnosticText = `
 Entity: ${diag.entityName}
-ID: ${diag.dynamicEntityId}
+ID: ${diag.dynamic_entity_id}
 Record Count: ${diag.error ? "Unknown" : diag.recordCount}
 ${diag.error ? `Error: ${diag.error}` : ""}
 ${diag.responseKeys ? `Response Keys: ${diag.responseKeys.join(", ")}` : ""}
@@ -57,7 +57,7 @@ ${diag.triedKeys ? `Tried Keys: ${diag.triedKeys.join(", ")}` : ""}
 
     try {
       await navigator.clipboard.writeText(diagnosticText);
-      copiedId = diag.dynamicEntityId;
+      copiedId = diag.dynamic_entity_id;
       setTimeout(() => {
         copiedId = null;
       }, 2000);
@@ -172,7 +172,7 @@ ${diag.triedKeys ? `Tried Keys: ${diag.triedKeys.join(", ")}` : ""}
 <!-- Entity List -->
 {#if filteredDiagnostics && filteredDiagnostics.length > 0}
   <div class="space-y-4">
-    {#each filteredDiagnostics as diag (diag.dynamicEntityId)}
+    {#each filteredDiagnostics as diag (diag.dynamic_entity_id)}
       <div
         class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800"
       >
@@ -194,7 +194,7 @@ ${diag.triedKeys ? `Tried Keys: ${diag.triedKeys.join(", ")}` : ""}
               </span>
             </div>
             <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-              ID: {diag.dynamicEntityId}
+              ID: {diag.dynamic_entity_id}
             </p>
           </div>
           <div class="flex items-start gap-4">
@@ -204,7 +204,7 @@ ${diag.triedKeys ? `Tried Keys: ${diag.triedKeys.join(", ")}` : ""}
               class="rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-700"
               title="Copy diagnostic info"
             >
-              {#if copiedId === diag.dynamicEntityId}
+              {#if copiedId === diag.dynamic_entity_id}
                 <svg
                   class="h-5 w-5 text-green-600 dark:text-green-400"
                   fill="none"
@@ -296,13 +296,13 @@ ${diag.triedKeys ? `Tried Keys: ${diag.triedKeys.join(", ")}` : ""}
         <!-- Actions -->
         <div class="mt-4 flex gap-2">
           <a
-            href="/dynamic-entities/system/{diag.dynamicEntityId}/crud"
+            href="/dynamic-entities/system/{diag.dynamic_entity_id}/crud"
             class="rounded-lg bg-blue-100 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50"
           >
             View CRUD
           </a>
           <a
-            href="/dynamic-entities/system/{diag.dynamicEntityId}"
+            href="/dynamic-entities/system/{diag.dynamic_entity_id}"
             class="rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
           >
             View Definition
