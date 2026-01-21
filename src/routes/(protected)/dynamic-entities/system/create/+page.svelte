@@ -21,6 +21,7 @@
     "age": {
       "type": "integer",
       "description": "Age in years",
+      "example": 25,
       "minimum": 0,
       "maximum": 150
     },
@@ -51,11 +52,21 @@
     }
   }
 
+  function validateEntityName(name: string): boolean {
+    const validPattern = /^[a-z0-9_]+$/;
+    return validPattern.test(name);
+  }
+
   async function handleSubmit(e: Event) {
     e.preventDefault();
 
     if (!entityName.trim()) {
       alert("Entity name is required");
+      return;
+    }
+
+    if (!validateEntityName(entityName)) {
+      alert("Entity name can only contain lowercase letters, numbers, and underscores. No spaces or hyphens allowed. e.g., school_friend");
       return;
     }
 
@@ -69,14 +80,16 @@
     try {
       const schema = JSON.parse(schemaJson);
 
-      // Construct the system dynamic entity payload
-      const payload: Record<string, any> = {};
-      payload[entityName] = {
-        description: entityDescription || `${entityName} entity`,
-        required: schema.required || [],
-        properties: schema.properties,
+      // Construct the system dynamic entity payload for v6.0.0
+      const payload: Record<string, any> = {
+        entity_name: entityName,
+        schema: {
+          description: entityDescription || `${entityName} entity`,
+          required: schema.required || [],
+          properties: schema.properties,
+        },
+        has_personal_entity: hasPersonalEntity,
       };
-      payload.has_personal_entity = hasPersonalEntity;
 
       const response = await fetch(`/api/dynamic-entities/system/create`, {
         method: "POST",
@@ -158,14 +171,14 @@
           Entity Name <span class="text-red-600">*</span>
         </label>
         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          The name of your entity (e.g., Piano, Guitar, Customer)
+          The name of your entity. Only lowercase letters, numbers, and underscores allowed (e.g., piano, school_friend)
         </p>
         <input
           type="text"
           id="entityName"
           bind:value={entityName}
           required
-          placeholder="e.g., Piano"
+          placeholder="e.g., piano"
           class="mt-2 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
         />
       </div>
@@ -270,7 +283,7 @@
             <strong>minLength/maxLength:</strong> For string validation (optional)
           </li>
           <li>
-            <strong>example:</strong> Example value for the field (optional)
+            <strong>example:</strong> Example value for the field (required)
           </li>
         </ul>
         {#if data.externalLinks?.API_EXPLORER_URL}

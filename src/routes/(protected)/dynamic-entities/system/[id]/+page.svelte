@@ -185,14 +185,12 @@
   let exportCopied = $state(false);
 
   function createExportDefinition(): any {
-    // Create the request body needed to recreate this entity
-    const exportDef: any = {};
-    if (entityName && entityName !== "Unknown") {
-      exportDef[entityName] = schema;
-    }
-    // Include has_personal_entity field
-    exportDef.has_personal_entity = entity.has_personal_entity || false;
-    return exportDef;
+    // Create the request body needed to recreate this entity (v6.0.0 format)
+    return {
+      entity_name: entityName,
+      schema: schema,
+      has_personal_entity: entity.has_personal_entity || false,
+    };
   }
 
   async function exportDefinition() {
@@ -368,14 +366,6 @@
       <div>
         <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">
           Entity Name
-        </dt>
-        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
-          {entityName}
-        </dd>
-      </div>
-      <div>
-        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">
-          Schema Key
         </dt>
         <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
           {entityName}
