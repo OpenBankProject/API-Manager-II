@@ -320,6 +320,15 @@ export const ROLE_REQUIREMENTS = {
     },
   ],
 
+  // Database Pool
+  getDatabasePool: [
+    {
+      role: "CanGetDatabasePoolInfo",
+      description: "View database connection pool status",
+      action: "view database pool",
+    },
+  ],
+
   // Rate Limiting
   createRateLimit: [
     {
@@ -542,4 +551,11 @@ export function getLogCacheRoles(): RoleRequirement[] {
  */
 export function getMigrationsRoles(): RoleRequirement[] {
   return [...ROLE_REQUIREMENTS.getMigrations];
+}
+
+/**
+ * Get roles required to view database pool status
+ */
+export function getDatabasePoolRoles(): RoleRequirement[] {
+  return [...ROLE_REQUIREMENTS.getDatabasePool];
 }

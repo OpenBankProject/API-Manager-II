@@ -21,6 +21,7 @@ import {
   FileText,
   Lock,
   HardDrive,
+  Waves,
 } from "@lucide/svelte";
 import { env } from "$env/dynamic/public";
 
@@ -77,6 +78,11 @@ export function getActiveMenuItem(pathname: string) {
 function buildSystemItems(): NavigationItem[] {
   const items: NavigationItem[] = [
     { href: "/system/cache", label: "Cache", iconComponent: HardDrive },
+    {
+      href: "/system/database-pool",
+      label: "Database Pool",
+      iconComponent: Waves,
+    },
     { href: "/system/log-cache", label: "LogCache", iconComponent: Database },
     {
       href: "/system/migrations",
