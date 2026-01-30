@@ -22,6 +22,8 @@ import {
   Lock,
   HardDrive,
   Waves,
+  FolderOpen,
+  Star,
 } from "@lucide/svelte";
 import { env } from "$env/dynamic/public";
 
@@ -41,7 +43,12 @@ function buildMyAccountItems(): NavigationItem[] {
       href: "/user/entitlements",
       label: "Entitlements",
       iconComponent: IdCardLanyard,
-    }, // New item
+    },
+    {
+      href: "/api-collections",
+      label: "My Collections",
+      iconComponent: FolderOpen,
+    },
   ];
 
   // Only add Subscriptions link if PUBLIC_SUBSCRIPTIONS_URL is set
@@ -82,6 +89,11 @@ function buildSystemItems(): NavigationItem[] {
       href: "/system/database-pool",
       label: "Database Pool",
       iconComponent: Waves,
+    },
+    {
+      href: "/system/featured-collections",
+      label: "Featured Collections",
+      iconComponent: Star,
     },
     { href: "/system/log-cache", label: "LogCache", iconComponent: Database },
     {
