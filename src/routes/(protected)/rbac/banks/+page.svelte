@@ -3,7 +3,7 @@
   import { Search, Building2, Globe, AlertTriangle } from "@lucide/svelte";
 
   interface Bank {
-    id: string;
+    bank_id: string;
     short_name: string;
     full_name: string;
     logo?: string;
@@ -28,7 +28,7 @@
     const query = searchQuery.toLowerCase();
     return banks.filter(
       (bank: Bank) =>
-        bank.id.toLowerCase().includes(query) ||
+        bank.bank_id.toLowerCase().includes(query) ||
         bank.short_name.toLowerCase().includes(query) ||
         bank.full_name.toLowerCase().includes(query),
     );
@@ -140,7 +140,7 @@
                 {/if}
                 <div class="bank-header-info">
                   <h3 class="bank-name">{bank.short_name}</h3>
-                  <div class="bank-id">{bank.id}</div>
+                  <div class="bank-id">{bank.bank_id}</div>
                 </div>
               </div>
 

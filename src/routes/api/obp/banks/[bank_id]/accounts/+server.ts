@@ -1,6 +1,7 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { obp_requests } from "$lib/obp/requests";
+import { extractErrorDetails } from "$lib/obp/errors";
 import { SessionOAuthHelper } from "$lib/oauth/sessionHelper";
 import { createLogger } from "$lib/utils/logger";
 
@@ -49,25 +50,14 @@ export const GET: RequestHandler = async ({ locals, params }) => {
   } catch (err) {
     logger.error("Error fetching accounts:", err);
 
-    let errorMessage = "Failed to fetch accounts";
-    let statusCode = 500;
+    // Extract full error details - NEVER hide or simplify OBP error messages!
+    const { message, obpErrorCode } = extractErrorDetails(err);
 
-    if (err instanceof Error) {
-      errorMessage = err.message;
-
-      // Try to extract status code from error message
-      const statusMatch = err.message.match(/status (\d+)/i);
-      if (statusMatch) {
-        statusCode = parseInt(statusMatch[1], 10);
-      }
+    const errorResponse: any = { error: message, accounts: [] };
+    if (obpErrorCode) {
+      errorResponse.obpErrorCode = obpErrorCode;
     }
 
-    return json(
-      {
-        error: errorMessage,
-        accounts: [],
-      },
-      { status: statusCode },
-    );
+    return json(errorResponse, { status: 500 });
   }
 };

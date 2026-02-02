@@ -2,6 +2,10 @@
   import { goto } from "$app/navigation";
   import type { PageData } from "./$types";
   import { trackedFetch } from "$lib/utils/trackedFetch";
+  import {
+    extractErrorFromResponse,
+    formatErrorForDisplay,
+  } from "$lib/utils/errorHandler";
 
   let { data }: { data: PageData } = $props();
 
@@ -350,17 +354,13 @@
       );
 
       if (!response.ok) {
-        let errorMessage = "Failed to create record";
-        try {
-          const error = await response.json();
-          errorMessage = error.error || error.message || errorMessage;
-          console.error("API Error Response:", error);
-        } catch (e) {
-          const text = await response.text();
-          console.error("Non-JSON Error Response:", text);
-          errorMessage = `Server error: ${response.status} ${response.statusText}`;
-        }
-        throw new Error(errorMessage);
+        // Extract full error details - NEVER hide or simplify OBP error messages!
+        const errorDetails = await extractErrorFromResponse(
+          response,
+          "Failed to create record",
+        );
+        console.error("API Error Response:", errorDetails);
+        throw new Error(formatErrorForDisplay(errorDetails));
       }
 
       await response.json();
@@ -431,17 +431,13 @@
       );
 
       if (!response.ok) {
-        let errorMessage = "Failed to update record";
-        try {
-          const error = await response.json();
-          errorMessage = error.error || error.message || errorMessage;
-          console.error("API Error Response:", error);
-        } catch (e) {
-          const text = await response.text();
-          console.error("Non-JSON Error Response:", text);
-          errorMessage = `Server error: ${response.status} ${response.statusText}`;
-        }
-        throw new Error(errorMessage);
+        // Extract full error details - NEVER hide or simplify OBP error messages!
+        const errorDetails = await extractErrorFromResponse(
+          response,
+          "Failed to update record",
+        );
+        console.error("API Error Response:", errorDetails);
+        throw new Error(formatErrorForDisplay(errorDetails));
       }
 
       await response.json();
@@ -503,17 +499,13 @@
       );
 
       if (!response.ok) {
-        let errorMessage = "Failed to delete record";
-        try {
-          const error = await response.json();
-          errorMessage = error.error || error.message || errorMessage;
-          console.error("API Error Response:", error);
-        } catch (e) {
-          const text = await response.text();
-          console.error("Non-JSON Error Response:", text);
-          errorMessage = `Server error: ${response.status} ${response.statusText}`;
-        }
-        throw new Error(errorMessage);
+        // Extract full error details - NEVER hide or simplify OBP error messages!
+        const errorDetails = await extractErrorFromResponse(
+          response,
+          "Failed to delete record",
+        );
+        console.error("API Error Response:", errorDetails);
+        throw new Error(formatErrorForDisplay(errorDetails));
       }
 
       // Refetch all records to ensure correct data structure

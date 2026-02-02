@@ -3,6 +3,50 @@ const logger = createLogger("OBPRequests");
 import { env } from "$env/dynamic/public";
 import { OBPErrorBase, OBPRequestError } from "$lib/obp/errors";
 
+/**
+ * Extract error details from OBP API response data.
+ * Handles multiple OBP error formats:
+ * - v6.0.0: { code: "OBP-XXXXX", message: "..." }
+ * - older: { failCode: "OBP-XXXXX", failMsg: "..." }
+ * - simple: { message: "..." } or { error: "..." }
+ *
+ * IMPORTANT: Never simplify or hide OBP error messages - show them in full!
+ */
+function extractOBPError(
+  data: any,
+  response: Response,
+): { code?: string; message: string } {
+  // If data is a string, return it directly
+  if (typeof data === "string") {
+    return {
+      message: data || `HTTP ${response.status}: ${response.statusText}`,
+    };
+  }
+
+  // If data is not an object, return status info
+  if (!data || typeof data !== "object") {
+    return { message: `HTTP ${response.status}: ${response.statusText}` };
+  }
+
+  // Extract code from various possible fields
+  const code = data.code || data.failCode || data.error_code;
+
+  // Extract message from various possible fields - NEVER use generic fallback if we have data!
+  const message =
+    data.message ||
+    data.failMsg ||
+    data.error ||
+    data.error_message ||
+    // If we have a code but no message, at least show the code
+    (code ? `Error code: ${code}` : null) ||
+    // If we have any other data, stringify it to show the full response
+    (Object.keys(data).length > 0
+      ? JSON.stringify(data)
+      : `HTTP ${response.status}: ${response.statusText}`);
+
+  return { code, message };
+}
+
 class OBPRequests {
   base_url: string;
 
@@ -68,22 +112,12 @@ class OBPRequests {
         data: typeof data === "string" ? data.substring(0, 200) : data,
       });
 
-      // Handle OBP error format - v6.0.0 uses code/message, older versions use failCode/failMsg
-      if (data && typeof data === "object" && data.code && data.message) {
-        throw new OBPRequestError(data.code, data.message);
-      } else if (
-        data &&
-        typeof data === "object" &&
-        data.failCode &&
-        data.failMsg
-      ) {
-        throw new OBPRequestError(data.failCode, data.failMsg);
+      // Extract full error details - NEVER hide or simplify OBP error messages!
+      const { code, message } = extractOBPError(data, response);
+      if (code) {
+        throw new OBPRequestError(code, message, response.status);
       } else {
-        const errorMsg =
-          typeof data === "string"
-            ? `Server returned ${response.status}: ${data.substring(0, 100)}`
-            : `Error fetching OBP data: ${response.statusText}`;
-        throw new OBPErrorBase(errorMsg);
+        throw new OBPErrorBase(message, response.status);
       }
     }
 
@@ -154,22 +188,12 @@ class OBPRequests {
         data: typeof data === "string" ? data.substring(0, 200) : data,
       });
 
-      // Handle OBP error format - v6.0.0 uses code/message, older versions use failCode/failMsg
-      if (data && typeof data === "object" && data.code && data.message) {
-        throw new OBPRequestError(data.code, data.message);
-      } else if (
-        data &&
-        typeof data === "object" &&
-        data.failCode &&
-        data.failMsg
-      ) {
-        throw new OBPRequestError(data.failCode, data.failMsg);
+      // Extract full error details - NEVER hide or simplify OBP error messages!
+      const { code, message } = extractOBPError(data, response);
+      if (code) {
+        throw new OBPRequestError(code, message, response.status);
       } else {
-        const errorMsg =
-          typeof data === "string"
-            ? `Server returned ${response.status}: ${data.substring(0, 100)}`
-            : `Error posting OBP data: ${response.statusText}`;
-        throw new OBPErrorBase(errorMsg);
+        throw new OBPErrorBase(message, response.status);
       }
     }
 
@@ -239,22 +263,12 @@ class OBPRequests {
         data: typeof data === "string" ? data.substring(0, 200) : data,
       });
 
-      // Handle OBP error format - v6.0.0 uses code/message, older versions use failCode/failMsg
-      if (data && typeof data === "object" && data.code && data.message) {
-        throw new OBPRequestError(data.code, data.message);
-      } else if (
-        data &&
-        typeof data === "object" &&
-        data.failCode &&
-        data.failMsg
-      ) {
-        throw new OBPRequestError(data.failCode, data.failMsg);
+      // Extract full error details - NEVER hide or simplify OBP error messages!
+      const { code, message } = extractOBPError(data, response);
+      if (code) {
+        throw new OBPRequestError(code, message, response.status);
       } else {
-        const errorMsg =
-          typeof data === "string"
-            ? `Server returned ${response.status}: ${data.substring(0, 100)}`
-            : `Error deleting OBP data: ${response.statusText}`;
-        throw new OBPErrorBase(errorMsg);
+        throw new OBPErrorBase(message, response.status);
       }
     }
 
@@ -337,22 +351,12 @@ class OBPRequests {
         data: typeof data === "string" ? data.substring(0, 200) : data,
       });
 
-      // Handle OBP error format - v6.0.0 uses code/message, older versions use failCode/failMsg
-      if (data && typeof data === "object" && data.code && data.message) {
-        throw new OBPRequestError(data.code, data.message);
-      } else if (
-        data &&
-        typeof data === "object" &&
-        data.failCode &&
-        data.failMsg
-      ) {
-        throw new OBPRequestError(data.failCode, data.failMsg);
+      // Extract full error details - NEVER hide or simplify OBP error messages!
+      const { code, message } = extractOBPError(data, response);
+      if (code) {
+        throw new OBPRequestError(code, message, response.status);
       } else {
-        const errorMsg =
-          typeof data === "string"
-            ? `Server returned ${response.status}: ${data.substring(0, 100)}`
-            : `Error putting OBP data: ${response.statusText}`;
-        throw new OBPErrorBase(errorMsg);
+        throw new OBPErrorBase(message, response.status);
       }
     }
 
@@ -423,22 +427,12 @@ class OBPRequests {
         data: typeof data === "string" ? data.substring(0, 200) : data,
       });
 
-      // Handle OBP error format - v6.0.0 uses code/message, older versions use failCode/failMsg
-      if (data && typeof data === "object" && data.code && data.message) {
-        throw new OBPRequestError(data.code, data.message);
-      } else if (
-        data &&
-        typeof data === "object" &&
-        data.failCode &&
-        data.failMsg
-      ) {
-        throw new OBPRequestError(data.failCode, data.failMsg);
+      // Extract full error details - NEVER hide or simplify OBP error messages!
+      const { code, message } = extractOBPError(data, response);
+      if (code) {
+        throw new OBPRequestError(code, message, response.status);
       } else {
-        const errorMsg =
-          typeof data === "string"
-            ? `Server returned ${response.status}: ${data.substring(0, 100)}`
-            : `Error patching OBP data: ${response.statusText}`;
-        throw new OBPErrorBase(errorMsg);
+        throw new OBPErrorBase(message, response.status);
       }
     }
 

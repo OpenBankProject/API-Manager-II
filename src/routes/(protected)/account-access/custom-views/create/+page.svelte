@@ -323,7 +323,7 @@
                 >
                   <option value="">Select a bank...</option>
                   {#each banks as bank}
-                    <option value={bank.id}>{bank.full_name || bank.id}</option>
+                    <option value={bank.bank_id}>{bank.full_name || bank.bank_id}</option>
                   {/each}
                 </select>
               </div>

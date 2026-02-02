@@ -35,7 +35,7 @@ export async function load({ locals }) {
             const banksResponse = await obp_requests.get('/obp/v6.0.0/banks');
             for (const bank of banksResponse.banks) {
                 banks.push({
-                    bank_id: bank.id,
+                    bank_id: bank.bank_id,
                     name: bank.full_name
                 });
             }

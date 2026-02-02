@@ -9,7 +9,7 @@
   } from "$lib/utils/errorHandler";
 
   interface Bank {
-    id: string;
+    bank_id: string;
     short_name: string;
     full_name: string;
     logo?: string;
@@ -34,7 +34,7 @@
   let isLoading = $state(false);
   let error = $state("");
 
-  let selectedBank = $derived(banks.find((bank) => bank.id === selectedBankId));
+  let selectedBank = $derived(banks.find((bank) => bank.bank_id === selectedBankId));
 
   onMount(async () => {
     await fetchBanks();
@@ -58,9 +58,10 @@
       }
 
       const data = await response.json();
-      banks = (data.banks || []).sort((a: Bank, b: Bank) =>
-        a.id.localeCompare(b.id),
-      );
+      // Filter out banks with missing bank_id and sort by bank_id
+      banks = (data.banks || [])
+        .filter((b: Bank) => b.bank_id != null)
+        .sort((a: Bank, b: Bank) => (a.bank_id || "").localeCompare(b.bank_id || ""));
     } catch (err) {
       console.error("Error fetching banks:", err);
       error = err instanceof Error ? err.message : "Failed to load banks";
@@ -86,7 +87,7 @@
         <option value="" disabled>No banks available</option>
       {:else}
         {#each banks as bank}
-          <option value={bank.id}>
+          <option value={bank.bank_id}>
             {bank.short_name}
             {#if bank.full_name && bank.full_name !== bank.short_name}
               - {bank.full_name}

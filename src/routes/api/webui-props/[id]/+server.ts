@@ -1,6 +1,7 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { obp_requests } from "$lib/obp/requests";
+import { extractErrorDetails } from "$lib/obp/errors";
 import { SessionOAuthHelper } from "$lib/oauth/sessionHelper";
 import { createLogger } from "$lib/utils/logger";
 
@@ -52,17 +53,10 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
   } catch (err) {
     logger.error("Error updating webui prop:", err);
 
-    let errorMessage = "Failed to update webui prop";
-    let obpErrorCode = undefined;
+    // Extract full error details - NEVER hide or simplify OBP error messages!
+    const { message, obpErrorCode } = extractErrorDetails(err);
 
-    if (err instanceof Error) {
-      errorMessage = err.message;
-      if ("obpErrorCode" in err) {
-        obpErrorCode = (err as any).obpErrorCode;
-      }
-    }
-
-    const errorResponse: any = { error: errorMessage };
+    const errorResponse: any = { error: message };
     if (obpErrorCode) {
       errorResponse.obpErrorCode = obpErrorCode;
     }
@@ -109,24 +103,10 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
       logger.error("Error details:", JSON.stringify(err, null, 2));
     }
 
-    let errorMessage = "Failed to delete webui prop";
-    let obpErrorCode = undefined;
-    let detailedError = undefined;
+    // Extract full error details - NEVER hide or simplify OBP error messages!
+    const { message, obpErrorCode } = extractErrorDetails(err);
 
-    if (err instanceof Error) {
-      errorMessage = err.message;
-      if ("obpErrorCode" in err) {
-        obpErrorCode = (err as any).obpErrorCode;
-      }
-      if ("response" in err) {
-        detailedError = (err as any).response;
-      }
-    }
-
-    const errorResponse: any = {
-      error: errorMessage,
-      details: detailedError,
-    };
+    const errorResponse: any = { error: message };
     if (obpErrorCode) {
       errorResponse.obpErrorCode = obpErrorCode;
     }

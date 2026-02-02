@@ -1,6 +1,7 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { obp_requests } from "$lib/obp/requests";
+import { extractErrorDetails } from "$lib/obp/errors";
 import { SessionOAuthHelper } from "$lib/oauth/sessionHelper";
 import { createLogger } from "$lib/utils/logger";
 
@@ -51,17 +52,10 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
   } catch (err) {
     logger.error("Error removing endpoint from API collection:", err);
 
-    let errorMessage = "Failed to remove endpoint from API collection";
-    let obpErrorCode = undefined;
+    // Extract full error details - NEVER hide or simplify OBP error messages!
+    const { message, obpErrorCode } = extractErrorDetails(err);
 
-    if (err instanceof Error) {
-      errorMessage = err.message;
-      if ("obpErrorCode" in err) {
-        obpErrorCode = (err as any).obpErrorCode;
-      }
-    }
-
-    const errorResponse: any = { error: errorMessage };
+    const errorResponse: any = { error: message };
     if (obpErrorCode) {
       errorResponse.obpErrorCode = obpErrorCode;
     }
