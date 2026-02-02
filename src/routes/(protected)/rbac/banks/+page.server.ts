@@ -6,7 +6,7 @@ import { SessionOAuthHelper } from "$lib/oauth/sessionHelper";
 import { error } from "@sveltejs/kit";
 
 interface Bank {
-  id: string;
+  bank_id: string;
   short_name: string;
   full_name: string;
   logo?: string;
@@ -54,8 +54,8 @@ export const load: PageServerLoad = async ({ locals }) => {
     const banks = response.banks || [];
     logger.info(`Response: ${banks.length} banks`);
 
-    // Sort banks by ID
-    banks.sort((a, b) => a.id.localeCompare(b.id));
+    // Sort banks by bank_id
+    banks.sort((a, b) => (a.bank_id || "").localeCompare(b.bank_id || ""));
 
     return {
       banks,
