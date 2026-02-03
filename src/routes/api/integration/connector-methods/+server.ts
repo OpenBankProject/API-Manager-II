@@ -1,11 +1,13 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { obp_requests } from "$lib/obp/requests";
+import { extractErrorDetails } from "$lib/obp/errors";
 import { SessionOAuthHelper } from "$lib/oauth/sessionHelper";
 import { createLogger } from "$lib/utils/logger";
 
-const logger = createLogger("ConnectorMethodNamesAPI");
+const logger = createLogger("ConnectorMethodsAPI");
 
+// GET - Fetch all connector methods
 export const GET: RequestHandler = async ({ locals }) => {
   const session = locals.session;
 
@@ -21,33 +23,31 @@ export const GET: RequestHandler = async ({ locals }) => {
   const accessToken = sessionOAuth?.accessToken;
 
   if (!accessToken) {
-    logger.error("No access token available for connector method names API call");
+    logger.error("No access token available for connector methods API call");
     return json({ error: "No API access token available" }, { status: 401 });
   }
 
   try {
-    logger.info("=== CONNECTOR METHOD NAMES API CALL ===");
-    const endpoint = `/obp/v6.0.0/system/connector-method-names`;
+    logger.info("=== CONNECTOR METHODS API CALL ===");
+    const endpoint = `/obp/v6.0.0/management/connector-methods`;
     logger.info(`Request: ${endpoint}`);
 
     const response = await obp_requests.get(endpoint, accessToken);
 
-    logger.info("Connector method names fetched successfully");
+    logger.info("Connector methods fetched successfully");
+    logger.info(`Response: ${response?.connectors_methods?.length || 0} connector methods`);
 
-    return json(response);
+    return json(response.connectors_methods || []);
   } catch (err) {
-    logger.error("ERROR FETCHING CONNECTOR METHOD NAMES:");
-    logger.error(`  Error type: ${err?.constructor?.name}`);
-    logger.error(
-      `  Error message: ${err instanceof Error ? err.message : String(err)}`,
-    );
+    logger.error("ERROR FETCHING CONNECTOR METHODS:", err);
+
+    // Extract full error details - NEVER hide or simplify OBP error messages!
+    const { message, obpErrorCode } = extractErrorDetails(err);
 
     return json(
       {
-        error:
-          err instanceof Error
-            ? err.message
-            : "Failed to fetch connector method names",
+        error: message,
+        obpErrorCode,
       },
       { status: 500 },
     );

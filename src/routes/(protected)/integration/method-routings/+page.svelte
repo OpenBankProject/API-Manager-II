@@ -12,14 +12,17 @@
 
   let methodRoutings = $state<MethodRouting[]>([]);
   let methodNames = $state<string[]>([]);
+  let connectorNames = $state<string[]>([]);
+  let bankIds = $state<string[]>([]);
   let isLoading = $state(false);
   let isLoadingMethodNames = $state(false);
+  let isLoadingConnectors = $state(false);
   let error = $state<string | null>(null);
   let successMessage = $state<string | null>(null);
   let showCreateForm = $state(false);
   let editingRouting = $state<MethodRouting | null>(null);
 
-  const jsonPlaceholder = '{"key": "value"}';
+  const jsonPlaceholder = '{"param1": "value1", "param2": "value2"}';
 
   // Form state
   let formData = $state<MethodRouting>({
@@ -85,6 +88,53 @@
       console.error("Error fetching method names:", err);
     } finally {
       isLoadingMethodNames = false;
+    }
+  }
+
+  async function fetchConnectorNames() {
+    try {
+      isLoadingConnectors = true;
+
+      const response = await fetch("/api/system/connectors");
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMsg = errorData.error || response.statusText;
+        console.error(`Failed to fetch connectors (${response.status}): ${errorMsg}`);
+        return;
+      }
+
+      const data = await response.json();
+
+      connectorNames = Array.isArray(data)
+        ? data
+        : data.connector_names || [];
+    } catch (err) {
+      console.error("Error fetching connector names:", err);
+    } finally {
+      isLoadingConnectors = false;
+    }
+  }
+
+  async function fetchBankIds() {
+    try {
+      const response = await fetch("/api/banks");
+
+      if (!response.ok) {
+        console.error(`Failed to fetch banks (${response.status})`);
+        return;
+      }
+
+      const data = await response.json();
+      const banks = Array.isArray(data) ? data : data.banks || [];
+
+      // Extract just the bank_id values
+      bankIds = banks
+        .map((b: { bank_id?: string }) => b.bank_id)
+        .filter((id: string | undefined): id is string => !!id)
+        .sort();
+    } catch (err) {
+      console.error("Error fetching bank IDs:", err);
     }
   }
 
@@ -202,6 +252,8 @@
   onMount(() => {
     fetchMethodRoutings();
     fetchMethodNames();
+    fetchConnectorNames();
+    fetchBankIds();
   });
 </script>
 
@@ -291,14 +343,30 @@
               <label for="connector_name" class="form-label">
                 Connector Name <span class="required">*</span>
               </label>
-              <input
-                type="text"
-                id="connector_name"
-                bind:value={formData.connector_name}
-                class="form-input"
-                placeholder="e.g., rest_vMar2019"
-                required
-              />
+              {#if isLoadingConnectors}
+                <div class="loading-text">Loading connectors...</div>
+              {:else if connectorNames.length > 0}
+                <select
+                  id="connector_name"
+                  bind:value={formData.connector_name}
+                  class="form-input"
+                  required
+                >
+                  <option value="">Select a connector</option>
+                  {#each connectorNames as connectorName}
+                    <option value={connectorName}>{connectorName}</option>
+                  {/each}
+                </select>
+              {:else}
+                <input
+                  type="text"
+                  id="connector_name"
+                  bind:value={formData.connector_name}
+                  class="form-input"
+                  placeholder="e.g., rest_vMar2019"
+                  required
+                />
+              {/if}
             </div>
 
             <div class="form-group">
@@ -310,8 +378,15 @@
                 id="bank_id_pattern"
                 bind:value={formData.bank_id_pattern}
                 class="form-input"
-                placeholder="e.g., gh.29.uk or .*"
+                placeholder="e.g., gh.29.uk or .* for all"
+                list="bank-ids-list"
               />
+              <datalist id="bank-ids-list">
+                {#each bankIds as bankId}
+                  <option value={bankId}></option>
+                {/each}
+              </datalist>
+              <div class="form-hint">Type a bank ID or pattern (e.g., .* for all banks)</div>
             </div>
 
             <div class="form-group">
@@ -336,6 +411,7 @@
                 rows="4"
                 placeholder={jsonPlaceholder}
               ></textarea>
+              <div class="form-hint">Optional key-value pairs as JSON object, e.g., {"{"}"key1": "value1", "key2": "value2"{"}"}</div>
             </div>
           </div>
 
@@ -559,6 +635,16 @@
   }
 
   :global([data-mode="dark"]) .loading-text {
+    color: var(--color-surface-400);
+  }
+
+  .form-hint {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+  }
+
+  :global([data-mode="dark"]) .form-hint {
     color: var(--color-surface-400);
   }
 

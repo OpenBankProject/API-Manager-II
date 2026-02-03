@@ -72,6 +72,59 @@ export const GET: RequestHandler = async ({ locals }) => {
   }
 };
 
+// Helper to transform parameters from form input to OBP format
+// OBP expects: parameters: [{key: "k1", value: "v1"}, {key: "k2", value: "v2"}]
+function transformParameters(params: unknown): Array<{key: string, value: string}> {
+  // If empty or null, return empty array
+  if (!params || params === "") {
+    return [];
+  }
+
+  // If already an array, return as-is
+  if (Array.isArray(params)) {
+    return params;
+  }
+
+  // If it's a string, try to parse it as JSON
+  if (typeof params === "string") {
+    const trimmed = params.trim();
+    if (!trimmed) {
+      return [];
+    }
+
+    try {
+      const parsed = JSON.parse(trimmed);
+
+      // If parsed result is an array, return it
+      if (Array.isArray(parsed)) {
+        return parsed;
+      }
+
+      // If parsed result is an object like {"key1": "value1", "key2": "value2"},
+      // convert to [{key: "key1", value: "value1"}, {key: "key2", value: "value2"}]
+      if (typeof parsed === "object" && parsed !== null) {
+        return Object.entries(parsed).map(([key, value]) => ({
+          key,
+          value: String(value),
+        }));
+      }
+    } catch {
+      logger.warn(`Failed to parse parameters as JSON: ${trimmed}`);
+      return [];
+    }
+  }
+
+  // If it's an object (but not array), convert entries
+  if (typeof params === "object" && params !== null) {
+    return Object.entries(params).map(([key, value]) => ({
+      key,
+      value: String(value),
+    }));
+  }
+
+  return [];
+}
+
 // POST - Create a new method routing
 export const POST: RequestHandler = async ({ request, locals }) => {
   const session = locals.session;
@@ -96,12 +149,23 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
   try {
     const body = await request.json();
-    logger.info("Creating method routing with data:", body);
+    logger.info("Creating method routing with raw data:", body);
+
+    // Transform the body for OBP API
+    const obpBody = {
+      method_name: body.method_name,
+      connector_name: body.connector_name,
+      is_bank_id_exact_match: body.is_bank_id_exact_match ?? false,
+      bank_id_pattern: body.bank_id_pattern || "",
+      parameters: transformParameters(body.parameters),
+    };
+
+    logger.info("Transformed body for OBP:", obpBody);
 
     const endpoint = `/obp/v3.1.0/management/method_routings`;
     logger.info(`Request: POST ${endpoint}`);
 
-    const response = await obp_requests.post(endpoint, body, accessToken);
+    const response = await obp_requests.post(endpoint, obpBody, accessToken);
 
     logger.info("Method routing created successfully");
     logger.debug(JSON.stringify(response, null, 2));
@@ -159,12 +223,23 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
       );
     }
 
-    logger.info(`Updating method routing ${methodRoutingId} with data:`, body);
+    logger.info(`Updating method routing ${methodRoutingId} with raw data:`, body);
+
+    // Transform the body for OBP API
+    const obpBody = {
+      method_name: body.method_name,
+      connector_name: body.connector_name,
+      is_bank_id_exact_match: body.is_bank_id_exact_match ?? false,
+      bank_id_pattern: body.bank_id_pattern || "",
+      parameters: transformParameters(body.parameters),
+    };
+
+    logger.info("Transformed body for OBP:", obpBody);
 
     const endpoint = `/obp/v3.1.0/management/method_routings/${methodRoutingId}`;
     logger.info(`Request: PUT ${endpoint}`);
 
-    const response = await obp_requests.put(endpoint, body, accessToken);
+    const response = await obp_requests.put(endpoint, obpBody, accessToken);
 
     logger.info("Method routing updated successfully");
     logger.debug(JSON.stringify(response, null, 2));
