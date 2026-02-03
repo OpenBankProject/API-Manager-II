@@ -14,10 +14,29 @@
   let selectedBankId = $state("");
   let showAddScopeForm = $state(false);
 
+  // Editable field states
+  let editingField = $state<string | null>(null);
+  let editAppName = $state("");
+  let editRedirectUrl = $state("");
+  let editLogoUrl = $state("");
+  let editCertificate = $state("");
+
   // Filter roles based on whether they require bank_id
   let selectedRoleRequiresBank = $derived(
     availableRoles.find((r: any) => r.role === selectedRole)?.requires_bank_id ?? false
   );
+
+  function startEditing(field: string) {
+    editingField = field;
+    if (field === "name") editAppName = consumer.app_name || "";
+    if (field === "redirect_url") editRedirectUrl = consumer.redirect_url || "";
+    if (field === "logo_url") editLogoUrl = consumer.logo_url || "";
+    if (field === "certificate") editCertificate = consumer.certificate_pem || "";
+  }
+
+  function cancelEditing() {
+    editingField = null;
+  }
 
   function formatDate(dateString: string): string {
     try {
@@ -110,11 +129,197 @@
     Consumer Details
   </h2>
 
-  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <!-- Editable fields in 2-column grid -->
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-4 pb-4 border-b border-gray-100 dark:border-gray-700">
+    <!-- App Name (Editable) -->
     <div>
-      <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">App Name</label>
-      <p class="mt-1 text-gray-900 dark:text-gray-100">{consumer.app_name}</p>
+      <div class="flex items-center justify-between">
+        <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">App Name</label>
+        {#if editingField !== "name"}
+          <button
+            type="button"
+            onclick={() => startEditing("name")}
+            class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+          >
+            Edit
+          </button>
+        {/if}
+      </div>
+      {#if editingField === "name"}
+        <form
+          method="POST"
+          action="?/updateName"
+          use:enhance={() => {
+            isSubmitting = true;
+            return async ({ update }) => {
+              await update();
+              await invalidateAll();
+              isSubmitting = false;
+              editingField = null;
+            };
+          }}
+          class="mt-1"
+        >
+          <input
+            type="text"
+            name="app_name"
+            bind:value={editAppName}
+            required
+            class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+          />
+          <div class="mt-1 flex gap-1">
+            <button type="submit" disabled={isSubmitting} class="rounded bg-blue-600 px-2 py-0.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50">Save</button>
+            <button type="button" onclick={cancelEditing} class="rounded border border-gray-300 px-2 py-0.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300">Cancel</button>
+          </div>
+        </form>
+      {:else}
+        <p class="mt-1 text-gray-900 dark:text-gray-100">{consumer.app_name}</p>
+      {/if}
     </div>
+
+    <!-- Redirect URL (Editable) -->
+    <div>
+      <div class="flex items-center justify-between">
+        <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Redirect URL</label>
+        {#if editingField !== "redirect_url"}
+          <button
+            type="button"
+            onclick={() => startEditing("redirect_url")}
+            class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+          >
+            Edit
+          </button>
+        {/if}
+      </div>
+      {#if editingField === "redirect_url"}
+        <form
+          method="POST"
+          action="?/updateRedirectUrl"
+          use:enhance={() => {
+            isSubmitting = true;
+            return async ({ update }) => {
+              await update();
+              await invalidateAll();
+              isSubmitting = false;
+              editingField = null;
+            };
+          }}
+          class="mt-1"
+        >
+          <input
+            type="url"
+            name="redirect_url"
+            bind:value={editRedirectUrl}
+            required
+            placeholder="https://example.com/callback"
+            class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+          />
+          <div class="mt-1 flex gap-1">
+            <button type="submit" disabled={isSubmitting} class="rounded bg-blue-600 px-2 py-0.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50">Save</button>
+            <button type="button" onclick={cancelEditing} class="rounded border border-gray-300 px-2 py-0.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300">Cancel</button>
+          </div>
+        </form>
+      {:else}
+        <p class="mt-1 text-gray-900 dark:text-gray-100 text-sm break-all">{consumer.redirect_url || "N/A"}</p>
+      {/if}
+    </div>
+
+    <!-- Logo URL (Editable) -->
+    <div>
+      <div class="flex items-center justify-between">
+        <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Logo URL</label>
+        {#if editingField !== "logo_url"}
+          <button
+            type="button"
+            onclick={() => startEditing("logo_url")}
+            class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+          >
+            Edit
+          </button>
+        {/if}
+      </div>
+      {#if editingField === "logo_url"}
+        <form
+          method="POST"
+          action="?/updateLogoUrl"
+          use:enhance={() => {
+            isSubmitting = true;
+            return async ({ update }) => {
+              await update();
+              await invalidateAll();
+              isSubmitting = false;
+              editingField = null;
+            };
+          }}
+          class="mt-1"
+        >
+          <input
+            type="url"
+            name="logo_url"
+            bind:value={editLogoUrl}
+            placeholder="https://example.com/logo.png"
+            class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+          />
+          <div class="mt-1 flex gap-1">
+            <button type="submit" disabled={isSubmitting} class="rounded bg-blue-600 px-2 py-0.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50">Save</button>
+            <button type="button" onclick={cancelEditing} class="rounded border border-gray-300 px-2 py-0.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300">Cancel</button>
+          </div>
+        </form>
+      {:else}
+        <p class="mt-1 text-gray-900 dark:text-gray-100 text-sm break-all">{consumer.logo_url || "Not set"}</p>
+      {/if}
+    </div>
+
+    <!-- Certificate (Editable) -->
+    <div>
+      <div class="flex items-center justify-between">
+        <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Certificate (PEM)</label>
+        {#if editingField !== "certificate"}
+          <button
+            type="button"
+            onclick={() => startEditing("certificate")}
+            class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+          >
+            Edit
+          </button>
+        {/if}
+      </div>
+      {#if editingField === "certificate"}
+        <form
+          method="POST"
+          action="?/updateCertificate"
+          use:enhance={() => {
+            isSubmitting = true;
+            return async ({ update }) => {
+              await update();
+              await invalidateAll();
+              isSubmitting = false;
+              editingField = null;
+            };
+          }}
+          class="mt-1"
+        >
+          <textarea
+            name="certificate_pem"
+            bind:value={editCertificate}
+            rows="3"
+            placeholder="-----BEGIN CERTIFICATE-----"
+            class="w-full rounded border border-gray-300 bg-white px-2 py-1 font-mono text-xs text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+          ></textarea>
+          <div class="mt-1 flex gap-1">
+            <button type="submit" disabled={isSubmitting} class="rounded bg-blue-600 px-2 py-0.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50">Save</button>
+            <button type="button" onclick={cancelEditing} class="rounded border border-gray-300 px-2 py-0.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300">Cancel</button>
+          </div>
+          <p class="mt-1 text-xs text-amber-600 dark:text-amber-400">Warning: May disable consumer</p>
+        </form>
+      {:else}
+        <p class="mt-1 text-gray-900 dark:text-gray-100 text-sm">{consumer.certificate_pem ? "Configured" : "Not set"}</p>
+      {/if}
+    </div>
+  </div>
+
+  <!-- Read-only fields -->
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
     <div>
       <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">App Type</label>
       <p class="mt-1 text-gray-900 dark:text-gray-100">{consumer.app_type}</p>
@@ -127,13 +332,9 @@
       <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Company</label>
       <p class="mt-1 text-gray-900 dark:text-gray-100">{consumer.company || "N/A"}</p>
     </div>
-    <div class="sm:col-span-2">
+    <div>
       <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Description</label>
       <p class="mt-1 text-gray-900 dark:text-gray-100">{consumer.description || "N/A"}</p>
-    </div>
-    <div class="sm:col-span-2">
-      <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Redirect URL</label>
-      <p class="mt-1 text-gray-900 dark:text-gray-100 break-all">{consumer.redirect_url || "N/A"}</p>
     </div>
     <div>
       <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Consumer ID</label>

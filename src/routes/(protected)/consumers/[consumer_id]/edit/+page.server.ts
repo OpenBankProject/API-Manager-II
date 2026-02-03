@@ -19,6 +19,8 @@ interface Consumer {
   company: string;
   enabled: boolean;
   created: string;
+  logo_url?: string;
+  certificate_pem?: string;
   created_by_user?: {
     user_id: string;
     email: string;
@@ -265,6 +267,186 @@ export const actions = {
       logger.error("Error deleting scope:", e);
       const { message } = extractErrorDetails(e);
       return fail(500, { error: message, action: "deleteScope" });
+    }
+  },
+
+  // Action to update consumer name
+  updateName: async (event: RequestEvent) => {
+    const session = event.locals.session;
+
+    if (!session?.data?.user) {
+      return fail(401, { error: "Unauthorized" });
+    }
+
+    const sessionOAuth = SessionOAuthHelper.getSessionOAuth(session);
+    const token = sessionOAuth?.accessToken;
+
+    if (!token) {
+      return fail(401, { error: "Unauthorized: No access token found in session." });
+    }
+
+    const consumerId = event.params.consumer_id;
+
+    if (!consumerId) {
+      return fail(400, { error: "Consumer ID is required." });
+    }
+
+    const formData = await event.request.formData();
+    const app_name = formData.get("app_name") as string;
+
+    if (!app_name?.trim()) {
+      return fail(400, { error: "App name is required.", action: "updateName" });
+    }
+
+    try {
+      logger.info(`Updating consumer ${consumerId} name to: ${app_name}`);
+
+      await obp_requests.put(
+        `/obp/v6.0.0/management/consumers/${consumerId}/consumer/name`,
+        { app_name },
+        token,
+      );
+
+      logger.info(`Successfully updated consumer ${consumerId} name`);
+
+      return { success: true, action: "updateName" };
+    } catch (e: any) {
+      logger.error("Error updating consumer name:", e);
+      const { message } = extractErrorDetails(e);
+      return fail(500, { error: message, action: "updateName" });
+    }
+  },
+
+  // Action to update consumer redirect URL
+  updateRedirectUrl: async (event: RequestEvent) => {
+    const session = event.locals.session;
+
+    if (!session?.data?.user) {
+      return fail(401, { error: "Unauthorized" });
+    }
+
+    const sessionOAuth = SessionOAuthHelper.getSessionOAuth(session);
+    const token = sessionOAuth?.accessToken;
+
+    if (!token) {
+      return fail(401, { error: "Unauthorized: No access token found in session." });
+    }
+
+    const consumerId = event.params.consumer_id;
+
+    if (!consumerId) {
+      return fail(400, { error: "Consumer ID is required." });
+    }
+
+    const formData = await event.request.formData();
+    const redirect_url = formData.get("redirect_url") as string;
+
+    if (!redirect_url?.trim()) {
+      return fail(400, { error: "Redirect URL is required.", action: "updateRedirectUrl" });
+    }
+
+    try {
+      logger.info(`Updating consumer ${consumerId} redirect URL`);
+
+      await obp_requests.put(
+        `/obp/v6.0.0/management/consumers/${consumerId}/consumer/redirect_url`,
+        { redirect_url },
+        token,
+      );
+
+      logger.info(`Successfully updated consumer ${consumerId} redirect URL`);
+
+      return { success: true, action: "updateRedirectUrl" };
+    } catch (e: any) {
+      logger.error("Error updating consumer redirect URL:", e);
+      const { message } = extractErrorDetails(e);
+      return fail(500, { error: message, action: "updateRedirectUrl" });
+    }
+  },
+
+  // Action to update consumer logo URL
+  updateLogoUrl: async (event: RequestEvent) => {
+    const session = event.locals.session;
+
+    if (!session?.data?.user) {
+      return fail(401, { error: "Unauthorized" });
+    }
+
+    const sessionOAuth = SessionOAuthHelper.getSessionOAuth(session);
+    const token = sessionOAuth?.accessToken;
+
+    if (!token) {
+      return fail(401, { error: "Unauthorized: No access token found in session." });
+    }
+
+    const consumerId = event.params.consumer_id;
+
+    if (!consumerId) {
+      return fail(400, { error: "Consumer ID is required." });
+    }
+
+    const formData = await event.request.formData();
+    const logo_url = formData.get("logo_url") as string || "";
+
+    try {
+      logger.info(`Updating consumer ${consumerId} logo URL`);
+
+      await obp_requests.put(
+        `/obp/v6.0.0/management/consumers/${consumerId}/consumer/logo_url`,
+        { logo_url },
+        token,
+      );
+
+      logger.info(`Successfully updated consumer ${consumerId} logo URL`);
+
+      return { success: true, action: "updateLogoUrl" };
+    } catch (e: any) {
+      logger.error("Error updating consumer logo URL:", e);
+      const { message } = extractErrorDetails(e);
+      return fail(500, { error: message, action: "updateLogoUrl" });
+    }
+  },
+
+  // Action to update consumer certificate
+  updateCertificate: async (event: RequestEvent) => {
+    const session = event.locals.session;
+
+    if (!session?.data?.user) {
+      return fail(401, { error: "Unauthorized" });
+    }
+
+    const sessionOAuth = SessionOAuthHelper.getSessionOAuth(session);
+    const token = sessionOAuth?.accessToken;
+
+    if (!token) {
+      return fail(401, { error: "Unauthorized: No access token found in session." });
+    }
+
+    const consumerId = event.params.consumer_id;
+
+    if (!consumerId) {
+      return fail(400, { error: "Consumer ID is required." });
+    }
+
+    const formData = await event.request.formData();
+    const certificate_pem = formData.get("certificate_pem") as string || "";
+
+    try {
+      logger.info(`Updating consumer ${consumerId} certificate`);
+
+      await obp_requests.put(
+        `/obp/v6.0.0/management/consumers/${consumerId}/consumer/certificate`,
+        { certificate_pem },
+        token,
+      );
+
+      logger.info(`Successfully updated consumer ${consumerId} certificate`);
+
+      return { success: true, action: "updateCertificate" };
+    } catch (e: any) {
+      logger.error("Error updating consumer certificate:", e);
+      const { message } = extractErrorDetails(e);
+      return fail(500, { error: message, action: "updateCertificate" });
     }
   },
 };
