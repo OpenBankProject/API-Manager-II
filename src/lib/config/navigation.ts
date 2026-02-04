@@ -318,12 +318,12 @@ function buildDynamicEndpointsItems(): NavigationItem[] {
   const items: NavigationItem[] = [
     {
       href: "/dynamic-endpoints/system",
-      label: "System Dynamic Endpoints",
+      label: "System",
       iconComponent: Plug,
     },
     {
       href: "/dynamic-endpoints/bank",
-      label: "Bank Dynamic Endpoints",
+      label: "Bank",
       iconComponent: Building2,
     },
   ];

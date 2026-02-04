@@ -7,6 +7,11 @@ import { SessionOAuthHelper } from "$lib/oauth/sessionHelper";
 
 const logger = createLogger("EditConsumerServer");
 
+interface CallCounter {
+  calls_made: number;
+  reset_in_seconds: number;
+}
+
 interface Consumer {
   consumer_id: string;
   key?: string;
@@ -21,6 +26,14 @@ interface Consumer {
   created: string;
   logo_url?: string;
   certificate_pem?: string;
+  call_counters?: {
+    per_second?: CallCounter;
+    per_minute?: CallCounter;
+    per_hour?: CallCounter;
+    per_day?: CallCounter;
+    per_week?: CallCounter;
+    per_month?: CallCounter;
+  };
   created_by_user?: {
     user_id: string;
     email: string;

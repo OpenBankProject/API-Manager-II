@@ -412,6 +412,78 @@
   </div>
 </div>
 
+<!-- Call Counters Section -->
+<div class="mb-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+  <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+    API Call Counters
+  </h2>
+  <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+    Current API usage for this consumer (from Redis).
+  </p>
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+    <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-900/50">
+      <div class="text-xs font-medium text-gray-500 dark:text-gray-400">Per Second</div>
+      {#if consumer.call_counters?.per_second && typeof consumer.call_counters.per_second.calls_made === 'number'}
+        <div class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100">{consumer.call_counters.per_second.calls_made}</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">resets in {consumer.call_counters.per_second.reset_in_seconds}s</div>
+      {:else}
+        <div class="mt-1 text-lg font-semibold text-red-600 dark:text-red-400">Err</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">unavailable</div>
+      {/if}
+    </div>
+    <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-900/50">
+      <div class="text-xs font-medium text-gray-500 dark:text-gray-400">Per Minute</div>
+      {#if consumer.call_counters?.per_minute && typeof consumer.call_counters.per_minute.calls_made === 'number'}
+        <div class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100">{consumer.call_counters.per_minute.calls_made}</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">resets in {consumer.call_counters.per_minute.reset_in_seconds}s</div>
+      {:else}
+        <div class="mt-1 text-lg font-semibold text-red-600 dark:text-red-400">Err</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">unavailable</div>
+      {/if}
+    </div>
+    <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-900/50">
+      <div class="text-xs font-medium text-gray-500 dark:text-gray-400">Per Hour</div>
+      {#if consumer.call_counters?.per_hour && typeof consumer.call_counters.per_hour.calls_made === 'number'}
+        <div class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100">{consumer.call_counters.per_hour.calls_made}</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">resets in {consumer.call_counters.per_hour.reset_in_seconds}s</div>
+      {:else}
+        <div class="mt-1 text-lg font-semibold text-red-600 dark:text-red-400">Err</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">unavailable</div>
+      {/if}
+    </div>
+    <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-900/50">
+      <div class="text-xs font-medium text-gray-500 dark:text-gray-400">Per Day</div>
+      {#if consumer.call_counters?.per_day && typeof consumer.call_counters.per_day.calls_made === 'number'}
+        <div class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100">{consumer.call_counters.per_day.calls_made}</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">resets in {consumer.call_counters.per_day.reset_in_seconds}s</div>
+      {:else}
+        <div class="mt-1 text-lg font-semibold text-red-600 dark:text-red-400">Err</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">unavailable</div>
+      {/if}
+    </div>
+    <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-900/50">
+      <div class="text-xs font-medium text-gray-500 dark:text-gray-400">Per Week</div>
+      {#if consumer.call_counters?.per_week && typeof consumer.call_counters.per_week.calls_made === 'number'}
+        <div class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100">{consumer.call_counters.per_week.calls_made}</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">resets in {consumer.call_counters.per_week.reset_in_seconds}s</div>
+      {:else}
+        <div class="mt-1 text-lg font-semibold text-red-600 dark:text-red-400">Err</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">unavailable</div>
+      {/if}
+    </div>
+    <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-900/50">
+      <div class="text-xs font-medium text-gray-500 dark:text-gray-400">Per Month</div>
+      {#if consumer.call_counters?.per_month && typeof consumer.call_counters.per_month.calls_made === 'number'}
+        <div class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100">{consumer.call_counters.per_month.calls_made}</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">resets in {consumer.call_counters.per_month.reset_in_seconds}s</div>
+      {:else}
+        <div class="mt-1 text-lg font-semibold text-red-600 dark:text-red-400">Err</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">unavailable</div>
+      {/if}
+    </div>
+  </div>
+</div>
+
 <!-- Scopes Section -->
 <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
   <div class="flex items-center justify-between mb-4">

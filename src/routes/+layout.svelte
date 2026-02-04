@@ -10,6 +10,7 @@
     rbacItems,
     accountAccessItems,
     dynamicEntitiesItems,
+    dynamicEndpointsItems,
     abacItems,
   } from "$lib/config/navigation";
   import Toast from "$lib/components/Toast.svelte";
@@ -71,6 +72,7 @@
   let isRbacExpanded = $state(false);
   let isAccountAccessExpanded = $state(false);
   let isDynamicEntitiesExpanded = $state(false);
+  let isDynamicEndpointsExpanded = $state(false);
   let isAbacExpanded = $state(false);
   let displayMode: "dark" | "light" = $state("dark");
   let systemDynamicEntities = $state<any[]>([]);
@@ -177,6 +179,10 @@
     page.url.pathname === "/dynamic-entities" ||
       page.url.pathname.startsWith("/dynamic-entities/"),
   );
+  let isDynamicEndpointsActive = $derived(
+    page.url.pathname === "/dynamic-endpoints" ||
+      page.url.pathname.startsWith("/dynamic-endpoints/"),
+  );
   let isAbacActive = $derived(
     page.url.pathname === "/abac" || page.url.pathname.startsWith("/abac/"),
   );
@@ -207,6 +213,12 @@
     }
     if (isAccountAccessActive) {
       isAccountAccessExpanded = true;
+    }
+    if (isDynamicEntitiesActive) {
+      isDynamicEntitiesExpanded = true;
+    }
+    if (isDynamicEndpointsActive) {
+      isDynamicEndpointsExpanded = true;
     }
     if (isAbacActive) {
       isAbacExpanded = true;
@@ -253,6 +265,10 @@
 
   function toggleDynamicEntities() {
     isDynamicEntitiesExpanded = !isDynamicEntitiesExpanded;
+  }
+
+  function toggleDynamicEndpoints() {
+    isDynamicEndpointsExpanded = !isDynamicEndpointsExpanded;
   }
 
   function toggleAbac() {
@@ -718,6 +734,48 @@
             {#if isDynamicEntitiesExpanded}
               <Navigation.Menu class="mt-1 ml-4 flex flex-col gap-1 px-2">
                 {#each dynamicEntitiesItems as subItem}
+                  {@const Icon = subItem.iconComponent}
+                  <a
+                    href={subItem.href}
+                    class="btn w-full justify-start gap-3 px-2 pl-6 text-sm hover:preset-tonal"
+                    class:preset-filled-secondary-50-950={page.url.pathname ===
+                      subItem.href}
+                    class:border-l-2={page.url.pathname === subItem.href}
+                    class:border-primary-500={page.url.pathname ===
+                      subItem.href}
+                    title={subItem.label}
+                    aria-label={subItem.label}
+                  >
+                    <Icon class="size-4" />
+                    <span>{subItem.label}</span>
+                  </a>
+                {/each}
+              </Navigation.Menu>
+            {/if}
+          </Navigation.Group>
+
+          <!-- Dynamic Endpoints Group -->
+          <Navigation.Group>
+            <button
+              type="button"
+              class="btn w-full justify-start gap-3 px-2 hover:preset-tonal"
+              class:preset-filled-primary-50-950={isDynamicEndpointsActive}
+              class:border={isDynamicEndpointsActive}
+              class:border-solid-secondary-500={isDynamicEndpointsActive}
+              onclick={toggleDynamicEndpoints}
+            >
+              <Plug class="size-5" />
+              <span>Dynamic Endpoints</span>
+              {#if isDynamicEndpointsExpanded}
+                <ChevronDown class="h-4 w-4" />
+              {:else}
+                <ChevronRight class="h-4 w-4" />
+              {/if}
+            </button>
+
+            {#if isDynamicEndpointsExpanded}
+              <Navigation.Menu class="mt-1 ml-4 flex flex-col gap-1 px-2">
+                {#each dynamicEndpointsItems as subItem}
                   {@const Icon = subItem.iconComponent}
                   <a
                     href={subItem.href}
