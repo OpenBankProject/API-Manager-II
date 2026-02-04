@@ -2,6 +2,7 @@
   import { enhance } from "$app/forms";
   import { invalidateAll } from "$app/navigation";
   import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
+  import MissingRoleAlert from "$lib/components/MissingRoleAlert.svelte";
 
   let { data, form } = $props();
 
@@ -11,6 +12,46 @@
   let banks = $derived(data.banks || []);
   const userEntitlements = data.userEntitlements || [];
   const requiredRoles = data.requiredRoles || [];
+  const actionRoles = data.actionRoles || {};
+
+  // Helper to check if user has a specific role
+  function hasRole(roleName: string): boolean {
+    return userEntitlements.some((e: any) => e.role_name === roleName);
+  }
+
+  // Check which actions the user can perform
+  let canEnableDisable = $derived(hasRole(actionRoles.enableDisable?.role));
+  let canAddScope = $derived(hasRole(actionRoles.addScope?.role));
+  let canDeleteScope = $derived(hasRole(actionRoles.deleteScope?.role));
+  let canUpdateRedirectUrl = $derived(hasRole(actionRoles.updateRedirectUrl?.role));
+
+  // Track which action's missing role alert to show (only shown after user tries the action)
+  let showMissingRoleFor = $state<string | null>(null);
+  let missingRoleBankId = $state<string>("");
+
+  function tryAction(action: string, bankId: string = ""): boolean {
+    const roleCheck = {
+      enableDisable: canEnableDisable,
+      addScope: canAddScope,
+      deleteScope: canDeleteScope,
+      updateRedirectUrl: canUpdateRedirectUrl,
+    }[action];
+
+    if (roleCheck) {
+      showMissingRoleFor = null;
+      return true; // User has permission, proceed
+    }
+
+    // User doesn't have permission, show the alert
+    showMissingRoleFor = action;
+    missingRoleBankId = bankId;
+    return false;
+  }
+
+  function dismissMissingRole() {
+    showMissingRoleFor = null;
+    missingRoleBankId = "";
+  }
 
   let isSubmitting = $state(false);
   let selectedRole = $state("");
@@ -188,7 +229,7 @@
         {#if editingField !== "redirect_url"}
           <button
             type="button"
-            onclick={() => startEditing("redirect_url")}
+            onclick={() => { startEditing("redirect_url"); dismissMissingRole(); }}
             class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
           >
             Edit
@@ -196,10 +237,21 @@
         {/if}
       </div>
       {#if editingField === "redirect_url"}
+        {#if showMissingRoleFor === "updateRedirectUrl"}
+          <div class="mt-1 mb-2">
+            <MissingRoleAlert
+              roles={[actionRoles.updateRedirectUrl?.role]}
+              message={`You need the ${actionRoles.updateRedirectUrl?.role} role to ${actionRoles.updateRedirectUrl?.action}`}
+            />
+          </div>
+        {/if}
         <form
           method="POST"
           action="?/updateRedirectUrl"
           use:enhance={() => {
+            if (!tryAction("updateRedirectUrl")) {
+              return async () => {}; // Cancel form submission
+            }
             isSubmitting = true;
             return async ({ update }) => {
               await update();
@@ -220,7 +272,7 @@
           />
           <div class="mt-1 flex gap-1">
             <button type="submit" disabled={isSubmitting} class="rounded bg-blue-600 px-2 py-0.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50">Save</button>
-            <button type="button" onclick={cancelEditing} class="rounded border border-gray-300 px-2 py-0.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300">Cancel</button>
+            <button type="button" onclick={() => { cancelEditing(); dismissMissingRole(); }} class="rounded border border-gray-300 px-2 py-0.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300">Cancel</button>
           </div>
         </form>
       {:else}
@@ -380,6 +432,9 @@
       method="POST"
       action="?/toggleEnabled"
       use:enhance={() => {
+        if (!tryAction("enableDisable")) {
+          return async () => {}; // Cancel form submission
+        }
         isSubmitting = true;
         return async ({ update }) => {
           await update();
@@ -410,6 +465,15 @@
       </button>
     </form>
   </div>
+
+  {#if showMissingRoleFor === "enableDisable"}
+    <div class="mt-4">
+      <MissingRoleAlert
+        roles={[actionRoles.enableDisable?.role]}
+        message={`You need the ${actionRoles.enableDisable?.role} role to ${actionRoles.enableDisable?.action}`}
+      />
+    </div>
+  {/if}
 </div>
 
 <!-- Call Counters Section -->
@@ -492,7 +556,7 @@
     </h2>
     <button
       type="button"
-      onclick={() => showAddScopeForm = !showAddScopeForm}
+      onclick={() => { showAddScopeForm = !showAddScopeForm; dismissMissingRole(); }}
       class="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-blue-800"
     >
       {showAddScopeForm ? "Cancel" : "Add Scope"}
@@ -507,10 +571,24 @@
   {#if showAddScopeForm}
     <div class="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
       <h3 class="text-sm font-medium text-blue-900 dark:text-blue-100 mb-3">Add New Scope</h3>
+
+      {#if showMissingRoleFor === "addScope"}
+        <div class="mb-4">
+          <MissingRoleAlert
+            roles={[actionRoles.addScope?.role]}
+            bankId={missingRoleBankId}
+            message={`You need the ${actionRoles.addScope?.role} role to ${actionRoles.addScope?.action}`}
+          />
+        </div>
+      {/if}
+
       <form
         method="POST"
         action="?/addScope"
         use:enhance={() => {
+          if (!tryAction("addScope", selectedBankId)) {
+            return async () => {}; // Cancel form submission
+          }
           isSubmitting = true;
           return async ({ update }) => {
             await update();
@@ -630,6 +708,9 @@
                   method="POST"
                   action="?/deleteScope"
                   use:enhance={() => {
+                    if (!tryAction("deleteScope", scope.bank_id || "")) {
+                      return async () => {}; // Cancel - show missing role alert
+                    }
                     if (!confirm(`Are you sure you want to delete the scope "${scope.role_name}"?`)) {
                       return async () => {};
                     }
@@ -678,10 +759,20 @@
       </p>
     </div>
   {/if}
+
+  {#if showMissingRoleFor === "deleteScope"}
+    <div class="mt-4">
+      <MissingRoleAlert
+        roles={[actionRoles.deleteScope?.role]}
+        bankId={missingRoleBankId}
+        message={`You need the ${actionRoles.deleteScope?.role} role to ${actionRoles.deleteScope?.action}`}
+      />
+    </div>
+  {/if}
 </div>
 
 <!-- Additional Actions -->
-<div class="mt-6 flex gap-4">
+<div class="mt-6 flex flex-wrap gap-4">
   <a
     href="/consumers/{consumer.consumer_id}/rate-limits"
     class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:focus:ring-gray-700"
@@ -690,6 +781,15 @@
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
     Manage Rate Limits
+  </a>
+  <a
+    href="/metrics?consumer_id={consumer.consumer_id}"
+    class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:focus:ring-gray-700"
+  >
+    <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+    </svg>
+    View Metrics
   </a>
 </div>
 </PageRoleCheck>

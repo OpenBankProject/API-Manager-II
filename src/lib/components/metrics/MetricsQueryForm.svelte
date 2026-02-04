@@ -235,6 +235,17 @@
 
     <div class="form-row">
       <div class="form-field">
+        <label for="consumer_id">Consumer ID</label>
+        <input
+          type="text"
+          id="consumer_id"
+          bind:value={queryForm.consumer_id}
+          placeholder="Filter by consumer ID"
+          onblur={handleFieldChange}
+          class="form-input"
+        />
+      </div>
+      <div class="form-field">
         <label for="app_name">App Name</label>
         <input
           type="text"
@@ -285,17 +296,6 @@
           id="implemented_in_version"
           bind:value={queryForm.implemented_in_version}
           placeholder="Filter by version"
-          onblur={handleFieldChange}
-          class="form-input"
-        />
-      </div>
-      <div class="form-field">
-        <label for="consumer_id">Consumer ID</label>
-        <input
-          type="text"
-          id="consumer_id"
-          bind:value={queryForm.consumer_id}
-          placeholder="Filter by consumer ID"
           onblur={handleFieldChange}
           class="form-input"
         />

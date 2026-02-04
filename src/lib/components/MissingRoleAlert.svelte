@@ -11,13 +11,22 @@
     bankId?: string;
   }
 
+  interface Bank {
+    bank_id: string;
+    short_name: string;
+  }
+
   let { roles, errorCode, message, bankId }: Props = $props();
 
+  let isExpanded = $state(false);
   let isSubmitting = $state(false);
   let submitSuccess = $state(false);
   let submitError = $state<string | null>(null);
   let rolesMetadata = $state<Map<string, boolean>>(new Map());
   let loadingMetadata = $state(false);
+  let banks = $state<Bank[]>([]);
+  let loadingBanks = $state(false);
+  let selectedBankId = $state("");
 
   // Fetch role metadata on mount
   onMount(async () => {
@@ -30,6 +39,12 @@
         metadataMap.set(roleName, rolesCache.requiresBankId(roleName));
       });
       rolesMetadata = metadataMap;
+
+      // If any role requires bank_id and no bankId was provided, fetch banks
+      const needsBankId = Array.from(metadataMap.values()).some((requires) => requires);
+      if (needsBankId && !bankId) {
+        await fetchBanks();
+      }
     } catch (error) {
       console.error("Failed to fetch role metadata:", error);
     } finally {
@@ -37,13 +52,43 @@
     }
   });
 
+  async function fetchBanks() {
+    loadingBanks = true;
+    try {
+      const response = await fetch("/api/banks");
+      if (response.ok) {
+        const data = await response.json();
+        banks = (data.banks || []).map((b: any) => ({
+          bank_id: b.bank_id,
+          short_name: b.short_name || b.bank_id,
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to fetch banks:", error);
+    } finally {
+      loadingBanks = false;
+    }
+  }
+
   // Check if any role requires bank_id
   let requiresBankId = $derived(
     Array.from(rolesMetadata.values()).some((requires) => requires),
   );
 
+  // Determine if we need to show bank selector (role requires bank but none provided)
+  let showBankSelector = $derived(requiresBankId && !bankId);
+
+  // The effective bank_id to use (provided prop or selected)
+  let effectiveBankId = $derived(bankId || selectedBankId);
+
   async function handleRequestClick() {
     if (isSubmitting) return;
+
+    // Validate bank selection if required
+    if (showBankSelector && !selectedBankId) {
+      submitError = "Please select a bank for this role.";
+      return;
+    }
 
     isSubmitting = true;
     submitError = null;
@@ -54,7 +99,7 @@
         const requestBody: any = {
           role_name: role,
           // Always send bank_id - use empty string for system-wide roles
-          bank_id: bankId || "",
+          bank_id: effectiveBankId || "",
         };
 
         const response = await fetch("/api/rbac/entitlement-requests", {
@@ -87,62 +132,100 @@
   }
 </script>
 
-<div class="alert alert-missing-role">
-  <div class="alert-header">
+<div class="alert alert-missing-role" class:expanded={isExpanded}>
+  <button
+    type="button"
+    class="alert-header"
+    onclick={() => isExpanded = !isExpanded}
+  >
     <span class="alert-icon">🔒</span>
-    <strong>Missing Entitlement{roles.length > 1 ? "s" : ""}</strong>
+    <span class="alert-title">
+      <strong>Missing Entitlement{roles.length > 1 ? "s" : ""}:</strong>
+      <span class="role-preview">{roles.join(", ")}</span>
+    </span>
     {#if errorCode}
       <span class="error-code">OBP-{errorCode}</span>
     {/if}
-  </div>
+    <span class="expand-icon">{isExpanded ? "▼" : "▶"}</span>
+  </button>
 
-  <div class="entitlement-list">
-    {#each roles as role}
-      <div class="entitlement-name">{role}</div>
-    {/each}
-  </div>
+  {#if isExpanded}
+    <div class="alert-content">
+      <div class="entitlement-list">
+        {#each roles as role}
+          <div class="entitlement-name">{role}</div>
+        {/each}
+      </div>
 
-  {#if bankId}
-    <p class="bank-info">
-      <strong>Bank ID:</strong> <code class="bank-code">{bankId}</code>
-    </p>
-  {/if}
+      {#if bankId}
+        <p class="bank-info">
+          <strong>Bank ID:</strong> <code class="bank-code">{bankId}</code>
+        </p>
+      {/if}
 
-  {#if message}
-    <MessageBox {message} type="error" />
-  {/if}
+      {#if showBankSelector}
+        <div class="bank-selector">
+          <label for="bank-select" class="bank-label">
+            <strong>Select Bank:</strong>
+            <span class="required">*</span>
+            <span class="bank-hint">This role requires a bank to be selected</span>
+          </label>
+          {#if loadingBanks}
+            <div class="loading-banks">Loading banks...</div>
+          {:else if banks.length === 0}
+            <div class="no-banks">No banks available</div>
+          {:else}
+            <select
+              id="bank-select"
+              bind:value={selectedBankId}
+              class="bank-dropdown"
+            >
+              <option value="">-- Select a bank --</option>
+              {#each banks as bank}
+                <option value={bank.bank_id}>{bank.short_name} ({bank.bank_id})</option>
+              {/each}
+            </select>
+          {/if}
+        </div>
+      {/if}
 
-  {#if submitError}
-    <MessageBox message={submitError} type="error" />
-  {/if}
+      {#if message}
+        <MessageBox {message} type="error" />
+      {/if}
 
-  {#if submitSuccess}
-    <div class="submit-success">
-      ✅ Entitlement request{roles.length > 1 ? "s" : ""} submitted successfully!
-      Redirecting...
+      {#if submitError}
+        <MessageBox message={submitError} type="error" />
+      {/if}
+
+      {#if submitSuccess}
+        <div class="submit-success">
+          ✅ Entitlement request{roles.length > 1 ? "s" : ""} submitted successfully!
+          Redirecting...
+        </div>
+      {:else}
+        <div class="alert-actions">
+          <button
+            class="btn-request"
+            onclick={handleRequestClick}
+            disabled={isSubmitting}
+          >
+            {#if isSubmitting}
+              <span class="spinner">⏳</span>
+              Submitting...
+            {:else}
+              <ShieldCheck size={18} />
+              Request Entitlement
+            {/if}
+          </button>
+        </div>
+      {/if}
+
+      <div class="tip-box">
+        <strong>💡 Tip:</strong> If you have recently been granted this entitlement,
+        you should <strong>log out and log back in</strong> again.
+      </div>
     </div>
-  {:else}
-    <div class="alert-actions">
-      <button
-        class="btn-request"
-        onclick={handleRequestClick}
-        disabled={isSubmitting}
-      >
-        {#if isSubmitting}
-          <span class="spinner">⏳</span>
-          Submitting...
-        {:else}
-          <ShieldCheck size={18} />
-          Request Entitlement
-        {/if}
-      </button>
-    </div>
   {/if}
-
-  <div class="tip-box">
-    <strong>💡 Tip:</strong> If you have recently been granted this entitlement,
-    you should <strong>log out and log back in</strong> again.
-  </div>
 </div>
 
 <style>
@@ -155,7 +238,11 @@
     background: #fef3c7;
     border: 2px solid #f59e0b;
     color: #92400e;
-    padding: 1.5rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .alert-missing-role.expanded {
+    padding: 1rem 1.25rem;
   }
 
   :global([data-mode="dark"]) .alert-missing-role {
@@ -168,12 +255,72 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    font-size: 0.875rem;
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-align: left;
+    color: inherit;
+  }
+
+  .alert-header:hover {
+    opacity: 0.9;
+  }
+
+  .expanded .alert-header {
     margin-bottom: 0.75rem;
-    font-size: 1.125rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  :global([data-mode="dark"]) .expanded .alert-header {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .alert-title {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  .role-preview {
+    font-weight: normal;
+    font-size: 0.8125rem;
+    opacity: 0.9;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .expand-icon {
+    font-size: 0.75rem;
+    opacity: 0.7;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .alert-content {
+    animation: slideDown 0.2s ease-out;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .alert-icon {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
+    flex-shrink: 0;
   }
 
   .error-code {
@@ -326,5 +473,82 @@
   :global([data-mode="dark"]) .tip-box {
     background: rgba(59, 130, 246, 0.15);
     border-left-color: rgb(var(--color-primary-500));
+  }
+
+  .bank-selector {
+    margin: 1rem 0;
+    padding: 1rem;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 6px;
+  }
+
+  :global([data-mode="dark"]) .bank-selector {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.4);
+  }
+
+  .bank-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    color: #1e40af;
+  }
+
+  :global([data-mode="dark"]) .bank-label {
+    color: rgb(var(--color-primary-300));
+  }
+
+  .bank-hint {
+    display: block;
+    font-weight: normal;
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+  }
+
+  :global([data-mode="dark"]) .bank-hint {
+    color: rgb(var(--color-surface-400));
+  }
+
+  .required {
+    color: #dc2626;
+    margin-left: 0.25rem;
+  }
+
+  .bank-dropdown {
+    width: 100%;
+    padding: 0.625rem;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    border-radius: 4px;
+    font-size: 0.875rem;
+    background: white;
+    color: #1f2937;
+    cursor: pointer;
+  }
+
+  .bank-dropdown:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+
+  :global([data-mode="dark"]) .bank-dropdown {
+    background: rgb(var(--color-surface-800));
+    border-color: rgba(59, 130, 246, 0.5);
+    color: rgb(var(--color-surface-100));
+  }
+
+  .loading-banks,
+  .no-banks {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-style: italic;
+  }
+
+  :global([data-mode="dark"]) .loading-banks,
+  :global([data-mode="dark"]) .no-banks {
+    color: rgb(var(--color-surface-400));
   }
 </style>

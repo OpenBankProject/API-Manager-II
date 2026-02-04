@@ -77,14 +77,18 @@ export async function load(event: RequestEvent) {
   // Get user entitlements from session for role checking
   const userEntitlements = (session.data.user as any)?.entitlements?.list || [];
 
-  // Required roles for this page - checked one at a time by PageRoleCheck
+  // Required role to view this page
   const requiredRoles = [
     { role: "CanGetConsumers", action: "view consumer details" },
-    { role: "CanEnableConsumers", action: "enable or disable consumers" },
-    { role: "CanCreateScopeAtOneBank", action: "add scopes to consumers" },
-    { role: "CanDeleteScopeAtAnyBank", action: "delete scopes from consumers" },
-    { role: "CanUpdateConsumerRedirectUrl", action: "update consumer redirect URL" },
   ];
+
+  // Action-specific roles (checked when user attempts the action)
+  const actionRoles = {
+    enableDisable: { role: "CanEnableConsumers", action: "enable or disable consumers" },
+    addScope: { role: "CanCreateScopeAtOneBank", action: "add scopes to consumers" },
+    deleteScope: { role: "CanDeleteScopeAtAnyBank", action: "delete scopes from consumers" },
+    updateRedirectUrl: { role: "CanUpdateConsumerRedirectUrl", action: "update consumer redirect URL" },
+  };
 
   let consumer: Consumer | undefined = undefined;
   let scopes: Scope[] = [];
@@ -156,6 +160,7 @@ export async function load(event: RequestEvent) {
     banks,
     userEntitlements,
     requiredRoles,
+    actionRoles,
   };
 }
 

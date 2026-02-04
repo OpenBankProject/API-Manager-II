@@ -286,7 +286,7 @@ function buildDynamicEntitiesItems(): NavigationItem[] {
   const items: NavigationItem[] = [
     {
       href: "/dynamic-entities/system",
-      label: "System Dynamic Entities",
+      label: "System",
       iconComponent: Settings,
     },
     {

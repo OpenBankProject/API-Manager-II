@@ -42,6 +42,7 @@
   let countdown = $state(5);
   let isCountingDown = $state(false);
   let timestampColorIndex = $state(0);
+  let showUrl = $state(false);
 
   // Configuration information
   let obpInfo = $derived(configHelpers.getObpConnectionInfo());
@@ -380,29 +381,39 @@
 
   <!-- Panel 2: API Metrics Results -->
   <div class="panel full-width-panel">
-    <div class="panel-header">
-      <h2 class="panel-title">API Metrics Results</h2>
-      <div class="panel-subtitle">
-        URL: {obpInfo.baseUrl}/obp/v6.0.0/management/metrics?{currentQueryString}
-        <br />
-        Last updated:
-        <span class="timestamp-color-{timestampColorIndex}"
-          >{lastRefreshTime}</span
-        >
-        •
-        {#if isCountingDown}
-          <span class="countdown">Refreshing in {countdown}s</span>
-        {:else}
-          <span class="countdown-idle">Next refresh in {countdown}s</span>
-        {/if}
+    <div class="panel-header-compact">
+      <div class="panel-header-row">
+        <h2 class="panel-title">API Metrics Results</h2>
+        <div class="panel-meta">
+          <button
+            class="url-toggle"
+            onclick={() => showUrl = !showUrl}
+            title={showUrl ? "Hide URL" : "Show URL"}
+          >
+            {showUrl ? "▼" : "▶"} URL
+          </button>
+          <span class="meta-separator">•</span>
+          <span class="timestamp-color-{timestampColorIndex}">{lastRefreshTime}</span>
+          <span class="meta-separator">•</span>
+          {#if isCountingDown}
+            <span class="countdown">{countdown}s</span>
+          {:else}
+            <span class="countdown-idle">{countdown}s</span>
+          {/if}
+          <button
+            class="refresh-btn-inline"
+            onclick={refreshMetrics}
+            title="Manual refresh"
+          >
+            🔄
+          </button>
+        </div>
       </div>
-      <button
-        class="refresh-btn"
-        on:click={refreshMetrics}
-        title="Manual refresh"
-      >
-        🔄
-      </button>
+      {#if showUrl}
+        <div class="url-display">
+          <code>{obpInfo.baseUrl}/obp/v6.0.0/management/metrics?{currentQueryString}</code>
+        </div>
+      {/if}
     </div>
 
     <div class="panel-content">
@@ -610,6 +621,106 @@
   :global([data-mode="dark"]) .panel-header {
     background: var(--color-surface-800);
     border-color: var(--color-surface-700);
+  }
+
+  .panel-header-compact {
+    background: var(--color-surface-100);
+    border-bottom: 1px solid var(--color-surface-300);
+    padding: 0.75rem 1.5rem;
+  }
+
+  :global([data-mode="dark"]) .panel-header-compact {
+    background: var(--color-surface-800);
+    border-color: var(--color-surface-700);
+  }
+
+  .panel-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .panel-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--color-surface-600);
+  }
+
+  :global([data-mode="dark"]) .panel-meta {
+    color: var(--color-surface-400);
+  }
+
+  .meta-separator {
+    color: var(--color-surface-400);
+  }
+
+  :global([data-mode="dark"]) .meta-separator {
+    color: var(--color-surface-600);
+  }
+
+  .url-toggle {
+    background: none;
+    border: 1px solid var(--color-surface-300);
+    border-radius: 4px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    color: var(--color-surface-600);
+    transition: all 0.2s;
+  }
+
+  :global([data-mode="dark"]) .url-toggle {
+    border-color: var(--color-surface-600);
+    color: var(--color-surface-400);
+  }
+
+  .url-toggle:hover {
+    background: var(--color-surface-200);
+    color: var(--color-surface-800);
+  }
+
+  :global([data-mode="dark"]) .url-toggle:hover {
+    background: var(--color-surface-700);
+    color: var(--color-surface-200);
+  }
+
+  .url-display {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background: var(--color-surface-200);
+    border-radius: 4px;
+    overflow-x: auto;
+  }
+
+  :global([data-mode="dark"]) .url-display {
+    background: var(--color-surface-900);
+  }
+
+  .url-display code {
+    font-size: 0.75rem;
+    color: var(--color-surface-700);
+    word-break: break-all;
+  }
+
+  :global([data-mode="dark"]) .url-display code {
+    color: var(--color-surface-300);
+  }
+
+  .refresh-btn-inline {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.25rem;
+    transition: transform 0.2s;
+  }
+
+  .refresh-btn-inline:hover {
+    transform: rotate(180deg);
   }
 
   .panel-title {
