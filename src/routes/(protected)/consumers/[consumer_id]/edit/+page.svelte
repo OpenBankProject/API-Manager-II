@@ -1,6 +1,7 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
   import { invalidateAll } from "$app/navigation";
+  import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
 
   let { data, form } = $props();
 
@@ -8,6 +9,8 @@
   let scopes = $derived(data.scopes || []);
   let availableRoles = $derived(data.availableRoles || []);
   let banks = $derived(data.banks || []);
+  const userEntitlements = data.userEntitlements || [];
+  const requiredRoles = data.requiredRoles || [];
 
   let isSubmitting = $state(false);
   let selectedRole = $state("");
@@ -57,6 +60,7 @@
   <title>Edit Consumer - {consumer.app_name}</title>
 </svelte:head>
 
+<PageRoleCheck {userEntitlements} {requiredRoles}>
 <div class="mb-6">
   <a
     href="/consumers"
@@ -616,3 +620,4 @@
     Manage Rate Limits
   </a>
 </div>
+</PageRoleCheck>

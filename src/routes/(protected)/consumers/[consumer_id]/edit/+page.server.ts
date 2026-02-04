@@ -61,6 +61,18 @@ export async function load(event: RequestEvent) {
     throw error(400, "Consumer ID is required.");
   }
 
+  // Get user entitlements from session for role checking
+  const userEntitlements = (session.data.user as any)?.entitlements?.list || [];
+
+  // Required roles for this page - checked one at a time by PageRoleCheck
+  const requiredRoles = [
+    { role: "CanGetConsumers", action: "view consumer details" },
+    { role: "CanEnableConsumers", action: "enable or disable consumers" },
+    { role: "CanCreateScopeAtOneBank", action: "add scopes to consumers" },
+    { role: "CanDeleteScopeAtAnyBank", action: "delete scopes from consumers" },
+    { role: "CanUpdateConsumerRedirectUrl", action: "update consumer redirect URL" },
+  ];
+
   let consumer: Consumer | undefined = undefined;
   let scopes: Scope[] = [];
   let availableRoles: Role[] = [];
@@ -129,6 +141,8 @@ export async function load(event: RequestEvent) {
     scopes,
     availableRoles,
     banks,
+    userEntitlements,
+    requiredRoles,
   };
 }
 

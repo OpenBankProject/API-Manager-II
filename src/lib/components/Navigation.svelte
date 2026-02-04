@@ -60,16 +60,40 @@
               },
             ],
           },
+          {
+            label: "Dynamic Endpoints",
+            icon: "🔌",
+            available: true,
+            subItems: [
+              {
+                href: "/dynamic-endpoints/system",
+                label: "System Dynamic Endpoints",
+                icon: "⚙️",
+              },
+              {
+                href: "/dynamic-endpoints/bank",
+                label: "Bank Dynamic Endpoints",
+                icon: "🏦",
+              },
+            ],
+          },
         ].filter((item) => item.available)
       : [],
   );
 
   // Reactive check for active route
-  function isActiveRoute(href: string): boolean {
+  function isActiveRoute(href: string | undefined): boolean {
+    if (!href) return false;
     if (href === "/") {
       return $page.url.pathname === "/";
     }
     return $page.url.pathname.startsWith(href);
+  }
+
+  // Check if any sub-item of a dropdown is active
+  function isDropdownActive(subItems: Array<{ href: string }> | undefined): boolean {
+    if (!subItems) return false;
+    return subItems.some((subItem) => isActiveRoute(subItem.href));
   }
 
   // Event handlers with better encapsulation
@@ -135,7 +159,7 @@
             <div class="nav-dropdown">
               <button
                 class="nav-link dropdown-toggle"
-                class:active={isActiveRoute(item.href)}
+                class:active={isDropdownActive(item.subItems)}
                 onclick={() => handlers.toggleDropdown(item.label)}
                 onblur={() => setTimeout(handlers.closeDropdown, 200)}
               >
@@ -239,7 +263,7 @@
               <div class="mobile-nav-dropdown">
                 <button
                   class="mobile-nav-link"
-                  class:active={isActiveRoute(item.href)}
+                  class:active={isDropdownActive(item.subItems)}
                   onclick={() => handlers.toggleDropdown(item.label)}
                 >
                   <span class="nav-icon">{item.icon}</span>

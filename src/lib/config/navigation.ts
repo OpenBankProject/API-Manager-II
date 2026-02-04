@@ -24,6 +24,7 @@ import {
   Waves,
   FolderOpen,
   Star,
+  Plug,
 } from "@lucide/svelte";
 import { env } from "$env/dynamic/public";
 
@@ -310,6 +311,38 @@ export function getActiveDynamicEntitiesMenuItem(pathname: string) {
   });
 
   return found || dynamicEntitiesItems[0]; // fallback to first item
+}
+
+// Dynamic Endpoints navigation items
+function buildDynamicEndpointsItems(): NavigationItem[] {
+  const items: NavigationItem[] = [
+    {
+      href: "/dynamic-endpoints/system",
+      label: "System Dynamic Endpoints",
+      iconComponent: Plug,
+    },
+    {
+      href: "/dynamic-endpoints/bank",
+      label: "Bank Dynamic Endpoints",
+      iconComponent: Building2,
+    },
+  ];
+
+  return items;
+}
+
+export const dynamicEndpointsItems = buildDynamicEndpointsItems();
+
+export function getActiveDynamicEndpointsMenuItem(pathname: string) {
+  const found = dynamicEndpointsItems.find((item) => {
+    // Skip external links for active menu detection
+    if (item.external) {
+      return false;
+    }
+    return pathname.startsWith(item.href);
+  });
+
+  return found || dynamicEndpointsItems[0]; // fallback to first item
 }
 
 // ABAC navigation items
