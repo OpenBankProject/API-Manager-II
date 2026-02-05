@@ -26,6 +26,7 @@ import {
   Star,
   Plug,
   Package,
+  CircleHelp,
 } from "@lucide/svelte";
 import { env } from "$env/dynamic/public";
 
@@ -362,12 +363,13 @@ export function getActiveDynamicEndpointsMenuItem(pathname: string) {
 // Products navigation items
 function buildProductsItems(): NavigationItem[] {
   const items: NavigationItem[] = [
-    { href: "/products", label: "Products", iconComponent: Package },
+    { href: "/products", label: "API Products", iconComponent: Package },
     {
       href: "/products/collections",
       label: "Product Collections",
       iconComponent: FolderOpen,
     },
+    { href: "/products/help", label: "Help", iconComponent: CircleHelp },
   ];
 
   return items;

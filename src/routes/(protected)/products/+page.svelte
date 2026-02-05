@@ -90,7 +90,7 @@
 </script>
 
 <svelte:head>
-  <title>Products - API Manager</title>
+  <title>API Products - API Manager</title>
 </svelte:head>
 
 <div class="container mx-auto px-4 py-8">
@@ -98,33 +98,31 @@
   <div class="mb-6 flex items-center justify-between">
     <div>
       <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-        Products
+        API Products
       </h1>
       <p class="mt-1 text-gray-600 dark:text-gray-400">
-        Manage bank financial products that TPPs can subscribe to
+        Manage API products that TPPs can subscribe to
       </p>
     </div>
-    {#if selectedBankId}
-      <a
-        href="/products/create?bank_id={selectedBankId}"
-        class="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+    <a
+      href="/products/create{selectedBankId ? `?bank_id=${selectedBankId}` : ''}"
+      class="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+    >
+      <svg
+        class="mr-2 h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
       >
-        <svg
-          class="mr-2 h-4 w-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 4v16m8-8H4"
-          />
-        </svg>
-        Create Product
-      </a>
-    {/if}
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M12 4v16m8-8H4"
+        />
+      </svg>
+      Create an API Product
+    </a>
   </div>
 
   <!-- Bank Selector -->
