@@ -13,6 +13,8 @@
   const userEntitlements = data.userEntitlements || [];
   const requiredRoles = data.requiredRoles || [];
   const actionRoles = data.actionRoles || {};
+  const isCurrentConsumer = data.isCurrentConsumer || false;
+  const rateLimitingInfo = data.rateLimitingInfo;
 
   // Helper to check if user has a specific role
   function hasRole(roleName: string): boolean {
@@ -98,7 +100,7 @@
 </script>
 
 <svelte:head>
-  <title>Edit Consumer - {consumer.app_name}</title>
+  <title>{consumer.app_name} - Detail</title>
 </svelte:head>
 
 <PageRoleCheck {userEntitlements} {requiredRoles}>
@@ -111,13 +113,19 @@
   </a>
 </div>
 
-<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-  Edit Consumer
+<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+  {consumer.app_name} - Detail
 </h1>
 
-<p class="mb-6 text-gray-600 dark:text-gray-400">
-  Manage settings and scopes for <strong>{consumer.app_name}</strong>
-</p>
+{#if isCurrentConsumer}
+  <div class="mb-6 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 dark:border-blue-800 dark:bg-blue-900/20">
+    <div class="flex items-center gap-2">
+      <span class="text-blue-600 dark:text-blue-400">ℹ️</span>
+      <span class="text-sm font-medium text-blue-800 dark:text-blue-200">This is the current consumer</span>
+      <span class="text-xs text-blue-600 dark:text-blue-400">— the app you are using to access the API right now</span>
+    </div>
+  </div>
+{/if}
 
 <!-- Error/Success Messages -->
 {#if form?.error}
@@ -168,18 +176,18 @@
   </div>
 {/if}
 
-<!-- Consumer Details Section -->
+<!-- Consumer / Client Section -->
 <div class="mb-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
   <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-    Consumer Details
+    Consumer / Client
   </h2>
 
   <!-- Editable fields in 2-column grid -->
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-4 pb-4 border-b border-gray-100 dark:border-gray-700">
-    <!-- App Name (Editable) -->
+    <!-- Name (Editable) -->
     <div>
       <div class="flex items-center justify-between">
-        <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">App Name</label>
+        <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Name</label>
         {#if editingField !== "name"}
           <button
             type="button"
@@ -481,68 +489,88 @@
   <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
     API Call Counters
   </h2>
-  <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
-    Current API usage for this consumer (from Redis).
+  <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+    Current API usage for this consumer.
   </p>
+  {#if rateLimitingInfo}
+    <p class="mb-4 text-[11px] text-gray-400 dark:text-gray-500">
+      Rate limiting: {rateLimitingInfo.enabled ? 'enabled' : 'disabled'}
+      {#if rateLimitingInfo.enabled}
+        • {rateLimitingInfo.is_active ? 'active' : 'inactive'}
+        {#if rateLimitingInfo.technology}
+          • backend: {rateLimitingInfo.technology}
+        {/if}
+        {#if rateLimitingInfo.service_available !== undefined}
+          • service: {rateLimitingInfo.service_available ? 'available' : 'unavailable'}
+        {/if}
+      {/if}
+    </p>
+  {/if}
   <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
     <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-900/50">
       <div class="text-xs font-medium text-gray-500 dark:text-gray-400">Per Second</div>
       {#if consumer.call_counters?.per_second && typeof consumer.call_counters.per_second.calls_made === 'number'}
         <div class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100">{consumer.call_counters.per_second.calls_made}</div>
-        <div class="text-xs text-gray-500 dark:text-gray-400">resets in {consumer.call_counters.per_second.reset_in_seconds}s</div>
+        <div class="text-[10px] text-gray-400 dark:text-gray-500">resets: {consumer.call_counters.per_second.reset_in_seconds}s</div>
+        <div class="text-[10px] text-gray-400 dark:text-gray-500">{consumer.call_counters.per_second.status || ''}</div>
       {:else}
         <div class="mt-1 text-lg font-semibold text-red-600 dark:text-red-400">Err</div>
-        <div class="text-xs text-gray-500 dark:text-gray-400">unavailable</div>
+        <div class="text-[10px] text-gray-400 dark:text-gray-500">unavailable</div>
       {/if}
     </div>
     <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-900/50">
       <div class="text-xs font-medium text-gray-500 dark:text-gray-400">Per Minute</div>
       {#if consumer.call_counters?.per_minute && typeof consumer.call_counters.per_minute.calls_made === 'number'}
         <div class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100">{consumer.call_counters.per_minute.calls_made}</div>
-        <div class="text-xs text-gray-500 dark:text-gray-400">resets in {consumer.call_counters.per_minute.reset_in_seconds}s</div>
+        <div class="text-[10px] text-gray-400 dark:text-gray-500">resets: {consumer.call_counters.per_minute.reset_in_seconds}s</div>
+        <div class="text-[10px] text-gray-400 dark:text-gray-500">{consumer.call_counters.per_minute.status || ''}</div>
       {:else}
         <div class="mt-1 text-lg font-semibold text-red-600 dark:text-red-400">Err</div>
-        <div class="text-xs text-gray-500 dark:text-gray-400">unavailable</div>
+        <div class="text-[10px] text-gray-400 dark:text-gray-500">unavailable</div>
       {/if}
     </div>
     <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-900/50">
       <div class="text-xs font-medium text-gray-500 dark:text-gray-400">Per Hour</div>
       {#if consumer.call_counters?.per_hour && typeof consumer.call_counters.per_hour.calls_made === 'number'}
         <div class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100">{consumer.call_counters.per_hour.calls_made}</div>
-        <div class="text-xs text-gray-500 dark:text-gray-400">resets in {consumer.call_counters.per_hour.reset_in_seconds}s</div>
+        <div class="text-[10px] text-gray-400 dark:text-gray-500">resets: {consumer.call_counters.per_hour.reset_in_seconds}s</div>
+        <div class="text-[10px] text-gray-400 dark:text-gray-500">{consumer.call_counters.per_hour.status || ''}</div>
       {:else}
         <div class="mt-1 text-lg font-semibold text-red-600 dark:text-red-400">Err</div>
-        <div class="text-xs text-gray-500 dark:text-gray-400">unavailable</div>
+        <div class="text-[10px] text-gray-400 dark:text-gray-500">unavailable</div>
       {/if}
     </div>
     <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-900/50">
       <div class="text-xs font-medium text-gray-500 dark:text-gray-400">Per Day</div>
       {#if consumer.call_counters?.per_day && typeof consumer.call_counters.per_day.calls_made === 'number'}
         <div class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100">{consumer.call_counters.per_day.calls_made}</div>
-        <div class="text-xs text-gray-500 dark:text-gray-400">resets in {consumer.call_counters.per_day.reset_in_seconds}s</div>
+        <div class="text-[10px] text-gray-400 dark:text-gray-500">resets: {consumer.call_counters.per_day.reset_in_seconds}s</div>
+        <div class="text-[10px] text-gray-400 dark:text-gray-500">{consumer.call_counters.per_day.status || ''}</div>
       {:else}
         <div class="mt-1 text-lg font-semibold text-red-600 dark:text-red-400">Err</div>
-        <div class="text-xs text-gray-500 dark:text-gray-400">unavailable</div>
+        <div class="text-[10px] text-gray-400 dark:text-gray-500">unavailable</div>
       {/if}
     </div>
     <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-900/50">
       <div class="text-xs font-medium text-gray-500 dark:text-gray-400">Per Week</div>
       {#if consumer.call_counters?.per_week && typeof consumer.call_counters.per_week.calls_made === 'number'}
         <div class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100">{consumer.call_counters.per_week.calls_made}</div>
-        <div class="text-xs text-gray-500 dark:text-gray-400">resets in {consumer.call_counters.per_week.reset_in_seconds}s</div>
+        <div class="text-[10px] text-gray-400 dark:text-gray-500">resets: {consumer.call_counters.per_week.reset_in_seconds}s</div>
+        <div class="text-[10px] text-gray-400 dark:text-gray-500">{consumer.call_counters.per_week.status || ''}</div>
       {:else}
         <div class="mt-1 text-lg font-semibold text-red-600 dark:text-red-400">Err</div>
-        <div class="text-xs text-gray-500 dark:text-gray-400">unavailable</div>
+        <div class="text-[10px] text-gray-400 dark:text-gray-500">unavailable</div>
       {/if}
     </div>
     <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-900/50">
       <div class="text-xs font-medium text-gray-500 dark:text-gray-400">Per Month</div>
       {#if consumer.call_counters?.per_month && typeof consumer.call_counters.per_month.calls_made === 'number'}
         <div class="mt-1 text-lg font-semibold text-gray-900 dark:text-gray-100">{consumer.call_counters.per_month.calls_made}</div>
-        <div class="text-xs text-gray-500 dark:text-gray-400">resets in {consumer.call_counters.per_month.reset_in_seconds}s</div>
+        <div class="text-[10px] text-gray-400 dark:text-gray-500">resets: {consumer.call_counters.per_month.reset_in_seconds}s</div>
+        <div class="text-[10px] text-gray-400 dark:text-gray-500">{consumer.call_counters.per_month.status || ''}</div>
       {:else}
         <div class="mt-1 text-lg font-semibold text-red-600 dark:text-red-400">Err</div>
-        <div class="text-xs text-gray-500 dark:text-gray-400">unavailable</div>
+        <div class="text-[10px] text-gray-400 dark:text-gray-500">unavailable</div>
       {/if}
     </div>
   </div>

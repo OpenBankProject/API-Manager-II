@@ -10,6 +10,7 @@ const logger = createLogger("EditConsumerServer");
 interface CallCounter {
   calls_made: number;
   reset_in_seconds: number;
+  status?: string;
 }
 
 interface Consumer {
@@ -94,6 +95,13 @@ export async function load(event: RequestEvent) {
   let scopes: Scope[] = [];
   let availableRoles: Role[] = [];
   let banks: Array<{ bank_id: string; short_name: string }> = [];
+  let isCurrentConsumer = false;
+  let rateLimitingInfo: {
+    enabled?: boolean;
+    is_active?: boolean;
+    technology?: string;
+    service_available?: boolean;
+  } | null = null;
 
   // Fetch consumer details
   try {
@@ -109,6 +117,31 @@ export async function load(event: RequestEvent) {
 
   if (!consumer) {
     throw error(404, "Consumer not found.");
+  }
+
+  // Check if this is the current consumer (the one being used for this session)
+  try {
+    const currentConsumer = await obp_requests.get(
+      `/obp/v6.0.0/consumers/current`,
+      token,
+    );
+    isCurrentConsumer = currentConsumer?.consumer_id === consumerId;
+    logger.debug(`Is current consumer: ${isCurrentConsumer}`);
+  } catch (e) {
+    logger.error("Error fetching current consumer:", e);
+    // Non-fatal - continue without this info
+  }
+
+  // Fetch rate limiting info
+  try {
+    rateLimitingInfo = await obp_requests.get(
+      `/obp/v6.0.0/rate-limiting`,
+      token,
+    );
+    logger.debug(`Rate limiting info: enabled=${rateLimitingInfo?.enabled}, active=${rateLimitingInfo?.is_active}`);
+  } catch (e) {
+    logger.error("Error fetching rate limiting info:", e);
+    // Non-fatal - continue without this info
   }
 
   // Fetch scopes for this consumer
@@ -161,6 +194,8 @@ export async function load(event: RequestEvent) {
     userEntitlements,
     requiredRoles,
     actionRoles,
+    isCurrentConsumer,
+    rateLimitingInfo,
   };
 }
 

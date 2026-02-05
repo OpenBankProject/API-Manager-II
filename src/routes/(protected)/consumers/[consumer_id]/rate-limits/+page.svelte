@@ -287,6 +287,8 @@
         {formatUsageValue(callCounters, "per_second")}
         {#if activeRateLimits && activeRateLimits.active_per_second_rate_limit > 0}
           / {formatNumber(activeRateLimits.active_per_second_rate_limit)}
+        {:else}
+          / <span class="text-gray-500 dark:text-gray-400">Unlimited</span>
         {/if}
       </div>
     </div>
@@ -300,6 +302,8 @@
         {formatUsageValue(callCounters, "per_minute")}
         {#if activeRateLimits && activeRateLimits.active_per_minute_rate_limit > 0}
           / {formatNumber(activeRateLimits.active_per_minute_rate_limit)}
+        {:else}
+          / <span class="text-gray-500 dark:text-gray-400">Unlimited</span>
         {/if}
       </div>
     </div>
@@ -311,6 +315,8 @@
         {formatUsageValue(callCounters, "per_hour")}
         {#if activeRateLimits && activeRateLimits.active_per_hour_rate_limit > 0}
           / {formatNumber(activeRateLimits.active_per_hour_rate_limit)}
+        {:else}
+          / <span class="text-gray-500 dark:text-gray-400">Unlimited</span>
         {/if}
       </div>
     </div>
@@ -322,6 +328,8 @@
         {formatUsageValue(callCounters, "per_day")}
         {#if activeRateLimits && activeRateLimits.active_per_day_rate_limit > 0}
           / {formatNumber(activeRateLimits.active_per_day_rate_limit)}
+        {:else}
+          / <span class="text-gray-500 dark:text-gray-400">Unlimited</span>
         {/if}
       </div>
     </div>
@@ -333,6 +341,8 @@
         {formatUsageValue(callCounters, "per_week")}
         {#if activeRateLimits && activeRateLimits.active_per_week_rate_limit > 0}
           / {formatNumber(activeRateLimits.active_per_week_rate_limit)}
+        {:else}
+          / <span class="text-gray-500 dark:text-gray-400">Unlimited</span>
         {/if}
       </div>
     </div>
@@ -344,6 +354,8 @@
         {formatUsageValue(callCounters, "per_month")}
         {#if activeRateLimits && activeRateLimits.active_per_month_rate_limit > 0}
           / {formatNumber(activeRateLimits.active_per_month_rate_limit)}
+        {:else}
+          / <span class="text-gray-500 dark:text-gray-400">Unlimited</span>
         {/if}
       </div>
     </div>
