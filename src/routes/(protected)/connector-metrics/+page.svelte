@@ -3,6 +3,7 @@
   import { configHelpers } from "$lib/config";
   import { trackedFetch } from "$lib/utils/trackedFetch";
   import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
+  import { checkRoles } from "$lib/utils/roleChecker";
 
   interface ConnectorMetric {
     connector_name: string;
@@ -13,8 +14,14 @@
   }
 
   let { data } = $props();
-  const userEntitlements = data.userEntitlements || [];
-  const requiredRoles = data.requiredRoles || [];
+
+  // Make these reactive so PageRoleCheck updates properly
+  let userEntitlements = $derived(data.userEntitlements || []);
+  let requiredRoles = $derived(data.requiredRoles || []);
+
+  // Check if user has required roles (for PageRoleCheck component)
+  let roleCheck = $derived(checkRoles(userEntitlements, requiredRoles));
+  let hasRequiredRoles = $derived(roleCheck.hasAllRoles);
 
   const apiExplorerUrl =
     $page.data.externalLinks?.API_EXPLORER_URL ||
@@ -34,8 +41,8 @@
   let showRawJson = $state(false);
 
   // Auto refresh
-  let autoRefresh = $state("5");
-  let countdown = $state(5);
+  let autoRefresh = $state("60");
+  let countdown = $state(60);
   let countdownInterval: number | undefined = undefined;
   let timeUpdateInterval: number | undefined = undefined;
   let currentTimeUTC = $state(new Date().toISOString().replace("T", " ").slice(0, 19));
@@ -248,7 +255,13 @@
   let initialized = $state(false);
 
   $effect(() => {
-    if (typeof window !== "undefined" && !initialized) {
+    // Check roles directly in effect to avoid timing issues
+    const roles = data.requiredRoles || [];
+    const entitlements = data.userEntitlements || [];
+    const check = checkRoles(entitlements, roles);
+
+    // Only fetch data if user has required roles
+    if (typeof window !== "undefined" && !initialized && check.hasAllRoles) {
       initialized = true;
 
       // Set default from_date to 5 minutes ago

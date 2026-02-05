@@ -25,6 +25,7 @@ import {
   FolderOpen,
   Star,
   Plug,
+  Package,
 } from "@lucide/svelte";
 import { env } from "$env/dynamic/public";
 
@@ -348,6 +349,33 @@ export function getActiveDynamicEndpointsMenuItem(pathname: string) {
   });
 
   return found || dynamicEndpointsItems[0]; // fallback to first item
+}
+
+// Products navigation items
+function buildProductsItems(): NavigationItem[] {
+  const items: NavigationItem[] = [
+    { href: "/products", label: "Products", iconComponent: Package },
+    {
+      href: "/products/collections",
+      label: "Product Collections",
+      iconComponent: FolderOpen,
+    },
+  ];
+
+  return items;
+}
+
+export const productsItems = buildProductsItems();
+
+export function getActiveProductsMenuItem(pathname: string) {
+  const found = productsItems.find((item) => {
+    if (item.external) {
+      return false;
+    }
+    return pathname.startsWith(item.href);
+  });
+
+  return found || productsItems[0];
 }
 
 // ABAC navigation items

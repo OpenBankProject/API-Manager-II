@@ -11,6 +11,7 @@
     accountAccessItems,
     dynamicEntitiesItems,
     dynamicEndpointsItems,
+    productsItems,
     abacItems,
   } from "$lib/config/navigation";
   import Toast from "$lib/components/Toast.svelte";
@@ -49,6 +50,7 @@
     Database,
     Box,
     Lock,
+    Package,
   } from "@lucide/svelte";
 
   import { env } from "$env/dynamic/public";
@@ -73,6 +75,7 @@
   let isAccountAccessExpanded = $state(false);
   let isDynamicEntitiesExpanded = $state(false);
   let isDynamicEndpointsExpanded = $state(false);
+  let isProductsExpanded = $state(false);
   let isAbacExpanded = $state(false);
   let displayMode: "dark" | "light" = $state("dark");
   let systemDynamicEntities = $state<any[]>([]);
@@ -185,6 +188,10 @@
     page.url.pathname === "/dynamic-endpoints" ||
       page.url.pathname.startsWith("/dynamic-endpoints/"),
   );
+  let isProductsActive = $derived(
+    page.url.pathname === "/products" ||
+      page.url.pathname.startsWith("/products/"),
+  );
   let isAbacActive = $derived(
     page.url.pathname === "/abac" || page.url.pathname.startsWith("/abac/"),
   );
@@ -221,6 +228,9 @@
     }
     if (isDynamicEndpointsActive) {
       isDynamicEndpointsExpanded = true;
+    }
+    if (isProductsActive) {
+      isProductsExpanded = true;
     }
     if (isAbacActive) {
       isAbacExpanded = true;
@@ -271,6 +281,10 @@
 
   function toggleDynamicEndpoints() {
     isDynamicEndpointsExpanded = !isDynamicEndpointsExpanded;
+  }
+
+  function toggleProducts() {
+    isProductsExpanded = !isProductsExpanded;
   }
 
   function toggleAbac() {
@@ -619,6 +633,48 @@
                     aria-label={subItem.label}
                     target={subItem.external ? "_blank" : undefined}
                     rel={subItem.external ? "noopener noreferrer" : undefined}
+                  >
+                    <Icon class="size-4" />
+                    <span>{subItem.label}</span>
+                  </a>
+                {/each}
+              </Navigation.Menu>
+            {/if}
+          </Navigation.Group>
+
+          <!-- Products Group -->
+          <Navigation.Group>
+            <button
+              type="button"
+              class="btn w-full justify-start gap-3 px-2 hover:preset-tonal"
+              class:preset-filled-primary-50-950={isProductsActive}
+              class:border={isProductsActive}
+              class:border-solid-secondary-500={isProductsActive}
+              onclick={toggleProducts}
+            >
+              <Package class="size-5" />
+              <span>Products</span>
+              {#if isProductsExpanded}
+                <ChevronDown class="h-4 w-4" />
+              {:else}
+                <ChevronRight class="h-4 w-4" />
+              {/if}
+            </button>
+
+            {#if isProductsExpanded}
+              <Navigation.Menu class="mt-1 ml-4 flex flex-col gap-1 px-2">
+                {#each productsItems as subItem}
+                  {@const Icon = subItem.iconComponent}
+                  <a
+                    href={subItem.href}
+                    class="btn w-full justify-start gap-3 px-2 pl-6 text-sm hover:preset-tonal"
+                    class:preset-filled-secondary-50-950={page.url.pathname ===
+                      subItem.href}
+                    class:border-l-2={page.url.pathname === subItem.href}
+                    class:border-primary-500={page.url.pathname ===
+                      subItem.href}
+                    title={subItem.label}
+                    aria-label={subItem.label}
                   >
                     <Icon class="size-4" />
                     <span>{subItem.label}</span>

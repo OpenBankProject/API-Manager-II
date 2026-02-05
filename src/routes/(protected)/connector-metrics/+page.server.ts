@@ -13,7 +13,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 
   // Get user entitlements from session for role checking
   const userEntitlements = (session.data.user as any)?.entitlements?.list || [];
-  const requiredRoles = [{ role: "CanGetConnectorMetrics" }];
+  const requiredRoles = [
+    {
+      role: "CanGetConnectorMetrics",
+      description: "View connector metrics",
+      action: "view connector metrics",
+    },
+  ];
 
   return {
     userEntitlements,

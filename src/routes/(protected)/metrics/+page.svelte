@@ -1,11 +1,30 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { invalidate } from "$app/navigation";
+  import { page } from "$app/stores";
   import type { PageData } from "./$types";
   import { configHelpers } from "$lib/config";
   import MetricsQueryForm from "$lib/components/metrics/MetricsQueryForm.svelte";
 
   let { data } = $props<{ data: PageData }>();
+
+  // API Explorer URL for linking operation IDs
+  const apiExplorerUrl = $page.data.externalLinks?.API_EXPLORER_URL || "https://apiexplorer-ii-sandbox.openbankproject.com";
+
+  function getOperationId(metric: any): string {
+    const version = metric.implemented_in_version || "";
+    const partialFunction = metric.implemented_by_partial_function || "";
+    if (version && partialFunction) {
+      return `OBP${version}-${partialFunction}`;
+    }
+    return partialFunction || "N/A";
+  }
+
+  function getApiExplorerLink(metric: any): string {
+    const operationId = getOperationId(metric);
+    if (operationId === "N/A") return "";
+    return `${apiExplorerUrl}/resource-docs/OBPv6.0.0?operationid=${operationId}`;
+  }
 
   let metrics = $derived(data.metrics);
   let hasApiAccess = $derived(data.hasApiAccess);
@@ -429,17 +448,15 @@
                   <th>Date</th>
                   <th>User</th>
                   <th>App</th>
-                  <th>Version</th>
-                  <th>Partial Function</th>
+                  <th>Operation ID</th>
                   <th>Method</th>
-                  <th>Endpoint</th>
                   <th>Duration</th>
                   <th>Correlation ID</th>
                 </tr>
               </thead>
               <tbody>
                 {#each metrics.metrics as metric}
-                  <tr>
+                  <tr class="metric-row-main">
                     <td class="date-cell">
                       {formatDate(metric.date)}
                     </td>
@@ -449,11 +466,20 @@
                     <td class="app-cell">
                       {metric.app_name || "Unknown"}
                     </td>
-                    <td class="version-cell">
-                      {metric.implemented_in_version || "N/A"}
-                    </td>
-                    <td class="partial-function-cell">
-                      {metric.implemented_by_partial_function || "N/A"}
+                    <td class="operation-id-cell">
+                      {#if getApiExplorerLink(metric)}
+                        <a
+                          href={getApiExplorerLink(metric)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="operation-id-link"
+                          title="View in API Explorer"
+                        >
+                          <code class="operation-id">{getOperationId(metric)}</code>
+                        </a>
+                      {:else}
+                        <code class="operation-id">{getOperationId(metric)}</code>
+                      {/if}
                     </td>
                     <td class="method-cell">
                       <span
@@ -461,9 +487,6 @@
                       >
                         {metric.verb}
                       </span>
-                    </td>
-                    <td class="endpoint-cell">
-                      <code class="endpoint-path">{metric.url}</code>
                     </td>
                     <td class="duration-cell">
                       <span
@@ -480,6 +503,11 @@
                       <code class="correlation-id"
                         >{metric.correlation_id || "N/A"}</code
                       >
+                    </td>
+                  </tr>
+                  <tr class="metric-row-endpoint">
+                    <td colspan="7" class="endpoint-cell-full">
+                      <code class="endpoint-path">{metric.url}</code>
                     </td>
                   </tr>
                 {/each}
@@ -809,13 +837,7 @@
     border-color: var(--color-surface-800);
   }
 
-  .metrics-table tr:hover {
-    background: var(--color-surface-100);
-  }
-
-  :global([data-mode="dark"]) .metrics-table tr:hover {
-    background: var(--color-surface-800);
-  }
+  /* Row hover is handled by .metric-row-main:hover styles */
 
   .date-cell {
     font-family: monospace;
@@ -829,18 +851,50 @@
     color: var(--color-surface-400);
   }
 
-  .endpoint-cell {
+  .metric-row-main td {
+    border-bottom: none;
+  }
+
+  .metric-row-endpoint {
+    background: var(--color-surface-50);
+  }
+
+  :global([data-mode="dark"]) .metric-row-endpoint {
+    background: var(--color-surface-900);
+  }
+
+  .metric-row-endpoint td {
+    padding-top: 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--color-surface-300);
+  }
+
+  :global([data-mode="dark"]) .metric-row-endpoint td {
+    border-color: var(--color-surface-700);
+  }
+
+  .metric-row-main:hover,
+  .metric-row-main:hover + .metric-row-endpoint {
+    background: var(--color-surface-100);
+  }
+
+  :global([data-mode="dark"]) .metric-row-main:hover,
+  :global([data-mode="dark"]) .metric-row-main:hover + .metric-row-endpoint {
+    background: var(--color-surface-800);
+  }
+
+  .endpoint-cell-full {
     font-family: monospace;
     font-size: 0.8125rem;
-    max-width: 400px;
     word-break: break-all;
   }
 
   .endpoint-path {
     background: var(--color-surface-200);
-    padding: 0.125rem 0.375rem;
+    padding: 0.25rem 0.5rem;
     border-radius: 3px;
     font-size: 0.75rem;
+    display: inline-block;
   }
 
   :global([data-mode="dark"]) .endpoint-path {
@@ -853,6 +907,37 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .operation-id-cell {
+    font-family: monospace;
+    font-size: 0.8125rem;
+  }
+
+  .operation-id {
+    background: var(--color-secondary-100);
+    color: var(--color-secondary-800);
+    padding: 0.125rem 0.375rem;
+    border-radius: 3px;
+    font-size: 0.75rem;
+  }
+
+  :global([data-mode="dark"]) .operation-id {
+    background: var(--color-secondary-900);
+    color: var(--color-secondary-200);
+  }
+
+  .operation-id-link {
+    text-decoration: none;
+  }
+
+  .operation-id-link:hover .operation-id {
+    background: var(--color-secondary-200);
+    text-decoration: underline;
+  }
+
+  :global([data-mode="dark"]) .operation-id-link:hover .operation-id {
+    background: var(--color-secondary-800);
   }
 
   .method-cell {
