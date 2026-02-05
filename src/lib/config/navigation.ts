@@ -36,6 +36,14 @@ export interface NavigationItem {
   external?: boolean;
 }
 
+export interface NavigationSection {
+  id: string;
+  label: string;
+  iconComponent: any;
+  items: NavigationItem[];
+  basePaths: string[];
+}
+
 // Build navigation items dynamically based on environment variables
 function buildMyAccountItems(): NavigationItem[] {
   const items: NavigationItem[] = [
@@ -404,3 +412,16 @@ export function getActiveAbacMenuItem(pathname: string) {
 
   return found || abacItems[0]; // fallback to first item
 }
+
+export const navSections: NavigationSection[] = [
+  { id: "my-account", label: "My Account", iconComponent: User, items: myAccountItems, basePaths: ["/user"] },
+  { id: "system", label: "System", iconComponent: Server, items: systemItems, basePaths: ["/system"] },
+  { id: "integration", label: "Integration", iconComponent: Plug, items: integrationItems, basePaths: ["/integration"] },
+  { id: "metrics", label: "Metrics", iconComponent: BarChart3, items: metricsItems, basePaths: ["/metrics", "/aggregate-metrics", "/connector-metrics"] },
+  { id: "abac", label: "ABAC", iconComponent: Lock, items: abacItems, basePaths: ["/abac"] },
+  { id: "products", label: "Products", iconComponent: Package, items: productsItems, basePaths: ["/products"] },
+  { id: "rbac", label: "RBAC", iconComponent: Shield, items: rbacItems, basePaths: ["/rbac"] },
+  { id: "account-access", label: "Account Access", iconComponent: Landmark, items: accountAccessItems, basePaths: ["/account-access"] },
+  { id: "dynamic-entities", label: "Dynamic Entities", iconComponent: Box, items: dynamicEntitiesItems, basePaths: ["/dynamic-entities"] },
+  { id: "dynamic-endpoints", label: "Dynamic Endpoints", iconComponent: Plug, items: dynamicEndpointsItems, basePaths: ["/dynamic-endpoints"] },
+];

@@ -2,18 +2,7 @@
   import "../app.css";
   import { Navigation } from "@skeletonlabs/skeleton-svelte";
   import { page } from "$app/state";
-  import {
-    myAccountItems,
-    systemItems,
-    integrationItems,
-    metricsItems,
-    rbacItems,
-    accountAccessItems,
-    dynamicEntitiesItems,
-    dynamicEndpointsItems,
-    productsItems,
-    abacItems,
-  } from "$lib/config/navigation";
+  import { navSections, type NavigationSection } from "$lib/config/navigation";
   import Toast from "$lib/components/Toast.svelte";
   import ApiActivityIndicator from "$lib/components/ApiActivityIndicator.svelte";
   import { createLogger } from "$lib/utils/logger";
@@ -26,31 +15,14 @@
 
   // Lucide Icons
   import {
-    Menu,
-    X,
     Compass,
     KeyRound,
-    Star,
     SquareTerminal,
-    UserPlus,
-    Landmark,
-    MessageCircleQuestion,
-    ShieldUser,
-    User,
     Users,
     ChevronDown,
     ChevronRight,
-    Settings,
-    Shield,
     CreditCard,
-    BarChart3,
     Globe,
-    Server,
-    Plug,
-    Database,
-    Box,
-    Lock,
-    Package,
   } from "@lucide/svelte";
 
   import { env } from "$env/dynamic/public";
@@ -67,16 +39,7 @@
   logger.info("📊 Props received from server");
   let isAuthenticated = $state(false);
   let isMobileMenuOpen = $state(false);
-  let isMyAccountExpanded = $state(false);
-  let isSystemExpanded = $state(false);
-  let isIntegrationExpanded = $state(false);
-  let isMetricsExpanded = $state(false);
-  let isRbacExpanded = $state(false);
-  let isAccountAccessExpanded = $state(false);
-  let isDynamicEntitiesExpanded = $state(false);
-  let isDynamicEndpointsExpanded = $state(false);
-  let isProductsExpanded = $state(false);
-  let isAbacExpanded = $state(false);
+  let expandedSections = $state<Record<string, boolean>>({});
   let displayMode: "dark" | "light" = $state("dark");
   let systemDynamicEntities = $state<any[]>([]);
 
@@ -155,46 +118,16 @@
     }
   });
 
-  let isMyAccountActive = $derived(
-    page.url.pathname === "/user" || page.url.pathname.startsWith("/user/"),
-  );
-  let isSystemActive = $derived(
-    page.url.pathname === "/system" || page.url.pathname.startsWith("/system/"),
-  );
-  let isIntegrationActive = $derived(
-    page.url.pathname === "/integration" ||
-      page.url.pathname.startsWith("/integration/"),
-  );
-  let isMetricsActive = $derived(
-    page.url.pathname === "/metrics" ||
-      page.url.pathname.startsWith("/metrics/") ||
-      page.url.pathname === "/aggregate-metrics" ||
-      page.url.pathname.startsWith("/aggregate-metrics/") ||
-      page.url.pathname === "/connector-metrics" ||
-      page.url.pathname.startsWith("/connector-metrics/"),
-  );
-  let isRbacActive = $derived(
-    page.url.pathname === "/rbac" || page.url.pathname.startsWith("/rbac/"),
-  );
-  let isAccountAccessActive = $derived(
-    page.url.pathname === "/account-access" ||
-      page.url.pathname.startsWith("/account-access/"),
-  );
-  let isDynamicEntitiesActive = $derived(
-    page.url.pathname === "/dynamic-entities" ||
-      page.url.pathname.startsWith("/dynamic-entities/"),
-  );
-  let isDynamicEndpointsActive = $derived(
-    page.url.pathname === "/dynamic-endpoints" ||
-      page.url.pathname.startsWith("/dynamic-endpoints/"),
-  );
-  let isProductsActive = $derived(
-    page.url.pathname === "/products" ||
-      page.url.pathname.startsWith("/products/"),
-  );
-  let isAbacActive = $derived(
-    page.url.pathname === "/abac" || page.url.pathname.startsWith("/abac/"),
-  );
+  function isSectionActive(section: NavigationSection): boolean {
+    return section.basePaths.some(
+      (bp) =>
+        page.url.pathname === bp || page.url.pathname.startsWith(bp + "/"),
+    );
+  }
+
+  function toggleSection(id: string) {
+    expandedSections[id] = !expandedSections[id];
+  }
 
   logger.info("🧭 Navigation state initialized");
   const navStateTime = performance.now();
@@ -202,38 +135,13 @@
     `⏱️  Navigation state in ${(navStateTime - importsLoadedTime).toFixed(2)}ms`,
   );
 
-  // Watch for route changes to auto-expand sections
+  // Auto-expand active sections on route change
   $effect(() => {
     logger.info("🔄 Route effect triggered");
-    if (isMyAccountActive) {
-      isMyAccountExpanded = true;
-    }
-    if (isSystemActive) {
-      isSystemExpanded = true;
-    }
-    if (isIntegrationActive) {
-      isIntegrationExpanded = true;
-    }
-    if (isMetricsActive) {
-      isMetricsExpanded = true;
-    }
-    if (isRbacActive) {
-      isRbacExpanded = true;
-    }
-    if (isAccountAccessActive) {
-      isAccountAccessExpanded = true;
-    }
-    if (isDynamicEntitiesActive) {
-      isDynamicEntitiesExpanded = true;
-    }
-    if (isDynamicEndpointsActive) {
-      isDynamicEndpointsExpanded = true;
-    }
-    if (isProductsActive) {
-      isProductsExpanded = true;
-    }
-    if (isAbacActive) {
-      isAbacExpanded = true;
+    for (const section of navSections) {
+      if (isSectionActive(section)) {
+        expandedSections[section.id] = true;
+      }
     }
     logger.info(`📍 Current route: ${page.url.pathname}`);
   });
@@ -249,46 +157,6 @@
 
   function toggleMobileMenu() {
     isMobileMenuOpen = !isMobileMenuOpen;
-  }
-
-  function toggleMyAccount() {
-    isMyAccountExpanded = !isMyAccountExpanded;
-  }
-
-  function toggleSystem() {
-    isSystemExpanded = !isSystemExpanded;
-  }
-
-  function toggleIntegration() {
-    isIntegrationExpanded = !isIntegrationExpanded;
-  }
-
-  function toggleMetrics() {
-    isMetricsExpanded = !isMetricsExpanded;
-  }
-
-  function toggleRbac() {
-    isRbacExpanded = !isRbacExpanded;
-  }
-
-  function toggleAccountAccess() {
-    isAccountAccessExpanded = !isAccountAccessExpanded;
-  }
-
-  function toggleDynamicEntities() {
-    isDynamicEntitiesExpanded = !isDynamicEntitiesExpanded;
-  }
-
-  function toggleDynamicEndpoints() {
-    isDynamicEndpointsExpanded = !isDynamicEndpointsExpanded;
-  }
-
-  function toggleProducts() {
-    isProductsExpanded = !isProductsExpanded;
-  }
-
-  function toggleAbac() {
-    isAbacExpanded = !isAbacExpanded;
   }
 
   // Some items in the menu are rendered conditionally based on the presence of URLs set in the environment variables.
@@ -422,437 +290,52 @@
         </Navigation.Group>
 
         {#if isAuthenticated}
-          <!-- My Account Group -->
-          <Navigation.Group>
-            <button
-              type="button"
-              class="btn w-full justify-start gap-3 px-2 hover:preset-tonal"
-              class:preset-filled-primary-50-950={isMyAccountActive}
-              class:border={isMyAccountActive}
-              class:border-solid-secondary-500={isMyAccountActive}
-              onclick={toggleMyAccount}
-            >
-              <User class="size-5" />
-              <span>My Account</span>
-              {#if isMyAccountExpanded}
-                <ChevronDown class="h-4 w-4" />
-              {:else}
-                <ChevronRight class="h-4 w-4" />
+          {#each navSections as section}
+            <Navigation.Group>
+              {@const SectionIcon = section.iconComponent}
+              {@const active = isSectionActive(section)}
+              <button
+                type="button"
+                class="btn w-full justify-start gap-3 px-2 hover:preset-tonal"
+                class:preset-filled-primary-50-950={active}
+                class:border={active}
+                class:border-solid-secondary-500={active}
+                onclick={() => toggleSection(section.id)}
+              >
+                <SectionIcon class="size-5" />
+                <span>{section.label}</span>
+                {#if expandedSections[section.id]}
+                  <ChevronDown class="h-4 w-4" />
+                {:else}
+                  <ChevronRight class="h-4 w-4" />
+                {/if}
+              </button>
+
+              {#if expandedSections[section.id]}
+                <Navigation.Menu class="mt-1 ml-4 flex flex-col gap-1 px-2">
+                  {#each section.items as subItem}
+                    {@const SubIcon = subItem.iconComponent}
+                    <a
+                      href={subItem.href}
+                      class="btn w-full justify-start gap-3 px-2 pl-6 text-sm hover:preset-tonal"
+                      class:preset-filled-secondary-50-950={page.url.pathname ===
+                        subItem.href}
+                      class:border-l-2={page.url.pathname === subItem.href}
+                      class:border-primary-500={page.url.pathname ===
+                        subItem.href}
+                      title={subItem.label}
+                      aria-label={subItem.label}
+                      target={subItem.external ? "_blank" : undefined}
+                      rel={subItem.external ? "noopener noreferrer" : undefined}
+                    >
+                      <SubIcon class="size-4" />
+                      <span>{subItem.label}</span>
+                    </a>
+                  {/each}
+                </Navigation.Menu>
               {/if}
-            </button>
-
-            {#if isMyAccountExpanded}
-              <Navigation.Menu class="mt-1 ml-4 flex flex-col gap-1 px-2">
-                {#each myAccountItems as subItem}
-                  {@const Icon = subItem.iconComponent}
-                  <a
-                    href={subItem.href}
-                    class="btn w-full justify-start gap-3 px-2 pl-6 text-sm hover:preset-tonal"
-                    class:preset-filled-secondary-50-950={page.url.pathname ===
-                      subItem.href}
-                    class:border-l-2={page.url.pathname === subItem.href}
-                    class:border-primary-500={page.url.pathname ===
-                      subItem.href}
-                    title={subItem.label}
-                    aria-label={subItem.label}
-                    target={subItem.external ? "_blank" : undefined}
-                    rel={subItem.external ? "noopener noreferrer" : undefined}
-                  >
-                    <Icon class="size-4" />
-                    <span>{subItem.label}</span>
-                  </a>
-                {/each}
-              </Navigation.Menu>
-            {/if}
-          </Navigation.Group>
-
-          <!-- System Menu -->
-          <Navigation.Group>
-            <button
-              type="button"
-              class="btn w-full justify-start gap-3 px-2 hover:preset-tonal"
-              class:preset-filled-primary-50-950={isSystemActive}
-              class:border={isSystemActive}
-              class:border-solid-secondary-500={isSystemActive}
-              onclick={toggleSystem}
-            >
-              <Server class="size-5" />
-              <span>System</span>
-              {#if isSystemExpanded}
-                <ChevronDown class="h-4 w-4" />
-              {:else}
-                <ChevronRight class="h-4 w-4" />
-              {/if}
-            </button>
-
-            {#if isSystemExpanded}
-              <Navigation.Menu class="mt-1 ml-4 flex flex-col gap-1 px-2">
-                {#each systemItems as subItem}
-                  {@const Icon = subItem.iconComponent}
-                  <a
-                    href={subItem.href}
-                    class="btn w-full justify-start gap-3 px-2 pl-6 text-sm hover:preset-tonal"
-                    class:preset-filled-secondary-50-950={page.url.pathname ===
-                      subItem.href}
-                    class:border-l-2={page.url.pathname === subItem.href}
-                    class:border-primary-500={page.url.pathname ===
-                      subItem.href}
-                    title={subItem.label}
-                    aria-label={subItem.label}
-                    target={subItem.external ? "_blank" : undefined}
-                    rel={subItem.external ? "noopener noreferrer" : undefined}
-                  >
-                    <Icon class="size-4" />
-                    <span>{subItem.label}</span>
-                  </a>
-                {/each}
-              </Navigation.Menu>
-            {/if}
-          </Navigation.Group>
-
-          <!-- Integration Group -->
-          <Navigation.Group>
-            <button
-              type="button"
-              class="btn w-full justify-start gap-3 px-2 hover:preset-tonal"
-              class:preset-filled-primary-50-950={isIntegrationActive}
-              class:border={isIntegrationActive}
-              class:border-solid-secondary-500={isIntegrationActive}
-              onclick={toggleIntegration}
-            >
-              <Plug class="size-5" />
-              <span>Integration</span>
-              {#if isIntegrationExpanded}
-                <ChevronDown class="h-4 w-4" />
-              {:else}
-                <ChevronRight class="h-4 w-4" />
-              {/if}
-            </button>
-
-            {#if isIntegrationExpanded}
-              <Navigation.Menu class="mt-1 ml-4 flex flex-col gap-1 px-2">
-                {#each integrationItems as subItem}
-                  {@const Icon = subItem.iconComponent}
-                  <a
-                    href={subItem.href}
-                    class="btn w-full justify-start gap-3 px-2 pl-6 text-sm hover:preset-tonal"
-                    class:preset-filled-secondary-50-950={page.url.pathname ===
-                      subItem.href}
-                    class:border-l-2={page.url.pathname === subItem.href}
-                    class:border-primary-500={page.url.pathname ===
-                      subItem.href}
-                    title={subItem.label}
-                    aria-label={subItem.label}
-                    target={subItem.external ? "_blank" : undefined}
-                    rel={subItem.external ? "noopener noreferrer" : undefined}
-                  >
-                    <Icon class="size-4" />
-                    <span>{subItem.label}</span>
-                  </a>
-                {/each}
-              </Navigation.Menu>
-            {/if}
-          </Navigation.Group>
-
-          <!-- Metrics Group -->
-          <Navigation.Group>
-            <button
-              type="button"
-              class="btn w-full justify-start gap-3 px-2 hover:preset-tonal"
-              class:preset-filled-primary-50-950={isMetricsActive}
-              class:border={isMetricsActive}
-              class:border-solid-secondary-500={isMetricsActive}
-              onclick={toggleMetrics}
-            >
-              <BarChart3 class="size-5" />
-              <span>Metrics</span>
-              {#if isMetricsExpanded}
-                <ChevronDown class="h-4 w-4" />
-              {:else}
-                <ChevronRight class="h-4 w-4" />
-              {/if}
-            </button>
-
-            {#if isMetricsExpanded}
-              <Navigation.Menu class="mt-1 ml-4 flex flex-col gap-1 px-2">
-                {#each metricsItems as subItem}
-                  {@const Icon = subItem.iconComponent}
-                  <a
-                    href={subItem.href}
-                    class="btn w-full justify-start gap-3 px-2 pl-6 text-sm hover:preset-tonal"
-                    class:preset-filled-secondary-50-950={page.url.pathname ===
-                      subItem.href}
-                    class:border-l-2={page.url.pathname === subItem.href}
-                    class:border-primary-500={page.url.pathname ===
-                      subItem.href}
-                    title={subItem.label}
-                    aria-label={subItem.label}
-                    target={subItem.external ? "_blank" : undefined}
-                    rel={subItem.external ? "noopener noreferrer" : undefined}
-                  >
-                    <Icon class="size-4" />
-                    <span>{subItem.label}</span>
-                  </a>
-                {/each}
-              </Navigation.Menu>
-            {/if}
-          </Navigation.Group>
-
-          <!-- ABAC Section -->
-          <Navigation.Group>
-            <button
-              type="button"
-              class="btn w-full justify-start gap-3 px-2 hover:preset-tonal"
-              class:preset-filled-primary-50-950={isAbacActive}
-              class:border={isAbacActive}
-              class:border-solid-secondary-500={isAbacActive}
-              onclick={toggleAbac}
-            >
-              <Lock class="size-5" />
-              <span>ABAC</span>
-              {#if isAbacExpanded}
-                <ChevronDown class="h-4 w-4" />
-              {:else}
-                <ChevronRight class="h-4 w-4" />
-              {/if}
-            </button>
-
-            {#if isAbacExpanded}
-              <Navigation.Menu class="mt-1 ml-4 flex flex-col gap-1 px-2">
-                {#each abacItems as subItem}
-                  {@const Icon = subItem.iconComponent}
-                  <a
-                    href={subItem.href}
-                    class="btn w-full justify-start gap-3 px-2 pl-6 text-sm hover:preset-tonal"
-                    class:preset-filled-secondary-50-950={page.url.pathname ===
-                      subItem.href}
-                    class:border-l-2={page.url.pathname === subItem.href}
-                    class:border-primary-500={page.url.pathname ===
-                      subItem.href}
-                    title={subItem.label}
-                    aria-label={subItem.label}
-                    target={subItem.external ? "_blank" : undefined}
-                    rel={subItem.external ? "noopener noreferrer" : undefined}
-                  >
-                    <Icon class="size-4" />
-                    <span>{subItem.label}</span>
-                  </a>
-                {/each}
-              </Navigation.Menu>
-            {/if}
-          </Navigation.Group>
-
-          <!-- Products Group -->
-          <Navigation.Group>
-            <button
-              type="button"
-              class="btn w-full justify-start gap-3 px-2 hover:preset-tonal"
-              class:preset-filled-primary-50-950={isProductsActive}
-              class:border={isProductsActive}
-              class:border-solid-secondary-500={isProductsActive}
-              onclick={toggleProducts}
-            >
-              <Package class="size-5" />
-              <span>Products</span>
-              {#if isProductsExpanded}
-                <ChevronDown class="h-4 w-4" />
-              {:else}
-                <ChevronRight class="h-4 w-4" />
-              {/if}
-            </button>
-
-            {#if isProductsExpanded}
-              <Navigation.Menu class="mt-1 ml-4 flex flex-col gap-1 px-2">
-                {#each productsItems as subItem}
-                  {@const Icon = subItem.iconComponent}
-                  <a
-                    href={subItem.href}
-                    class="btn w-full justify-start gap-3 px-2 pl-6 text-sm hover:preset-tonal"
-                    class:preset-filled-secondary-50-950={page.url.pathname ===
-                      subItem.href}
-                    class:border-l-2={page.url.pathname === subItem.href}
-                    class:border-primary-500={page.url.pathname ===
-                      subItem.href}
-                    title={subItem.label}
-                    aria-label={subItem.label}
-                  >
-                    <Icon class="size-4" />
-                    <span>{subItem.label}</span>
-                  </a>
-                {/each}
-              </Navigation.Menu>
-            {/if}
-          </Navigation.Group>
-
-          <!-- RBAC Group -->
-          <Navigation.Group>
-            <button
-              type="button"
-              class="btn w-full justify-start gap-3 px-2 hover:preset-tonal"
-              class:preset-filled-primary-50-950={isRbacActive}
-              class:border={isRbacActive}
-              class:border-solid-secondary-500={isRbacActive}
-              onclick={toggleRbac}
-            >
-              <Shield class="size-5" />
-              <span>RBAC</span>
-              {#if isRbacExpanded}
-                <ChevronDown class="h-4 w-4" />
-              {:else}
-                <ChevronRight class="h-4 w-4" />
-              {/if}
-            </button>
-
-            {#if isRbacExpanded}
-              <Navigation.Menu class="mt-1 ml-4 flex flex-col gap-1 px-2">
-                {#each rbacItems as subItem}
-                  {@const Icon = subItem.iconComponent}
-                  <a
-                    href={subItem.href}
-                    class="btn w-full justify-start gap-3 px-2 pl-6 text-sm hover:preset-tonal"
-                    class:preset-filled-secondary-50-950={page.url.pathname ===
-                      subItem.href}
-                    class:border-l-2={page.url.pathname === subItem.href}
-                    class:border-primary-500={page.url.pathname ===
-                      subItem.href}
-                    title={subItem.label}
-                    aria-label={subItem.label}
-                    target={subItem.external ? "_blank" : undefined}
-                    rel={subItem.external ? "noopener noreferrer" : undefined}
-                  >
-                    <Icon class="size-4" />
-                    <span>{subItem.label}</span>
-                  </a>
-                {/each}
-              </Navigation.Menu>
-            {/if}
-          </Navigation.Group>
-
-          <!-- Account Access Group -->
-          <Navigation.Group>
-            <button
-              type="button"
-              class="btn w-full justify-start gap-3 px-2 hover:preset-tonal"
-              class:preset-filled-primary-50-950={isAccountAccessActive}
-              class:border={isAccountAccessActive}
-              class:border-solid-secondary-500={isAccountAccessActive}
-              onclick={toggleAccountAccess}
-            >
-              <Landmark class="size-5" />
-              <span>Account Access</span>
-              {#if isAccountAccessExpanded}
-                <ChevronDown class="h-4 w-4" />
-              {:else}
-                <ChevronRight class="h-4 w-4" />
-              {/if}
-            </button>
-
-            {#if isAccountAccessExpanded}
-              <Navigation.Menu class="mt-1 ml-4 flex flex-col gap-1 px-2">
-                {#each accountAccessItems as subItem}
-                  {@const Icon = subItem.iconComponent}
-                  <a
-                    href={subItem.href}
-                    class="btn w-full justify-start gap-3 px-2 pl-6 text-sm hover:preset-tonal"
-                    class:preset-filled-secondary-50-950={page.url.pathname ===
-                      subItem.href}
-                    class:border-l-2={page.url.pathname === subItem.href}
-                    class:border-primary-500={page.url.pathname ===
-                      subItem.href}
-                    title={subItem.label}
-                    aria-label={subItem.label}
-                  >
-                    <Icon class="size-4" />
-                    <span>{subItem.label}</span>
-                  </a>
-                {/each}
-              </Navigation.Menu>
-            {/if}
-          </Navigation.Group>
-
-          <!-- Dynamic Entities Group -->
-          <Navigation.Group>
-            <button
-              type="button"
-              class="btn w-full justify-start gap-3 px-2 hover:preset-tonal"
-              class:preset-filled-primary-50-950={isDynamicEntitiesActive}
-              class:border={isDynamicEntitiesActive}
-              class:border-solid-secondary-500={isDynamicEntitiesActive}
-              onclick={toggleDynamicEntities}
-            >
-              <Box class="size-5" />
-              <span>Dynamic Entities</span>
-              {#if isDynamicEntitiesExpanded}
-                <ChevronDown class="h-4 w-4" />
-              {:else}
-                <ChevronRight class="h-4 w-4" />
-              {/if}
-            </button>
-
-            {#if isDynamicEntitiesExpanded}
-              <Navigation.Menu class="mt-1 ml-4 flex flex-col gap-1 px-2">
-                {#each dynamicEntitiesItems as subItem}
-                  {@const Icon = subItem.iconComponent}
-                  <a
-                    href={subItem.href}
-                    class="btn w-full justify-start gap-3 px-2 pl-6 text-sm hover:preset-tonal"
-                    class:preset-filled-secondary-50-950={page.url.pathname ===
-                      subItem.href}
-                    class:border-l-2={page.url.pathname === subItem.href}
-                    class:border-primary-500={page.url.pathname ===
-                      subItem.href}
-                    title={subItem.label}
-                    aria-label={subItem.label}
-                  >
-                    <Icon class="size-4" />
-                    <span>{subItem.label}</span>
-                  </a>
-                {/each}
-              </Navigation.Menu>
-            {/if}
-          </Navigation.Group>
-
-          <!-- Dynamic Endpoints Group -->
-          <Navigation.Group>
-            <button
-              type="button"
-              class="btn w-full justify-start gap-3 px-2 hover:preset-tonal"
-              class:preset-filled-primary-50-950={isDynamicEndpointsActive}
-              class:border={isDynamicEndpointsActive}
-              class:border-solid-secondary-500={isDynamicEndpointsActive}
-              onclick={toggleDynamicEndpoints}
-            >
-              <Plug class="size-5" />
-              <span>Dynamic Endpoints</span>
-              {#if isDynamicEndpointsExpanded}
-                <ChevronDown class="h-4 w-4" />
-              {:else}
-                <ChevronRight class="h-4 w-4" />
-              {/if}
-            </button>
-
-            {#if isDynamicEndpointsExpanded}
-              <Navigation.Menu class="mt-1 ml-4 flex flex-col gap-1 px-2">
-                {#each dynamicEndpointsItems as subItem}
-                  {@const Icon = subItem.iconComponent}
-                  <a
-                    href={subItem.href}
-                    class="btn w-full justify-start gap-3 px-2 pl-6 text-sm hover:preset-tonal"
-                    class:preset-filled-secondary-50-950={page.url.pathname ===
-                      subItem.href}
-                    class:border-l-2={page.url.pathname === subItem.href}
-                    class:border-primary-500={page.url.pathname ===
-                      subItem.href}
-                    title={subItem.label}
-                    aria-label={subItem.label}
-                  >
-                    <Icon class="size-4" />
-                    <span>{subItem.label}</span>
-                  </a>
-                {/each}
-              </Navigation.Menu>
-            {/if}
-          </Navigation.Group>
+            </Navigation.Group>
+          {/each}
         {/if}
       </Navigation.Content>
 
