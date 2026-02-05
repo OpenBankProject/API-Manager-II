@@ -33,10 +33,26 @@
           { href: "/", label: "Home", icon: "🏠", available: true },
 
           {
-            href: "/metrics",
             label: "Metrics",
             icon: "📊",
             available: true,
+            subItems: [
+              {
+                href: "/metrics",
+                label: "API Metrics",
+                icon: "📈",
+              },
+              {
+                href: "/aggregate-metrics",
+                label: "Aggregate Metrics",
+                icon: "📊",
+              },
+              {
+                href: "/connector-metrics",
+                label: "Connector Metrics",
+                icon: "🔗",
+              },
+            ],
           },
           {
             label: "Dynamic Entities",
@@ -74,6 +90,23 @@
                 href: "/dynamic-endpoints/bank",
                 label: "Bank Dynamic Endpoints",
                 icon: "🏦",
+              },
+            ],
+          },
+          {
+            label: "Products",
+            icon: "📦",
+            available: true,
+            subItems: [
+              {
+                href: "/products",
+                label: "Products",
+                icon: "📋",
+              },
+              {
+                href: "/products/collections",
+                label: "Product Collections",
+                icon: "🗂️",
               },
             ],
           },

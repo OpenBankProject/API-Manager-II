@@ -622,7 +622,7 @@
           </div>
           <button
             class="refresh-btn"
-            on:click={refreshMetrics}
+            onclick={refreshMetrics}
             style="display: block; margin: 0 auto;"
           >
             🔄 Refresh Data

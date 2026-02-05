@@ -6,7 +6,7 @@
     myAccountItems,
     systemItems,
     integrationItems,
-    apiMetricsItems,
+    metricsItems,
     rbacItems,
     accountAccessItems,
     dynamicEntitiesItems,
@@ -68,7 +68,7 @@
   let isMyAccountExpanded = $state(false);
   let isSystemExpanded = $state(false);
   let isIntegrationExpanded = $state(false);
-  let isApiMetricsExpanded = $state(false);
+  let isMetricsExpanded = $state(false);
   let isRbacExpanded = $state(false);
   let isAccountAccessExpanded = $state(false);
   let isDynamicEntitiesExpanded = $state(false);
@@ -162,11 +162,13 @@
     page.url.pathname === "/integration" ||
       page.url.pathname.startsWith("/integration/"),
   );
-  let isApiMetricsActive = $derived(
+  let isMetricsActive = $derived(
     page.url.pathname === "/metrics" ||
       page.url.pathname.startsWith("/metrics/") ||
       page.url.pathname === "/aggregate-metrics" ||
-      page.url.pathname.startsWith("/aggregate-metrics/"),
+      page.url.pathname.startsWith("/aggregate-metrics/") ||
+      page.url.pathname === "/connector-metrics" ||
+      page.url.pathname.startsWith("/connector-metrics/"),
   );
   let isRbacActive = $derived(
     page.url.pathname === "/rbac" || page.url.pathname.startsWith("/rbac/"),
@@ -205,8 +207,8 @@
     if (isIntegrationActive) {
       isIntegrationExpanded = true;
     }
-    if (isApiMetricsActive) {
-      isApiMetricsExpanded = true;
+    if (isMetricsActive) {
+      isMetricsExpanded = true;
     }
     if (isRbacActive) {
       isRbacExpanded = true;
@@ -251,8 +253,8 @@
     isIntegrationExpanded = !isIntegrationExpanded;
   }
 
-  function toggleApiMetrics() {
-    isApiMetricsExpanded = !isApiMetricsExpanded;
+  function toggleMetrics() {
+    isMetricsExpanded = !isMetricsExpanded;
   }
 
   function toggleRbac() {
@@ -538,28 +540,28 @@
             {/if}
           </Navigation.Group>
 
-          <!-- API Metrics Group -->
+          <!-- Metrics Group -->
           <Navigation.Group>
             <button
               type="button"
               class="btn w-full justify-start gap-3 px-2 hover:preset-tonal"
-              class:preset-filled-primary-50-950={isApiMetricsActive}
-              class:border={isApiMetricsActive}
-              class:border-solid-secondary-500={isApiMetricsActive}
-              onclick={toggleApiMetrics}
+              class:preset-filled-primary-50-950={isMetricsActive}
+              class:border={isMetricsActive}
+              class:border-solid-secondary-500={isMetricsActive}
+              onclick={toggleMetrics}
             >
               <BarChart3 class="size-5" />
-              <span>API Metrics</span>
-              {#if isApiMetricsExpanded}
+              <span>Metrics</span>
+              {#if isMetricsExpanded}
                 <ChevronDown class="h-4 w-4" />
               {:else}
                 <ChevronRight class="h-4 w-4" />
               {/if}
             </button>
 
-            {#if isApiMetricsExpanded}
+            {#if isMetricsExpanded}
               <Navigation.Menu class="mt-1 ml-4 flex flex-col gap-1 px-2">
-                {#each apiMetricsItems as subItem}
+                {#each metricsItems as subItem}
                   {@const Icon = subItem.iconComponent}
                   <a
                     href={subItem.href}

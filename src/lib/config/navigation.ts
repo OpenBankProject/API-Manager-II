@@ -153,24 +153,29 @@ export function getActiveIntegrationMenuItem(pathname: string) {
   return found || integrationItems[0]; // fallback to first item
 }
 
-// API Metrics navigation items
-function buildApiMetricsItems(): NavigationItem[] {
+// Metrics navigation items
+function buildMetricsItems(): NavigationItem[] {
   const items: NavigationItem[] = [
-    { href: "/metrics", label: "Metrics", iconComponent: BarChart3 },
+    { href: "/metrics", label: "API Metrics", iconComponent: BarChart3 },
     {
       href: "/aggregate-metrics",
       label: "Aggregate Metrics",
       iconComponent: BarChart3,
+    },
+    {
+      href: "/connector-metrics",
+      label: "Connector Metrics",
+      iconComponent: Plug,
     },
   ];
 
   return items;
 }
 
-export const apiMetricsItems = buildApiMetricsItems();
+export const metricsItems = buildMetricsItems();
 
-export function getActiveApiMetricsMenuItem(pathname: string) {
-  const found = apiMetricsItems.find((item) => {
+export function getActiveMetricsMenuItem(pathname: string) {
+  const found = metricsItems.find((item) => {
     // Skip external links for active menu detection
     if (item.external) {
       return false;
@@ -178,7 +183,7 @@ export function getActiveApiMetricsMenuItem(pathname: string) {
     return pathname.startsWith(item.href);
   });
 
-  return found || apiMetricsItems[0]; // fallback to first item
+  return found || metricsItems[0]; // fallback to first item
 }
 
 // RBAC navigation items
