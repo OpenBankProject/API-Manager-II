@@ -12,17 +12,12 @@
   const apiExplorerUrl = $page.data.externalLinks?.API_EXPLORER_URL || "https://apiexplorer-ii-sandbox.openbankproject.com";
 
   function getOperationId(metric: any): string {
-    const version = metric.implemented_in_version || "";
-    const partialFunction = metric.implemented_by_partial_function || "";
-    if (version && partialFunction) {
-      return `OBP${version}-${partialFunction}`;
-    }
-    return partialFunction || "N/A";
+    return metric.operation_id || "Err";
   }
 
   function getApiExplorerLink(metric: any): string {
     const operationId = getOperationId(metric);
-    if (operationId === "N/A") return "";
+    if (operationId === "Err") return "";
     return `${apiExplorerUrl}/resource-docs/OBPv6.0.0?operationid=${operationId}`;
   }
 
