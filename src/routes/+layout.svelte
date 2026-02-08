@@ -395,9 +395,14 @@
       style="height: calc(100vh - 80px);"
     >
       <div
-        class="bg-opacity-0 flex items-center justify-end p-4"
+        class="bg-opacity-0 flex items-center justify-between p-4"
         style="height: 80px; flex-shrink: 0;"
       >
+        <div>
+          {#if isAuthenticated && currentBank.bank}
+            <span class="text-sm">{currentBank.bank.full_name}: {currentBank.bank.bank_id} ({currentBank.bank.bank_code})</span>
+          {/if}
+        </div>
         {#if isAuthenticated}
           <div class="relative mx-4">
             <button
@@ -426,9 +431,6 @@
               </div>
             {/if}
           </div>
-          {#if currentBank.bank}
-            <span class="text-sm">Bank: {currentBank.bank.bank_id} ({currentBank.bank.bank_code})</span>
-          {/if}
         {:else}
           <span class="mx-4 hover:text-tertiary-400"
             ><a href="{data.externalLinks.PORTAL_URL}/register">Register</a>
