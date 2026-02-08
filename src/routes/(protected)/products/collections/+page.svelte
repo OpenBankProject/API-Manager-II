@@ -6,7 +6,7 @@
     logErrorDetails,
   } from "$lib/utils/errorHandler";
   import { trackedFetch } from "$lib/utils/trackedFetch";
-  import BankSelectWidget from "$lib/components/BankSelectWidget.svelte";
+  import { currentBank } from "$lib/stores/currentBank.svelte";
 
   const apiExplorerUrl =
     $page.data.externalLinks?.API_EXPLORER_URL ||
@@ -14,8 +14,12 @@
 
   const apiExplorerCollectionsUrl = `${apiExplorerUrl}/resource-docs/OBPv6.0.0?operationid=OBPv3.1.0-getProductCollection`;
 
-  let selectedBankId = $state("");
+  let selectedBankId = $state(currentBank.bankId);
   let collectionCode = $state("");
+
+  $effect(() => {
+    selectedBankId = currentBank.bankId;
+  });
   let collection = $state<any>(null);
   let isLoading = $state(false);
   let loadError = $state("");
@@ -133,18 +137,6 @@
     </div>
   </div>
 
-  <!-- Bank Selector -->
-  <div class="mb-6">
-    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-      Select Bank
-    </label>
-    <BankSelectWidget
-      bind:selectedBankId
-      allowEmpty={true}
-      emptyLabel="Select a bank first"
-    />
-  </div>
-
   <!-- Collection Code Input -->
   {#if selectedBankId}
     <div class="mb-6">
@@ -230,10 +222,10 @@
         />
       </svg>
       <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
-        Select a Bank
+        No Bank Selected
       </h3>
       <p class="text-gray-600 dark:text-gray-400">
-        Please select a bank from the dropdown above to search for product collections.
+        Please select a bank in <a href="/user" class="text-blue-600 hover:underline dark:text-blue-400">My Account</a> to search for product collections.
       </p>
     </div>
   {:else if !collection && !loadError}

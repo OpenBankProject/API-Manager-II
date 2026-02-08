@@ -8,7 +8,7 @@
   } from "$lib/utils/errorHandler";
   import { page } from "$app/stores";
   import { trackedFetch } from "$lib/utils/trackedFetch";
-  import BankSelectWidget from "$lib/components/BankSelectWidget.svelte";
+  import { currentBank } from "$lib/stores/currentBank.svelte";
 
   let { data }: { data: PageData } = $props();
 
@@ -18,7 +18,7 @@
 
   const apiExplorerDynamicEndpointUrl = `${apiExplorerUrl}/resource-docs/OBPv6.0.0?operationid=OBPv4.0.0-getBankLevelDynamicEndpoints`;
 
-  let selectedBankId = $state("");
+  let selectedBankId = $state(currentBank.bankId);
   let endpoints = $state<any[]>([]);
   let isLoading = $state(false);
   let loadError = $state("");
@@ -57,6 +57,10 @@
       isLoading = false;
     }
   }
+
+  $effect(() => {
+    selectedBankId = currentBank.bankId;
+  });
 
   // Watch for bank selection changes
   $effect(() => {
@@ -198,18 +202,6 @@
     {/if}
   </div>
 
-  <!-- Bank Selector -->
-  <div class="mb-6">
-    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-      Select Bank
-    </label>
-    <BankSelectWidget
-      bind:selectedBankId
-      allowEmpty={true}
-      emptyLabel="Select a bank to view its dynamic endpoints"
-    />
-  </div>
-
   <!-- Stats -->
   {#if selectedBankId}
     <div class="mb-6 flex items-center gap-4">
@@ -294,10 +286,10 @@
         />
       </svg>
       <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
-        Select a Bank
+        No Bank Selected
       </h3>
       <p class="text-gray-600 dark:text-gray-400">
-        Please select a bank from the dropdown above to view its dynamic endpoints.
+        Please select a bank in <a href="/user" class="text-blue-600 hover:underline dark:text-blue-400">My Account</a> to view its dynamic endpoints.
       </p>
     </div>
   {:else if isLoading}

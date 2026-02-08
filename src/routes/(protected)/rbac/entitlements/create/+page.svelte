@@ -1,13 +1,13 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
-  import { User, KeyRound, Building2, Search } from "@lucide/svelte";
+  import { User, KeyRound } from "@lucide/svelte";
   import { toast } from "$lib/utils/toastService";
   import { trackedFetch } from "$lib/utils/trackedFetch";
   import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
   import UserSearchWidget from "$lib/components/UserSearchWidget.svelte";
-  import BankSelectWidget from "$lib/components/BankSelectWidget.svelte";
   import RoleSearchWidget from "$lib/components/RoleSearchWidget.svelte";
+  import { currentBank } from "$lib/stores/currentBank.svelte";
   import type { PageData } from "./$types";
   import {
     extractErrorFromResponse,
@@ -30,8 +30,12 @@
   let username = $state(urlUsername);
   let roleName = $state(urlRole);
   let roleScope = $state<"all" | "system" | "bank">("all");
-  let bankId = $state("");
+  let bankId = $state(currentBank.bankId);
   let isSubmitting = $state(false);
+
+  $effect(() => {
+    bankId = currentBank.bankId;
+  });
 
   function handleUserSelect(user: any) {
     userId = user.user_id;
@@ -179,27 +183,6 @@
             disabled={isSubmitting}
           />
         </div>
-
-        <!-- Bank ID Field - Only show for All or Bank scope -->
-        {#if roleScope !== "system"}
-          <div class="form-group">
-            <label class="form-label">
-              <Building2 size={18} />
-              Bank ID
-              <span class="optional">(Optional)</span>
-            </label>
-            <BankSelectWidget
-              bind:selectedBankId={bankId}
-              disabled={isSubmitting}
-              allowEmpty={true}
-              emptyLabel="System-wide (no specific bank)"
-            />
-            <div class="form-hint">
-              Leave empty for system-wide roles, or select a specific bank for
-              bank-specific roles
-            </div>
-          </div>
-        {/if}
 
         <!-- Form Actions -->
         <div class="form-actions">

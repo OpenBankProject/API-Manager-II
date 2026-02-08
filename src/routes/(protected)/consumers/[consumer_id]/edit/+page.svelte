@@ -3,6 +3,7 @@
   import { invalidateAll } from "$app/navigation";
   import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
   import MissingRoleAlert from "$lib/components/MissingRoleAlert.svelte";
+  import { currentBank } from "$lib/stores/currentBank.svelte";
 
   let { data, form } = $props();
 
@@ -57,8 +58,12 @@
 
   let isSubmitting = $state(false);
   let selectedRole = $state("");
-  let selectedBankId = $state("");
+  let selectedBankId = $state(currentBank.bankId);
   let showAddScopeForm = $state(false);
+
+  $effect(() => {
+    selectedBankId = currentBank.bankId;
+  });
 
   // Editable field states
   let editingField = $state<string | null>(null);
@@ -623,7 +628,6 @@
             await invalidateAll();
             isSubmitting = false;
             selectedRole = "";
-            selectedBankId = "";
             showAddScopeForm = false;
           };
         }}
@@ -650,22 +654,20 @@
         </div>
 
         {#if selectedRoleRequiresBank}
+          <input type="hidden" name="bank_id" value={selectedBankId} />
           <div>
-            <label for="bank_id" class="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-              Bank <span class="text-red-500">*</span>
+            <label class="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
+              Bank
             </label>
-            <select
-              id="bank_id"
-              name="bank_id"
-              bind:value={selectedBankId}
-              required
-              class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
-            >
-              <option value="">Select a bank</option>
-              {#each banks as bank}
-                <option value={bank.bank_id}>{bank.short_name} ({bank.bank_id})</option>
-              {/each}
-            </select>
+            {#if selectedBankId}
+              <div class="rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                {selectedBankId}
+              </div>
+            {:else}
+              <div class="text-sm text-amber-600 dark:text-amber-400">
+                Please select a bank in <a href="/user" class="underline">My Account</a> first.
+              </div>
+            {/if}
           </div>
         {:else}
           <input type="hidden" name="bank_id" value="" />
@@ -689,7 +691,7 @@
           </button>
           <button
             type="button"
-            onclick={() => { showAddScopeForm = false; selectedRole = ""; selectedBankId = ""; }}
+            onclick={() => { showAddScopeForm = false; selectedRole = ""; }}
             class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
           >
             Cancel

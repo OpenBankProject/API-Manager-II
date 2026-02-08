@@ -1,14 +1,18 @@
 <script lang="ts">
   import type { PageData } from "./$types";
   import { Mail, Building2, Users, CheckCircle, Clock } from "@lucide/svelte";
-  import BankSelectWidget from "$lib/components/BankSelectWidget.svelte";
+  import { currentBank } from "$lib/stores/currentBank.svelte";
   import { trackedFetch } from "$lib/utils/trackedFetch";
 
   let { data } = $props<{ data: PageData }>();
 
   // Form state
-  let selectedBankId = $state("");
+  let selectedBankId = $state(currentBank.bankId);
   let firstName = $state("");
+
+  $effect(() => {
+    selectedBankId = currentBank.bankId;
+  });
   let lastName = $state("");
   let email = $state("");
   let company = $state("");
@@ -213,20 +217,6 @@
 
       <form onsubmit={handleSubmit} class="form">
         <div class="form-grid">
-          <!-- Bank Selection -->
-          <div class="form-group full-width">
-            <label for="bank-id" class="form-label">
-              <Building2 size={16} />
-              Bank ID
-              <span class="required">*</span>
-            </label>
-            <BankSelectWidget
-              bind:selectedBankId
-              disabled={isSubmitting}
-              allowEmpty={false}
-            />
-          </div>
-
           <!-- First Name -->
           <div class="form-group">
             <label for="first-name" class="form-label">
@@ -445,7 +435,7 @@
       <div class="panel-content">
         <div class="empty-state">
           <Building2 size={48} />
-          <p>Select a bank to view invitations</p>
+          <p>No bank selected. Please select a bank in <a href="/user" style="color: #3b82f6; text-decoration: underline;">My Account</a> to view invitations.</p>
         </div>
       </div>
     </div>

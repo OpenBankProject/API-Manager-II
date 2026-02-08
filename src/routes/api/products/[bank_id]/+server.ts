@@ -7,7 +7,7 @@ import { createLogger } from "$lib/utils/logger";
 
 const logger = createLogger("ProductsAPI");
 
-export const GET: RequestHandler = async ({ locals, params }) => {
+export const GET: RequestHandler = async ({ locals, params, url }) => {
   const session = locals.session;
   const bankId = params.bank_id;
 
@@ -30,7 +30,8 @@ export const GET: RequestHandler = async ({ locals, params }) => {
 
   try {
     logger.info(`=== PRODUCTS API CALL for bank ${bankId} ===`);
-    const endpoint = `/obp/v6.0.0/banks/${bankId}/products`;
+    const queryString = url.searchParams.toString();
+    const endpoint = `/obp/v6.0.0/banks/${bankId}/products${queryString ? `?${queryString}` : ""}`;
     logger.info(`Request: ${endpoint}`);
 
     const response = await obp_requests.get(endpoint, accessToken);

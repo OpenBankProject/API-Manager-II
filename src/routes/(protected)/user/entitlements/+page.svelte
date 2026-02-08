@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { currentBank } from "$lib/stores/currentBank.svelte";
+
   const { data, form } = $props();
   const userEntitlements = data.userEntitlements;
   const allEntitlements = data.allAvailableEntitlements;
@@ -31,7 +33,11 @@
   );
 
   let selectedEntitlementRole = $state("");
-  let selectedBankId = $state("");
+  let selectedBankId = $state(currentBank.bankId);
+
+  $effect(() => {
+    selectedBankId = currentBank.bankId;
+  });
 
   // Derived state to get the full entitlement object
   let selectedEntitlement = $derived(
@@ -53,7 +59,6 @@
   // Reset form on success
   if (form?.success) {
     selectedEntitlementRole = "";
-    selectedBankId = "";
   }
 
   // console.debug('User Entitlements:', userEntitlements);
@@ -165,15 +170,19 @@
     {#if form?.error}<p class="text-error-500 text-xs">{form.error}</p>{/if}
 
     {#if selectedEntitlement.requires_bank_id}
-      <label class="label">
-        <span class="label-text">Select Bank</span>
-        <select class="select" name="bank_id" bind:value={selectedBankId}>
-          <option value="" disabled>Select a bank</option>
-          {#each allBanks as bank}
-            <option value={bank.bank_id}>{bank.name} ({bank.bank_id})</option>
-          {/each}
-        </select>
-      </label>
+      <input type="hidden" name="bank_id" value={selectedBankId} />
+      <div class="label">
+        <span class="label-text">Bank</span>
+        {#if selectedBankId}
+          <div class="rounded border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300">
+            {selectedBankId}
+          </div>
+        {:else}
+          <p class="text-sm text-amber-600 dark:text-amber-400">
+            Please select a bank in <a href="/user" class="underline">My Account</a> first.
+          </p>
+        {/if}
+      </div>
     {/if}
     <button class="btn preset-outlined-tertiary-500" type="submit"
       >Add Entitlement</button

@@ -4,7 +4,6 @@
   import {
     Users,
     ArrowLeft,
-    Building2,
     Shield,
     ChevronRight,
     X,
@@ -12,8 +11,8 @@
   import { toast } from "$lib/utils/toastService";
   import { trackedFetch } from "$lib/utils/trackedFetch";
   import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
-  import BankSelectWidget from "$lib/components/BankSelectWidget.svelte";
   import RoleSearchWidget from "$lib/components/RoleSearchWidget.svelte";
+  import { currentBank } from "$lib/stores/currentBank.svelte";
 
   let { data } = $props<{ data: PageData }>();
 
@@ -24,8 +23,12 @@
   let error = $derived(data.error);
 
   // Form state
-  let bankId = $state("");
+  let bankId = $state(currentBank.bankId);
   let groupName = $state("");
+
+  $effect(() => {
+    bankId = currentBank.bankId;
+  });
   let groupDescription = $state("");
   let selectedRoles = $state<string[]>([]);
   let isEnabled = $state(true);
@@ -152,23 +155,6 @@
       {/if}
 
       <form onsubmit={handleSubmit} class="form">
-        <!-- Bank ID -->
-        <div class="form-group">
-          <label for="bank-id" class="form-label">
-            <Building2 size={16} />
-            Bank ID
-          </label>
-          <BankSelectWidget
-            bind:selectedBankId={bankId}
-            disabled={isSubmitting}
-            allowEmpty={true}
-            emptyLabel="Select a bank (optional)..."
-          />
-          <div class="form-help">
-            Optionally select the bank this group belongs to
-          </div>
-        </div>
-
         <!-- Group Name -->
         <div class="form-group">
           <label for="group-name" class="form-label">

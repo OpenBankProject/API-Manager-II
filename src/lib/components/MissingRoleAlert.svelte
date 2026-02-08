@@ -2,6 +2,7 @@
   import { ShieldCheck } from "@lucide/svelte";
   import MessageBox from "$lib/components/MessageBox.svelte";
   import { rolesCache } from "$lib/stores/rolesCache.svelte";
+  import { currentBank } from "$lib/stores/currentBank.svelte";
   import { onMount } from "svelte";
 
   interface Props {
@@ -9,11 +10,6 @@
     errorCode?: string;
     message?: string;
     bankId?: string;
-  }
-
-  interface Bank {
-    bank_id: string;
-    short_name: string;
   }
 
   let { roles, errorCode, message, bankId }: Props = $props();
@@ -24,9 +20,11 @@
   let submitError = $state<string | null>(null);
   let rolesMetadata = $state<Map<string, boolean>>(new Map());
   let loadingMetadata = $state(false);
-  let banks = $state<Bank[]>([]);
-  let loadingBanks = $state(false);
-  let selectedBankId = $state("");
+  let selectedBankId = $state(currentBank.bankId);
+
+  $effect(() => {
+    selectedBankId = currentBank.bankId;
+  });
 
   // Fetch role metadata on mount
   onMount(async () => {
@@ -40,11 +38,6 @@
       });
       rolesMetadata = metadataMap;
 
-      // If any role requires bank_id and no bankId was provided, fetch banks
-      const needsBankId = Array.from(metadataMap.values()).some((requires) => requires);
-      if (needsBankId && !bankId) {
-        await fetchBanks();
-      }
     } catch (error) {
       console.error("Failed to fetch role metadata:", error);
     } finally {
@@ -52,41 +45,20 @@
     }
   });
 
-  async function fetchBanks() {
-    loadingBanks = true;
-    try {
-      const response = await fetch("/api/banks");
-      if (response.ok) {
-        const data = await response.json();
-        banks = (data.banks || []).map((b: any) => ({
-          bank_id: b.bank_id,
-          short_name: b.short_name || b.bank_id,
-        }));
-      }
-    } catch (error) {
-      console.error("Failed to fetch banks:", error);
-    } finally {
-      loadingBanks = false;
-    }
-  }
-
   // Check if any role requires bank_id
   let requiresBankId = $derived(
     Array.from(rolesMetadata.values()).some((requires) => requires),
   );
 
-  // Determine if we need to show bank selector (role requires bank but none provided)
-  let showBankSelector = $derived(requiresBankId && !bankId);
-
-  // The effective bank_id to use (provided prop or selected)
+  // The effective bank_id to use (provided prop or from currentBank)
   let effectiveBankId = $derived(bankId || selectedBankId);
 
   async function handleRequestClick() {
     if (isSubmitting) return;
 
     // Validate bank selection if required
-    if (showBankSelector && !selectedBankId) {
-      submitError = "Please select a bank for this role.";
+    if (requiresBankId && !bankId && !selectedBankId) {
+      submitError = "Please select a bank in My Account for this role.";
       return;
     }
 
@@ -163,30 +135,17 @@
         </p>
       {/if}
 
-      {#if showBankSelector}
-        <div class="bank-selector">
-          <label for="bank-select" class="bank-label">
-            <strong>Select Bank:</strong>
-            <span class="required">*</span>
-            <span class="bank-hint">This role requires a bank to be selected</span>
-          </label>
-          {#if loadingBanks}
-            <div class="loading-banks">Loading banks...</div>
-          {:else if banks.length === 0}
-            <div class="no-banks">No banks available</div>
-          {:else}
-            <select
-              id="bank-select"
-              bind:value={selectedBankId}
-              class="bank-dropdown"
-            >
-              <option value="">-- Select a bank --</option>
-              {#each banks as bank}
-                <option value={bank.bank_id}>{bank.short_name} ({bank.bank_id})</option>
-              {/each}
-            </select>
-          {/if}
-        </div>
+      {#if requiresBankId && !bankId}
+        {#if selectedBankId}
+          <p class="bank-info">
+            <strong>Bank ID:</strong> <code class="bank-code">{selectedBankId}</code>
+            <span class="bank-hint">(from current bank selection)</span>
+          </p>
+        {:else}
+          <div class="bank-selector">
+            <p>This role requires a bank. Please select a bank in <a href="/user" style="color: #3b82f6; text-decoration: underline;">My Account</a> first.</p>
+          </div>
+        {/if}
       {/if}
 
       {#if message}
@@ -516,39 +475,4 @@
     margin-left: 0.25rem;
   }
 
-  .bank-dropdown {
-    width: 100%;
-    padding: 0.625rem;
-    border: 1px solid rgba(59, 130, 246, 0.4);
-    border-radius: 4px;
-    font-size: 0.875rem;
-    background: white;
-    color: #1f2937;
-    cursor: pointer;
-  }
-
-  .bank-dropdown:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-  }
-
-  :global([data-mode="dark"]) .bank-dropdown {
-    background: rgb(var(--color-surface-800));
-    border-color: rgba(59, 130, 246, 0.5);
-    color: rgb(var(--color-surface-100));
-  }
-
-  .loading-banks,
-  .no-banks {
-    padding: 0.5rem;
-    font-size: 0.875rem;
-    color: #6b7280;
-    font-style: italic;
-  }
-
-  :global([data-mode="dark"]) .loading-banks,
-  :global([data-mode="dark"]) .no-banks {
-    color: rgb(var(--color-surface-400));
-  }
 </style>

@@ -10,7 +10,6 @@
   } from "@lucide/svelte";
   import { toast } from "$lib/utils/toastService";
   import { trackedFetch } from "$lib/utils/trackedFetch";
-  import BankSelectWidget from "$lib/components/BankSelectWidget.svelte";
   import { currentBank } from "$lib/stores/currentBank.svelte";
   import {
     bootstrapJourneys,
@@ -21,6 +20,10 @@
   type ItemStatus = "idle" | "creating" | "created" | "error";
 
   let selectedBankId = $state(currentBank.bankId);
+
+  $effect(() => {
+    selectedBankId = currentBank.bankId;
+  });
 
   // Status tracking for each collection and product
   let collectionStatus = $state<Record<string, ItemStatus>>({});
@@ -287,23 +290,14 @@
         </div>
       </div>
 
-      <!-- Bank Selector -->
-      <div class="bank-selector-section">
-        <label class="form-label">
-          Select Bank
-          <span class="required">*</span>
-        </label>
-        <BankSelectWidget
-          bind:selectedBankId
-          allowEmpty={false}
-          emptyLabel="Select a bank for product creation"
-        />
-        {#if !selectedBankId}
-          <div class="bank-hint">
-            A bank must be selected before creating products. Collections can be created without a bank.
+      {#if !selectedBankId}
+        <div class="info-banner" style="border-color: #fbbf24; background: #fef3c7; color: #92400e;">
+          <Info size={18} />
+          <div>
+            <strong>No bank selected.</strong> Please select a bank in <a href="/user" style="text-decoration: underline;">My Account</a> before creating products. Collections can be created without a bank.
           </div>
-        {/if}
-      </div>
+        </div>
+      {/if}
 
       <!-- Progress Bar -->
       <div class="progress-bar">
@@ -480,7 +474,7 @@
           {/if}
         </button>
         {#if !selectedBankId}
-          <span class="bootstrap-hint">Select a bank to enable full bootstrap</span>
+          <span class="bootstrap-hint">Select a bank in <a href="/user" style="text-decoration: underline; color: inherit;">My Account</a> to enable full bootstrap</span>
         {/if}
       </div>
     </div>
@@ -624,39 +618,6 @@
     background: rgba(59, 130, 246, 0.1);
     border-color: rgba(59, 130, 246, 0.3);
     color: rgb(var(--color-primary-200));
-  }
-
-  /* ── Bank Selector ──────────────────────────────────────────────── */
-  .bank-selector-section {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .form-label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #374151;
-  }
-
-  :global([data-mode="dark"]) .form-label {
-    color: var(--color-surface-200);
-  }
-
-  .required {
-    color: #dc2626;
-  }
-
-  .bank-hint {
-    font-size: 0.75rem;
-    color: #d97706;
-  }
-
-  :global([data-mode="dark"]) .bank-hint {
-    color: #fbbf24;
   }
 
   /* ── Progress Bar ───────────────────────────────────────────────── */

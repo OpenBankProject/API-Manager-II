@@ -35,7 +35,7 @@
     loadError = "";
 
     try {
-      const response = await trackedFetch(`/api/products/${bankId}`);
+      const response = await trackedFetch(`/api/products/${bankId}?product_type=API_PRODUCT`);
 
       if (!response.ok) {
         const errorDetails = await extractErrorFromResponse(
