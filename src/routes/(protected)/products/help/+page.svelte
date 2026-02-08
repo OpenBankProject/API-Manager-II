@@ -37,26 +37,62 @@
     </div>
 
     <div class="panel-content">
-      <!-- What is an API Product? -->
-      <section class="section">
-        <h2 class="section-title">What is an API Product?</h2>
-        <p class="section-text">
-          An API Product bundles a set of API endpoints (via an <strong>API Collection</strong>)
-          with access controls, rate limits, and pricing. Third-party providers (TPPs) subscribe to
-          an API Product to gain access to the endpoints it contains, subject to the quotas and
-          pricing you configure.
-        </p>
-      </section>
+      <!-- Two-column layout: Intro + Key Concepts -->
+      <div class="intro-grid">
+        <!-- What is an API Product? -->
+        <section class="section">
+          <h2 class="section-title">What is an API Product?</h2>
+          <p class="section-text">
+            An API Product bundles a set of API endpoints (via an <strong>API Collection</strong>)
+            with access controls, rate limits, and pricing. Third-party providers (TPPs) subscribe to
+            an API Product to gain access to the endpoints it contains, subject to the quotas and
+            pricing you configure.
+          </p>
+        </section>
+
+        <!-- Key Concepts -->
+        <section class="section">
+          <h2 class="section-title">Key Concepts</h2>
+          <div class="concepts-list">
+            <div class="concept-item">
+              <h3 class="concept-title">API Collection</h3>
+              <p class="concept-text">
+                A named group of API endpoints that forms the core of your product offering.
+              </p>
+            </div>
+            <div class="concept-item">
+              <h3 class="concept-title">Product Attribute</h3>
+              <p class="concept-text">
+                Key-value pairs storing rate limits, pricing, and linked API Collection ID.
+              </p>
+            </div>
+            <div class="concept-item">
+              <h3 class="concept-title">Rate Limit</h3>
+              <p class="concept-text">
+                Quota controlling API calls per time period (e.g. per month or per day).
+              </p>
+            </div>
+            <div class="concept-item">
+              <h3 class="concept-title">Product Code</h3>
+              <p class="concept-text">
+                Unique identifier (e.g. <code>payments-api-v2</code>) used across the system.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
 
       <!-- Step-by-step workflow -->
-      <section class="section">
+      <section class="section workflow-section">
         <h2 class="section-title">Step-by-step Workflow</h2>
 
-        <div class="steps">
+        <div class="steps-grid">
           <div class="step-card">
-            <div class="step-number">1</div>
-            <div class="step-icon">
-              <FolderOpen size={24} />
+            <div class="step-header">
+              <div class="step-number">1</div>
+              <div class="step-icon">
+                <FolderOpen size={20} />
+              </div>
             </div>
             <div class="step-body">
               <h3 class="step-title">Create an API Collection</h3>
@@ -71,15 +107,17 @@
           </div>
 
           <div class="step-card">
-            <div class="step-number">2</div>
-            <div class="step-icon">
-              <Package size={24} />
+            <div class="step-header">
+              <div class="step-number">2</div>
+              <div class="step-icon">
+                <Package size={20} />
+              </div>
             </div>
             <div class="step-body">
               <h3 class="step-title">Create an API Product</h3>
               <p class="step-text">
-                Link your product to the API Collection, give it a name and a unique product code.
-                The product code identifies it across the system.
+                Link your product to the API Collection, give it a name and a unique product code
+                that identifies it across the system.
               </p>
               <a href="/products/create" class="step-link">
                 Create a Product &rarr;
@@ -88,84 +126,51 @@
           </div>
 
           <div class="step-card">
-            <div class="step-number">3</div>
-            <div class="step-icon">
-              <Gauge size={24} />
+            <div class="step-header">
+              <div class="step-number">3</div>
+              <div class="step-icon">
+                <Gauge size={20} />
+              </div>
             </div>
             <div class="step-body">
               <h3 class="step-title">Set Rate Limits</h3>
               <p class="step-text">
-                Configure call quotas using <strong>Product Attributes</strong>. For example, set
-                <code>calls_per_month</code> to control how many API calls a subscriber can make.
+                Configure call quotas like <code>calls_per_month</code> to control how many API
+                calls a subscriber can make.
               </p>
             </div>
           </div>
 
           <div class="step-card">
-            <div class="step-number">4</div>
-            <div class="step-icon">
-              <CreditCard size={24} />
+            <div class="step-header">
+              <div class="step-number">4</div>
+              <div class="step-icon">
+                <CreditCard size={20} />
+              </div>
             </div>
             <div class="step-body">
               <h3 class="step-title">Set Pricing</h3>
               <p class="step-text">
-                Connect to Stripe or configure pricing details via Product Attributes such as
-                <code>price_per_month</code> or <code>stripe_product_id</code>.
+                Connect to Stripe or configure pricing via attributes like
+                <code>price_per_month</code>.
               </p>
             </div>
           </div>
 
           <div class="step-card">
-            <div class="step-number">5</div>
-            <div class="step-icon">
-              <Rocket size={24} />
+            <div class="step-header">
+              <div class="step-number">5</div>
+              <div class="step-icon">
+                <Rocket size={20} />
+              </div>
             </div>
             <div class="step-body">
               <h3 class="step-title">Publish</h3>
               <p class="step-text">
-                Make the product available for TPPs to discover and subscribe to. Once published,
-                consumers can request access through the API Marketplace.
+                Make the product available for TPPs to discover and subscribe to through the
+                API Marketplace.
               </p>
             </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Key Concepts -->
-      <section class="section">
-        <h2 class="section-title">Key Concepts</h2>
-
-        <div class="concepts-grid">
-          <div class="concept-card">
-            <h3 class="concept-title">API Collection</h3>
-            <p class="concept-text">
-              A named group of API endpoints. Collections let you curate which endpoints are
-              included in a product offering.
-            </p>
-          </div>
-
-          <div class="concept-card">
-            <h3 class="concept-title">Product Attribute</h3>
-            <p class="concept-text">
-              A key-value pair attached to a product. Attributes store configuration such as rate
-              limits, pricing, and the linked API Collection ID.
-            </p>
-          </div>
-
-          <div class="concept-card">
-            <h3 class="concept-title">Rate Limit</h3>
-            <p class="concept-text">
-              A quota that controls how many API calls a subscriber can make within a given time
-              period (e.g. per month or per day).
-            </p>
-          </div>
-
-          <div class="concept-card">
-            <h3 class="concept-title">Product Code</h3>
-            <p class="concept-text">
-              A unique identifier for a product (e.g. <code>payments-api-v2</code>). Used to
-              reference the product across the system and in API calls.
-            </p>
           </div>
         </div>
       </section>
@@ -175,7 +180,7 @@
 
 <style>
   .container {
-    max-width: 800px;
+    max-width: 1200px;
   }
 
   .breadcrumb {
@@ -282,12 +287,24 @@
     padding: 2rem;
   }
 
-  .section {
-    margin-bottom: 2.5rem;
+  .intro-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
   }
 
-  .section:last-child {
+  .section {
     margin-bottom: 0;
+  }
+
+  .workflow-section {
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  :global([data-mode="dark"]) .workflow-section {
+    border-top-color: rgb(var(--color-surface-700));
   }
 
   .section-title {
@@ -324,18 +341,70 @@
     color: var(--color-surface-200);
   }
 
-  /* Steps */
-  .steps {
+  /* Key Concepts List */
+  .concepts-list {
     display: flex;
     flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .concept-item {
+    padding: 0.75rem;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+  }
+
+  :global([data-mode="dark"]) .concept-item {
+    background: rgb(var(--color-surface-700));
+    border-color: rgb(var(--color-surface-600));
+  }
+
+  .concept-title {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0 0 0.25rem 0;
+  }
+
+  :global([data-mode="dark"]) .concept-title {
+    color: var(--color-surface-100);
+  }
+
+  .concept-text {
+    font-size: 0.75rem;
+    color: #4b5563;
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  :global([data-mode="dark"]) .concept-text {
+    color: var(--color-surface-300);
+  }
+
+  .concept-text code {
+    background: #e5e7eb;
+    padding: 0.0625rem 0.25rem;
+    border-radius: 3px;
+    font-size: 0.6875rem;
+  }
+
+  :global([data-mode="dark"]) .concept-text code {
+    background: rgb(var(--color-surface-600));
+    color: var(--color-surface-200);
+  }
+
+  /* Steps Grid */
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
     gap: 1rem;
   }
 
   .step-card {
     display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-    padding: 1.25rem;
+    flex-direction: column;
+    padding: 1rem;
     background: #f9fafb;
     border: 1px solid #e5e7eb;
     border-radius: 8px;
@@ -346,16 +415,23 @@
     border-color: rgb(var(--color-surface-600));
   }
 
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
   .step-number {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     background: #3b82f6;
     color: white;
     border-radius: 50%;
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
     font-weight: 700;
     flex-shrink: 0;
   }
@@ -364,11 +440,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     background: #eff6ff;
     color: #3b82f6;
-    border-radius: 8px;
+    border-radius: 6px;
     flex-shrink: 0;
   }
 
@@ -379,14 +455,15 @@
 
   .step-body {
     flex: 1;
-    min-width: 0;
+    display: flex;
+    flex-direction: column;
   }
 
   .step-title {
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
     font-weight: 600;
     color: #111827;
-    margin: 0 0 0.25rem 0;
+    margin: 0 0 0.375rem 0;
   }
 
   :global([data-mode="dark"]) .step-title {
@@ -394,10 +471,11 @@
   }
 
   .step-text {
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
     color: #4b5563;
     line-height: 1.5;
     margin: 0;
+    flex: 1;
   }
 
   :global([data-mode="dark"]) .step-text {
@@ -406,9 +484,9 @@
 
   .step-text code {
     background: #e5e7eb;
-    padding: 0.125rem 0.375rem;
-    border-radius: 4px;
-    font-size: 0.75rem;
+    padding: 0.0625rem 0.25rem;
+    border-radius: 3px;
+    font-size: 0.6875rem;
   }
 
   :global([data-mode="dark"]) .step-text code {
@@ -419,7 +497,7 @@
   .step-link {
     display: inline-block;
     margin-top: 0.5rem;
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: #3b82f6;
     text-decoration: none;
@@ -433,57 +511,21 @@
     color: rgb(var(--color-primary-400));
   }
 
-  /* Key Concepts Grid */
-  .concepts-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
+  @media (max-width: 1024px) {
+    .steps-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
   }
 
-  .concept-card {
-    padding: 1rem;
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-  }
+  @media (max-width: 768px) {
+    .intro-grid {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
 
-  :global([data-mode="dark"]) .concept-card {
-    background: rgb(var(--color-surface-700));
-    border-color: rgb(var(--color-surface-600));
-  }
-
-  .concept-title {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #111827;
-    margin: 0 0 0.375rem 0;
-  }
-
-  :global([data-mode="dark"]) .concept-title {
-    color: var(--color-surface-100);
-  }
-
-  .concept-text {
-    font-size: 0.8125rem;
-    color: #4b5563;
-    line-height: 1.5;
-    margin: 0;
-  }
-
-  :global([data-mode="dark"]) .concept-text {
-    color: var(--color-surface-300);
-  }
-
-  .concept-text code {
-    background: #e5e7eb;
-    padding: 0.125rem 0.375rem;
-    border-radius: 4px;
-    font-size: 0.75rem;
-  }
-
-  :global([data-mode="dark"]) .concept-text code {
-    background: rgb(var(--color-surface-600));
-    color: var(--color-surface-200);
+    .steps-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
   }
 
   @media (max-width: 640px) {
@@ -492,13 +534,7 @@
       text-align: center;
     }
 
-    .step-card {
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-    }
-
-    .concepts-grid {
+    .steps-grid {
       grid-template-columns: 1fr;
     }
   }

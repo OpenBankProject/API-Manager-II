@@ -27,6 +27,7 @@ import {
   Plug,
   Package,
   CircleHelp,
+  Rocket,
 } from "@lucide/svelte";
 import { env } from "$env/dynamic/public";
 
@@ -369,6 +370,7 @@ function buildProductsItems(): NavigationItem[] {
       label: "Product Collections",
       iconComponent: FolderOpen,
     },
+    { href: "/products/bootstrap", label: "Bootstrap", iconComponent: Rocket },
     { href: "/products/help", label: "Help", iconComponent: CircleHelp },
   ];
 

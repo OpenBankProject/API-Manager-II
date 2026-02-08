@@ -2,7 +2,7 @@
   import type { PageData } from "./$types";
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
-  import { Package, ArrowLeft, Plus, Trash2 } from "@lucide/svelte";
+  import { Package, ArrowLeft } from "@lucide/svelte";
   import { toast } from "$lib/utils/toastService";
   import { trackedFetch } from "$lib/utils/trackedFetch";
   import BankSelectWidget from "$lib/components/BankSelectWidget.svelte";
@@ -24,24 +24,26 @@
   let parentProductCode = $state("");
   let isSubmitting = $state(false);
 
-  // Custom attributes
-  const ATTRIBUTE_TYPES = ["STRING", "INTEGER", "DOUBLE", "DATE_WITH_DAY"];
+  // API Product specific attributes
+  let monthlySubscriptionAmount = $state("");
+  let callsPerSecond = $state("");
+  let callsPerMinute = $state("");
+  let callsPerHour = $state("");
+  let callsPerDay = $state("");
+  let callsPerWeek = $state("");
+  let callsPerMonth = $state("");
 
-  interface CustomAttribute {
-    name: string;
-    type: string;
-    value: string;
-    is_active: boolean;
-  }
+  // Auto-calculate other rate limits when per second changes
+  function handlePerSecondChange() {
+    const perSecond = parseInt(String(callsPerSecond || ""), 10);
 
-  let customAttributes: CustomAttribute[] = $state([]);
-
-  function addAttribute() {
-    customAttributes.push({ name: "", type: "STRING", value: "", is_active: true });
-  }
-
-  function removeAttribute(index: number) {
-    customAttributes.splice(index, 1);
+    if (!isNaN(perSecond) && perSecond > 0) {
+      callsPerMinute = String(perSecond * 60);
+      callsPerHour = String(perSecond * 3600);
+      callsPerDay = String(perSecond * 86400);
+      callsPerWeek = String(perSecond * 604800);
+      callsPerMonth = String(perSecond * 2592000); // 30 days
+    }
   }
 
   async function handleSubmit(event: Event) {
@@ -86,57 +88,68 @@
         throw new Error(errorData.error || "Failed to create product");
       }
 
-      // Step 2: Create the api_collection_id attribute
-      const attributeBody = {
-        name: "api_collection_id",
-        type: "STRING",
-        value: selectedCollectionId.trim(),
-        is_active: true,
-      };
+      // Step 2: Create the API Product attributes
+      const attributesToCreate = [
+        { name: "product_type", type: "STRING", value: "API_PRODUCT" },
+        { name: "api_collection_id", type: "STRING", value: selectedCollectionId.trim() },
+      ];
 
-      const attributeResponse = await trackedFetch(
-        `/api/products/${selectedBankId}/${productCode.trim()}/attribute`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(attributeBody),
-        },
-      );
+      // Add rate limit attributes if provided (convert to string for safety)
+      const subscriptionVal = String(monthlySubscriptionAmount || "").trim();
+      const perSecondVal = String(callsPerSecond || "").trim();
+      const perMinuteVal = String(callsPerMinute || "").trim();
+      const perHourVal = String(callsPerHour || "").trim();
+      const perDayVal = String(callsPerDay || "").trim();
+      const perWeekVal = String(callsPerWeek || "").trim();
+      const perMonthVal = String(callsPerMonth || "").trim();
 
-      if (!attributeResponse.ok) {
-        const errorData = await attributeResponse.json();
-        throw new Error(
-          errorData.error || "Product created but failed to set API Collection attribute",
-        );
+      if (subscriptionVal) {
+        attributesToCreate.push({ name: "monthly_subscription_amount", type: "DOUBLE", value: subscriptionVal });
+      }
+      if (perSecondVal) {
+        attributesToCreate.push({ name: "calls_per_second", type: "INTEGER", value: perSecondVal });
+      }
+      if (perMinuteVal) {
+        attributesToCreate.push({ name: "calls_per_minute", type: "INTEGER", value: perMinuteVal });
+      }
+      if (perHourVal) {
+        attributesToCreate.push({ name: "calls_per_hour", type: "INTEGER", value: perHourVal });
+      }
+      if (perDayVal) {
+        attributesToCreate.push({ name: "calls_per_day", type: "INTEGER", value: perDayVal });
+      }
+      if (perWeekVal) {
+        attributesToCreate.push({ name: "calls_per_week", type: "INTEGER", value: perWeekVal });
+      }
+      if (perMonthVal) {
+        attributesToCreate.push({ name: "calls_per_month", type: "INTEGER", value: perMonthVal });
       }
 
-      // Step 3: Create custom attributes
-      const attributesToCreate = customAttributes.filter((a) => a.name.trim() !== "");
       const failedAttributes: string[] = [];
 
       for (const attr of attributesToCreate) {
         try {
-          const customAttrBody = {
-            name: attr.name.trim(),
+          const attrBody = {
+            name: attr.name,
             type: attr.type,
-            value: attr.value.trim(),
-            is_active: attr.is_active,
+            value: attr.value,
+            is_active: true,
           };
 
-          const customAttrResponse = await trackedFetch(
+          const attrResponse = await trackedFetch(
             `/api/products/${selectedBankId}/${productCode.trim()}/attribute`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(customAttrBody),
+              body: JSON.stringify(attrBody),
             },
           );
 
-          if (!customAttrResponse.ok) {
-            failedAttributes.push(attr.name.trim());
+          if (!attrResponse.ok) {
+            failedAttributes.push(attr.name);
           }
         } catch {
-          failedAttributes.push(attr.name.trim());
+          failedAttributes.push(attr.name);
         }
       }
 
@@ -204,94 +217,96 @@
       {/if}
 
       <form onsubmit={handleSubmit} class="form">
-        <!-- API Collection -->
-        <div class="form-group">
-          <label for="api-collection" class="form-label">
-            API Collection
-            <span class="required">*</span>
-          </label>
-          {#if collections.length > 0}
-            <select
-              id="api-collection"
-              class="form-input"
-              bind:value={selectedCollectionId}
-              disabled={isSubmitting}
-              required
-            >
-              <option value="">Select an API Collection...</option>
-              {#each collections as collection}
-                <option value={collection.api_collection_id}>
-                  {collection.api_collection_name}
-                </option>
-              {/each}
-            </select>
-          {:else}
+        <!-- Row 1: API Collection + Bank -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="api-collection" class="form-label">
+              API Collection
+              <span class="required">*</span>
+            </label>
+            {#if collections.length > 0}
+              <select
+                id="api-collection"
+                class="form-input"
+                bind:value={selectedCollectionId}
+                disabled={isSubmitting}
+                required
+              >
+                <option value="">Select an API Collection...</option>
+                {#each collections as collection}
+                  <option value={collection.api_collection_id}>
+                    {collection.api_collection_name}
+                  </option>
+                {/each}
+              </select>
+            {:else}
+              <input
+                id="api-collection"
+                type="text"
+                class="form-input"
+                placeholder="Enter API Collection ID"
+                bind:value={selectedCollectionId}
+                disabled={isSubmitting}
+                required
+              />
+            {/if}
+            <div class="form-help">
+              The API Collection to link to this product
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="bank" class="form-label">
+              Bank
+              <span class="required">*</span>
+            </label>
+            <BankSelectWidget
+              bind:selectedBankId
+              allowEmpty={false}
+              emptyLabel="Select a bank"
+            />
+            <div class="form-help">The bank this product belongs to</div>
+          </div>
+        </div>
+
+        <!-- Row 2: Product Code + Name -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="product-code" class="form-label">
+              Product Code
+              <span class="required">*</span>
+            </label>
             <input
-              id="api-collection"
+              id="product-code"
               type="text"
               class="form-input"
-              placeholder="Enter API Collection ID"
-              bind:value={selectedCollectionId}
+              placeholder="e.g., payments-api-v2"
+              bind:value={productCode}
               disabled={isSubmitting}
               required
             />
-          {/if}
-          <div class="form-help">
-            The API Collection to link to this product
+            <div class="form-help">
+              A unique code to identify this product
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="product-name" class="form-label">
+              Name
+            </label>
+            <input
+              id="product-name"
+              type="text"
+              class="form-input"
+              placeholder="e.g., Payments API"
+              bind:value={name}
+              disabled={isSubmitting}
+            />
+            <div class="form-help">A display name for this product</div>
           </div>
         </div>
 
-        <!-- Bank -->
-        <div class="form-group">
-          <label for="bank" class="form-label">
-            Bank
-            <span class="required">*</span>
-          </label>
-          <BankSelectWidget
-            bind:selectedBankId
-            allowEmpty={false}
-            emptyLabel="Select a bank"
-          />
-          <div class="form-help">The bank this product belongs to</div>
-        </div>
-
-        <!-- Product Code -->
-        <div class="form-group">
-          <label for="product-code" class="form-label">
-            Product Code
-            <span class="required">*</span>
-          </label>
-          <input
-            id="product-code"
-            type="text"
-            class="form-input"
-            placeholder="e.g., payments-api-v2"
-            bind:value={productCode}
-            disabled={isSubmitting}
-            required
-          />
-          <div class="form-help">
-            A unique code to identify this product
-          </div>
-        </div>
-
-        <!-- Name -->
-        <div class="form-group">
-          <label for="product-name" class="form-label">
-            Name
-          </label>
-          <input
-            id="product-name"
-            type="text"
-            class="form-input"
-            placeholder="e.g., Payments API"
-            bind:value={name}
-            disabled={isSubmitting}
-          />
-          <div class="form-help">A display name for this product</div>
-        </div>
-
-        <!-- Description -->
+        <!-- Description (full width) -->
         <div class="form-group">
           <label for="product-description" class="form-label">
             Description
@@ -302,93 +317,139 @@
             placeholder="e.g., API product bundling payment initiation and status endpoints"
             bind:value={description}
             disabled={isSubmitting}
-            rows="4"
+            rows="3"
           ></textarea>
           <div class="form-help">
             Optional description of this product
           </div>
         </div>
 
-        <!-- Parent Product Code -->
-        <div class="form-group">
-          <label for="parent-product-code" class="form-label">
-            Parent Product Code
-          </label>
-          <input
-            id="parent-product-code"
-            type="text"
-            class="form-input"
-            placeholder="e.g., banking-apis"
-            bind:value={parentProductCode}
-            disabled={isSubmitting}
-          />
-          <div class="form-help">
-            Optional parent product code for product hierarchy
+        <!-- Row 3: Parent Product Code + Monthly Subscription -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="parent-product-code" class="form-label">
+              Parent Product Code
+            </label>
+            <input
+              id="parent-product-code"
+              type="text"
+              class="form-input"
+              placeholder="e.g., banking-apis"
+              bind:value={parentProductCode}
+              disabled={isSubmitting}
+            />
+            <div class="form-help">
+              Optional parent product code for hierarchy
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="monthly-subscription" class="form-label">
+              Monthly Subscription
+            </label>
+            <div class="input-with-prefix">
+              <span class="input-prefix">$</span>
+              <input
+                id="monthly-subscription"
+                type="number"
+                step="0.01"
+                min="0"
+                class="form-input with-prefix"
+                placeholder="e.g., 99.99"
+                bind:value={monthlySubscriptionAmount}
+                disabled={isSubmitting}
+              />
+            </div>
+            <div class="form-help">Monthly subscription fee</div>
           </div>
         </div>
 
-        <!-- Additional Attributes -->
-        <div class="attributes-section">
-          <div class="attributes-header">
-            <label class="form-label">Additional Attributes</label>
-            <button
-              type="button"
-              class="btn-add-attribute"
-              onclick={addAttribute}
-              disabled={isSubmitting}
-            >
-              <Plus size={14} />
-              Add Attribute
-            </button>
+        <!-- Rate Limits -->
+        <div class="rate-limits-section">
+          <div class="section-header">
+            <div class="section-title">Rate Limits</div>
+            <div class="form-help">Enter Per Second to auto-fill others, then adjust as needed</div>
           </div>
-          <div class="form-help">
-            Define custom attributes such as rate limits, pricing tiers, or metadata for this product
-          </div>
-
-          {#each customAttributes as attr, i}
-            <div class="attribute-row">
+          <div class="rate-limits-grid">
+            <div class="form-group">
+              <label for="calls-per-second" class="form-label">Per Second</label>
               <input
-                type="text"
-                class="form-input"
-                placeholder="calls_per_month"
-                bind:value={attr.name}
+                id="calls-per-second"
+                type="number"
+                min="0"
+                class="form-input primary-input"
+                placeholder="Enter"
+                bind:value={callsPerSecond}
+                onchange={handlePerSecondChange}
                 disabled={isSubmitting}
               />
-              <select
-                class="form-input"
-                bind:value={attr.type}
-                disabled={isSubmitting}
-              >
-                {#each ATTRIBUTE_TYPES as attrType}
-                  <option value={attrType}>{attrType}</option>
-                {/each}
-              </select>
-              <input
-                type="text"
-                class="form-input"
-                placeholder="10000"
-                bind:value={attr.value}
-                disabled={isSubmitting}
-              />
-              <label class="attribute-active-label">
-                <input
-                  type="checkbox"
-                  bind:checked={attr.is_active}
-                  disabled={isSubmitting}
-                />
-                Active
-              </label>
-              <button
-                type="button"
-                class="btn-remove-attribute"
-                onclick={() => removeAttribute(i)}
-                disabled={isSubmitting}
-                title="Remove attribute"
-              >
-                <Trash2 size={16} />
-              </button>
             </div>
-          {/each}
+
+            <div class="form-group">
+              <label for="calls-per-minute" class="form-label">Per Minute</label>
+              <input
+                id="calls-per-minute"
+                type="number"
+                min="0"
+                class="form-input"
+                placeholder="Auto"
+                bind:value={callsPerMinute}
+                disabled={isSubmitting}
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="calls-per-hour" class="form-label">Per Hour</label>
+              <input
+                id="calls-per-hour"
+                type="number"
+                min="0"
+                class="form-input"
+                placeholder="Auto"
+                bind:value={callsPerHour}
+                disabled={isSubmitting}
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="calls-per-day" class="form-label">Per Day</label>
+              <input
+                id="calls-per-day"
+                type="number"
+                min="0"
+                class="form-input"
+                placeholder="Auto"
+                bind:value={callsPerDay}
+                disabled={isSubmitting}
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="calls-per-week" class="form-label">Per Week</label>
+              <input
+                id="calls-per-week"
+                type="number"
+                min="0"
+                class="form-input"
+                placeholder="Auto"
+                bind:value={callsPerWeek}
+                disabled={isSubmitting}
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="calls-per-month" class="form-label">Per Month</label>
+              <input
+                id="calls-per-month"
+                type="number"
+                min="0"
+                class="form-input"
+                placeholder="Auto"
+                bind:value={callsPerMonth}
+                disabled={isSubmitting}
+              />
+            </div>
+          </div>
         </div>
 
         <!-- Action Buttons -->
@@ -418,7 +479,7 @@
 
 <style>
   .container {
-    max-width: 800px;
+    max-width: 1000px;
   }
 
   .breadcrumb {
@@ -544,6 +605,12 @@
   .form {
     display: flex;
     flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 1.5rem;
   }
 
@@ -697,109 +764,98 @@
     background: rgb(var(--color-surface-600));
   }
 
-  .attributes-section {
+  .section-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #374151;
+  }
+
+  :global([data-mode="dark"]) .section-title {
+    color: var(--color-surface-200);
+  }
+
+  .input-with-prefix {
     display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    padding-top: 1.5rem;
+    align-items: center;
+    position: relative;
+  }
+
+  .input-prefix {
+    position: absolute;
+    left: 0.75rem;
+    color: #6b7280;
+    font-size: 0.875rem;
+    font-weight: 500;
+    z-index: 1;
+  }
+
+  :global([data-mode="dark"]) .input-prefix {
+    color: var(--color-surface-400);
+  }
+
+  .form-input.with-prefix {
+    padding-left: 1.75rem;
+  }
+
+  .rate-limits-section {
+    padding-top: 1rem;
     border-top: 1px solid #e5e7eb;
   }
 
-  :global([data-mode="dark"]) .attributes-section {
+  :global([data-mode="dark"]) .rate-limits-section {
     border-top-color: rgb(var(--color-surface-700));
   }
 
-  .attributes-header {
+  .section-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
   }
 
-  .attribute-row {
+  .section-header .form-help {
+    margin: 0;
+  }
+
+  .rate-limits-grid {
     display: grid;
-    grid-template-columns: 1fr 150px 1fr 60px 36px;
-    gap: 0.5rem;
-    align-items: center;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.75rem;
   }
 
-  .attribute-active-label {
-    display: flex;
-    align-items: center;
+  .rate-limits-grid .form-group {
     gap: 0.25rem;
+  }
+
+  .rate-limits-grid .form-label {
     font-size: 0.75rem;
-    color: #374151;
-    white-space: nowrap;
+    font-weight: 500;
   }
 
-  :global([data-mode="dark"]) .attribute-active-label {
-    color: var(--color-surface-300);
-  }
-
-  .btn-add-attribute {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.375rem 0.75rem;
-    border: 1px solid #3b82f6;
-    border-radius: 6px;
-    background: transparent;
-    color: #3b82f6;
+  .rate-limits-grid .form-input {
+    padding: 0.5rem 0.5rem;
     font-size: 0.8125rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
   }
 
-  .btn-add-attribute:hover:not(:disabled) {
+  .rate-limits-grid .form-input.primary-input {
+    border-color: #3b82f6;
     background: #eff6ff;
   }
 
-  .btn-add-attribute:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  :global([data-mode="dark"]) .btn-add-attribute {
-    border-color: rgb(var(--color-primary-400));
-    color: rgb(var(--color-primary-400));
-  }
-
-  :global([data-mode="dark"]) .btn-add-attribute:hover:not(:disabled) {
+  :global([data-mode="dark"]) .rate-limits-grid .form-input.primary-input {
+    border-color: rgb(var(--color-primary-500));
     background: rgba(59, 130, 246, 0.15);
   }
 
-  .btn-remove-attribute {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    padding: 0;
-    border: none;
-    border-radius: 6px;
-    background: transparent;
-    color: #9ca3af;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
+  @media (max-width: 768px) {
+    .form-row {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
 
-  .btn-remove-attribute:hover:not(:disabled) {
-    background: #fef2f2;
-    color: #dc2626;
-  }
-
-  .btn-remove-attribute:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  :global([data-mode="dark"]) .btn-remove-attribute {
-    color: var(--color-surface-500);
-  }
-
-  :global([data-mode="dark"]) .btn-remove-attribute:hover:not(:disabled) {
-    background: rgba(239, 68, 68, 0.15);
-    color: rgb(var(--color-error-400));
+    .rate-limits-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
   }
 
   @media (max-width: 640px) {
@@ -818,14 +874,8 @@
       text-align: center;
     }
 
-    .attribute-row {
-      grid-template-columns: 1fr 1fr;
-      gap: 0.5rem;
-    }
-
-    .attribute-row .btn-remove-attribute {
-      grid-column: 2;
-      justify-self: end;
+    .rate-limits-grid {
+      grid-template-columns: repeat(2, 1fr);
     }
   }
 </style>

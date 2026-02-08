@@ -7,6 +7,7 @@
   } from "$lib/utils/errorHandler";
   import { trackedFetch } from "$lib/utils/trackedFetch";
   import BankSelectWidget from "$lib/components/BankSelectWidget.svelte";
+  import { currentBank } from "$lib/stores/currentBank.svelte";
 
   const apiExplorerUrl =
     $page.data.externalLinks?.API_EXPLORER_URL ||
@@ -14,7 +15,7 @@
 
   const apiExplorerProductsUrl = `${apiExplorerUrl}/resource-docs/OBPv6.0.0?operationid=OBPv4.0.0-getProducts`;
 
-  let selectedBankId = $state("");
+  let selectedBankId = $state(currentBank.bankId);
   let products = $state<any[]>([]);
   let isLoading = $state(false);
   let loadError = $state("");

@@ -7,6 +7,7 @@
   import ApiActivityIndicator from "$lib/components/ApiActivityIndicator.svelte";
   import { createLogger } from "$lib/utils/logger";
   import { resourceDocsCache } from "$lib/stores/resourceDocsCache";
+  import { currentBank } from "$lib/stores/currentBank.svelte";
   import { onMount } from "svelte";
 
   const logger = createLogger("LayoutClient");
@@ -27,6 +28,7 @@
 
   import { env } from "$env/dynamic/public";
   import LightSwitch from "$lib/components/LightSwitch.svelte";
+  import CurrentBankSelector from "$lib/components/CurrentBankSelector.svelte";
   import type { RootLayoutData } from "./+layout.server";
 
   logger.info("📦 All imports loaded");
@@ -41,6 +43,7 @@
   let isMobileMenuOpen = $state(false);
   let expandedSections = $state<Record<string, boolean>>({});
   let displayMode: "dark" | "light" = $state("dark");
+  let userMenuOpen = $state(false);
   let systemDynamicEntities = $state<any[]>([]);
 
   async function clearCache() {
@@ -79,11 +82,12 @@
     }
   });
 
-  // Pre-warm resource docs cache in browser for authenticated users
+  // Pre-warm resource docs cache and fetch banks for authenticated users
   onMount(() => {
     if (isAuthenticated) {
       logger.info("🔄 Pre-warming browser resource docs cache...");
       resourceDocsCache.preWarmCache(undefined as any);
+      currentBank.fetchBanks();
     }
   });
 
@@ -395,12 +399,36 @@
         style="height: 80px; flex-shrink: 0;"
       >
         {#if isAuthenticated}
-          <span class="mx-4 hover:text-tertiary-400"
-            ><a href="/user">{data.username}</a></span
-          >
-          <button type="button" class="btn preset-outlined-primary-500"
-            ><a href="/logout">Logout</a></button
-          >
+          <div class="relative mx-4">
+            <button
+              type="button"
+              class="flex items-center gap-1 hover:text-tertiary-400"
+              onclick={() => (userMenuOpen = !userMenuOpen)}
+              onblur={() => setTimeout(() => (userMenuOpen = false), 150)}
+            >
+              {data.username}
+              <ChevronDown class="size-4" />
+            </button>
+            {#if userMenuOpen}
+              <div class="absolute right-0 z-50 mt-2 min-w-[140px] rounded-md border border-surface-300-700 bg-surface-100-900 py-1 shadow-lg">
+                <a
+                  href="/user"
+                  class="block px-4 py-2 text-sm hover:preset-tonal"
+                >
+                  My Account
+                </a>
+                <a
+                  href="/logout"
+                  class="block px-4 py-2 text-sm hover:preset-tonal"
+                >
+                  Logout
+                </a>
+              </div>
+            {/if}
+          </div>
+          {#if currentBank.bank}
+            <span class="text-sm">Bank: {currentBank.bank.bank_id} ({currentBank.bank.bank_code})</span>
+          {/if}
         {:else}
           <span class="mx-4 hover:text-tertiary-400"
             ><a href="{data.externalLinks.PORTAL_URL}/register">Register</a>
