@@ -400,7 +400,7 @@
       >
         <div>
           {#if isAuthenticated && currentBank.bank}
-            <span class="text-sm">{currentBank.bank.full_name}: {currentBank.bank.bank_id} ({currentBank.bank.bank_code})</span>
+            <span class="text-sm">{currentBank.bank.full_name}: {currentBank.bank.bank_id} ({currentBank.bank.bank_code}) <a href="/user" class="hover:text-tertiary-400" title="Change current bank">&#9998;</a></span>
           {/if}
         </div>
         {#if isAuthenticated}
