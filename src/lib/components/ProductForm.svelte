@@ -16,6 +16,7 @@
     parentProductCode: string;
     collectionId: string;
     monthlySubscription: string;
+    monthlySubscriptionCurrency: string;
     rateLimits: {
       perSecond: string;
       perMinute: string;
@@ -36,6 +37,7 @@
     initialParentProductCode = "",
     initialCollectionId = "",
     initialSubscription = "",
+    initialSubscriptionCurrency = "EUR",
     initialRateLimits = { perSecond: "", perMinute: "", perHour: "", perDay: "", perWeek: "", perMonth: "" },
     initialCustomAttributes = [],
     onSubmit,
@@ -51,6 +53,7 @@
     initialParentProductCode?: string;
     initialCollectionId?: string;
     initialSubscription?: string;
+    initialSubscriptionCurrency?: string;
     initialRateLimits?: { perSecond: string; perMinute: string; perHour: string; perDay: string; perWeek: string; perMonth: string };
     initialCustomAttributes?: CustomAttribute[];
     onSubmit: (data: ProductFormData) => Promise<void>;
@@ -66,6 +69,7 @@
   let parentProductCode = $state(initialParentProductCode);
   let selectedCollectionId = $state(initialCollectionId);
   let monthlySubscriptionAmount = $state(initialSubscription);
+  let monthlySubscriptionCurrency = $state(initialSubscriptionCurrency);
   let isSubmitting = $state(false);
 
   // Rate limits
@@ -120,6 +124,7 @@
         parentProductCode: parentProductCode.trim(),
         collectionId: selectedCollectionId.trim(),
         monthlySubscription: String(monthlySubscriptionAmount || "").trim(),
+        monthlySubscriptionCurrency: String(monthlySubscriptionCurrency || "").trim(),
         rateLimits: {
           perSecond: String(callsPerSecond || "").trim(),
           perMinute: String(callsPerMinute || "").trim(),
@@ -196,20 +201,36 @@
       <label for="monthly-subscription" class="form-label">
         Monthly Subscription
       </label>
-      <div class="input-with-prefix">
-        <span class="input-prefix">$</span>
-        <input
-          id="monthly-subscription"
-          type="number"
-          step="0.01"
-          min="0"
-          class="form-input with-prefix"
-          placeholder="e.g., 99.99"
-          bind:value={monthlySubscriptionAmount}
+      <div class="subscription-row">
+        <div class="input-with-prefix subscription-amount">
+          <span class="input-prefix">$</span>
+          <input
+            id="monthly-subscription"
+            type="number"
+            step="0.01"
+            min="0"
+            class="form-input with-prefix"
+            placeholder="e.g., 99.99"
+            bind:value={monthlySubscriptionAmount}
+            disabled={isSubmitting}
+          />
+        </div>
+        <select
+          id="monthly-subscription-currency"
+          class="form-input currency-select"
+          bind:value={monthlySubscriptionCurrency}
           disabled={isSubmitting}
-        />
+        >
+          <option value="EUR">EUR</option>
+          <option value="USD">USD</option>
+          <option value="GBP">GBP</option>
+          <option value="CHF">CHF</option>
+          <option value="JPY">JPY</option>
+          <option value="CAD">CAD</option>
+          <option value="AUD">AUD</option>
+        </select>
       </div>
-      <div class="form-help">Monthly subscription fee</div>
+      <div class="form-help">Monthly subscription fee and currency</div>
     </div>
   </div>
 
@@ -670,6 +691,20 @@
 
   .form-input.with-prefix {
     padding-left: 1.75rem;
+  }
+
+  .subscription-row {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .subscription-amount {
+    flex: 1;
+  }
+
+  .currency-select {
+    width: 5rem;
+    flex-shrink: 0;
   }
 
   .rate-limits-section {

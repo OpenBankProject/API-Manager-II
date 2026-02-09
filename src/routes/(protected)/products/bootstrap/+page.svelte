@@ -7,6 +7,7 @@
     AlertCircle,
     Loader2,
     Info,
+    Trash2,
   } from "@lucide/svelte";
   import { toast } from "$lib/utils/toastService";
   import { trackedFetch } from "$lib/utils/trackedFetch";
@@ -17,7 +18,7 @@
     type BootstrapProduct,
   } from "$lib/config/bootstrapJourneys";
 
-  type ItemStatus = "idle" | "creating" | "created" | "error";
+  type ItemStatus = "idle" | "creating" | "created" | "error" | "deleting";
 
   let selectedBankId = $state(currentBank.bankId);
 
@@ -56,6 +57,12 @@
       Object.values(productStatus).some((s) => s === "creating"),
   );
 
+  const isAnyBusy = $derived(
+    isAnyCreating ||
+      Object.values(collectionStatus).some((s) => s === "deleting") ||
+      Object.values(productStatus).some((s) => s === "deleting"),
+  );
+
   const allDone = $derived(
     collectionsCreated === bootstrapJourneys.length &&
       productsCreated === totalProducts,
@@ -65,31 +72,44 @@
     expandedCollections[collectionId] = !expandedCollections[collectionId];
   }
 
-  // ── Create a single collection ───────────────────────────────────
+  // ── Create a single collection (idempotent) ─────────────────────
   async function createCollection(collection: BootstrapCollection) {
     collectionStatus[collection.id] = "creating";
     collectionErrors[collection.id] = "";
 
     try {
-      // Step 1: Create the collection
-      const res = await trackedFetch("/api/api-collections", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          api_collection_name: collection.collection_name,
-          description: collection.description,
-          is_sharable: collection.is_sharable,
-        }),
-      });
+      let collectionId: string;
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to create collection");
+      // Check if collection already exists by name (handles OBP soft-delete / uniqueness)
+      const existingRes = await trackedFetch(
+        `/api/api-collections/name/${encodeURIComponent(collection.collection_name)}`,
+      );
+
+      if (existingRes.ok) {
+        const existing = await existingRes.json();
+        collectionId = existing.api_collection_id;
+        collectionIds[collection.collection_name] = collectionId;
+      } else {
+        // Collection doesn't exist — create it
+        const res = await trackedFetch("/api/api-collections", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            api_collection_name: collection.collection_name,
+            description: collection.description,
+            is_sharable: collection.is_sharable,
+          }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || "Failed to create collection");
+        }
+
+        const created = await res.json();
+        collectionId = created.api_collection_id;
+        collectionIds[collection.collection_name] = collectionId;
       }
-
-      const created = await res.json();
-      const collectionId = created.api_collection_id;
-      collectionIds[collection.collection_name] = collectionId;
 
       // Step 2: Add endpoints
       let endpointWarnings = 0;
@@ -168,6 +188,8 @@
       const attributes = [
         { name: "product_type", type: "STRING", value: "API_PRODUCT", is_active: true },
         { name: "api_collection_id", type: "STRING", value: collectionId, is_active: true },
+        { name: "monthly_subscription_amount", type: "DOUBLE", value: product.monthly_subscription_amount, is_active: true },
+        { name: "monthly_subscription_currency", type: "STRING", value: product.monthly_subscription_currency, is_active: true },
       ];
 
       let attrWarnings = 0;
@@ -226,10 +248,81 @@
     }
   }
 
+  // ── Delete a collection and its products ──────────────────────────
+  async function deleteCollectionAndProducts(collection: BootstrapCollection) {
+    // Mark everything as deleting
+    collectionStatus[collection.id] = "deleting";
+    collectionErrors[collection.id] = "";
+    for (const product of collection.products) {
+      if (productStatus[product.id] === "created" || productStatus[product.id] === "error") {
+        productStatus[product.id] = "deleting";
+        productErrors[product.id] = "";
+      }
+    }
+
+    // Step 1: Delete products (cascade removes attributes too)
+    if (selectedBankId) {
+      for (const product of collection.products) {
+        if (productStatus[product.id] !== "deleting") continue;
+        try {
+          const res = await trackedFetch(
+            `/api/products/${selectedBankId}/${product.product_code}`,
+            { method: "DELETE" },
+          );
+          if (!res.ok) {
+            const data = await res.json();
+            // Ignore "not found" errors — product may not have been created
+            if (!data.error?.includes("not found") && !data.error?.includes("OBP-30001")) {
+              productErrors[product.id] = data.error || "Delete failed";
+            }
+          }
+        } catch {
+          // Ignore — product may not exist
+        }
+        productStatus[product.id] = "idle";
+      }
+    } else {
+      // No bank selected — just reset product statuses
+      for (const product of collection.products) {
+        productStatus[product.id] = "idle";
+      }
+    }
+
+    // Step 2: Delete the collection
+    const collectionId = collectionIds[collection.collection_name];
+    if (collectionId) {
+      try {
+        const res = await trackedFetch(
+          `/api/api-collections/${collectionId}`,
+          { method: "DELETE" },
+        );
+        if (!res.ok) {
+          const data = await res.json();
+          collectionStatus[collection.id] = "error";
+          collectionErrors[collection.id] = data.error || "Failed to delete collection";
+          toast.error("Delete Error", collectionErrors[collection.id]);
+          return;
+        }
+      } catch (err) {
+        collectionStatus[collection.id] = "error";
+        const msg = err instanceof Error ? err.message : "Delete failed";
+        collectionErrors[collection.id] = msg;
+        toast.error("Delete Error", msg);
+        return;
+      }
+      delete collectionIds[collection.collection_name];
+    }
+
+    collectionStatus[collection.id] = "idle";
+    toast.success("Deleted", `"${collection.collection_name}" and its products removed`);
+  }
+
   function statusBadgeClass(status: ItemStatus): string {
     switch (status) {
       case "creating":
         return "badge-creating";
+      case "deleting":
+        return "badge-deleting";
       case "created":
         return "badge-created";
       case "error":
@@ -244,7 +337,8 @@
       selectedBankId !== "" &&
       collectionStatus[collection.id] === "created" &&
       productStatus[product.id] !== "creating" &&
-      productStatus[product.id] !== "created"
+      productStatus[product.id] !== "created" &&
+      productStatus[product.id] !== "deleting"
     );
   }
 </script>
@@ -334,7 +428,7 @@
                 <div class="collection-title-row">
                   <h2 class="collection-name">{collection.collection_name.replaceAll("-", " ")}</h2>
                   <span class="badge {statusBadgeClass(cStatus)}">
-                    {#if cStatus === "creating"}
+                    {#if cStatus === "creating" || cStatus === "deleting"}
                       <Loader2 size={12} class="animate-spin" />
                     {:else if cStatus === "created"}
                       <Check size={12} />
@@ -357,7 +451,7 @@
               <div class="collection-actions">
                 <button
                   class="btn-sm btn-primary"
-                  disabled={cStatus === "creating" || cStatus === "created"}
+                  disabled={cStatus === "creating" || cStatus === "created" || cStatus === "deleting"}
                   onclick={() => createCollection(collection)}
                 >
                   {#if cStatus === "creating"}
@@ -370,11 +464,27 @@
                 </button>
                 <button
                   class="btn-sm btn-outline"
-                  disabled={isAnyCreating || !selectedBankId || (cStatus === "created" && collection.products.every(p => productStatus[p.id] === "created"))}
+                  disabled={isAnyBusy || !selectedBankId || (cStatus === "created" && collection.products.every(p => productStatus[p.id] === "created"))}
                   onclick={() => createAllForCollection(collection)}
                 >
                   Create All
                 </button>
+                {#if cStatus === "created" || cStatus === "error"}
+                  <button
+                    class="btn-sm btn-danger"
+                    disabled={isAnyBusy}
+                    onclick={() => deleteCollectionAndProducts(collection)}
+                  >
+                    <Trash2 size={12} />
+                    Delete
+                  </button>
+                {/if}
+                {#if cStatus === "deleting"}
+                  <button class="btn-sm btn-danger" disabled>
+                    <Loader2 size={12} class="animate-spin" />
+                    Deleting...
+                  </button>
+                {/if}
               </div>
             </div>
 
@@ -413,7 +523,7 @@
                       <span class="product-name">{product.name}</span>
                       <code class="product-code">{product.product_code}</code>
                       <span class="badge badge-sm {statusBadgeClass(pStatus)}">
-                        {#if pStatus === "creating"}
+                        {#if pStatus === "creating" || pStatus === "deleting"}
                           <Loader2 size={10} class="animate-spin" />
                         {:else if pStatus === "created"}
                           <Check size={10} />
@@ -440,6 +550,8 @@
                   >
                     {#if pStatus === "creating"}
                       Creating...
+                    {:else if pStatus === "deleting"}
+                      Deleting...
                     {:else if pStatus === "created"}
                       Created
                     {:else if !selectedBankId}
@@ -461,7 +573,7 @@
       <div class="bootstrap-all-section">
         <button
           class="btn-lg btn-primary"
-          disabled={isAnyCreating || !selectedBankId || allDone}
+          disabled={isAnyBusy || !selectedBankId || allDone}
           onclick={bootstrapAll}
         >
           <Rocket size={18} />
@@ -850,6 +962,16 @@
     color: #fca5a5;
   }
 
+  .badge-deleting {
+    background: #fef3c7;
+    color: #d97706;
+  }
+
+  :global([data-mode="dark"]) .badge-deleting {
+    background: rgba(217, 119, 6, 0.2);
+    color: #fbbf24;
+  }
+
   /* ── Endpoints Toggle & List ────────────────────────────────────── */
   .endpoints-toggle {
     display: flex;
@@ -1107,6 +1229,26 @@
 
   :global([data-mode="dark"]) .btn-outline:hover:not(:disabled) {
     background: rgba(59, 130, 246, 0.1);
+  }
+
+  .btn-danger {
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background: #fecaca;
+  }
+
+  :global([data-mode="dark"]) .btn-danger {
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.3);
+  }
+
+  :global([data-mode="dark"]) .btn-danger:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.25);
   }
 
   .btn-sm:disabled,

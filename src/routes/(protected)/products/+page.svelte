@@ -319,7 +319,7 @@
       </div>
     {:else}
       <div class="space-y-3">
-        {#each filteredProducts as product (product.code || product.product_code)}
+        {#each filteredProducts as product, i (`${product.code || product.product_code}-${i}`)}
           <div
             class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
           >

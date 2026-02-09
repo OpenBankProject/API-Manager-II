@@ -26,6 +26,7 @@
     parentProductCode: string;
     collectionId: string;
     monthlySubscription: string;
+    monthlySubscriptionCurrency: string;
     rateLimits: { perSecond: string; perMinute: string; perHour: string; perDay: string; perWeek: string; perMonth: string };
     customAttributes: Array<{ name: string; type: string; value: string }>;
   }) {
@@ -72,6 +73,9 @@
 
       if (formData.monthlySubscription) {
         attributesToCreate.push({ name: "monthly_subscription_amount", type: "DOUBLE", value: formData.monthlySubscription });
+      }
+      if (formData.monthlySubscriptionCurrency) {
+        attributesToCreate.push({ name: "monthly_subscription_currency", type: "STRING", value: formData.monthlySubscriptionCurrency });
       }
       if (formData.rateLimits.perSecond) {
         attributesToCreate.push({ name: "calls_per_second", type: "INTEGER", value: formData.rateLimits.perSecond });

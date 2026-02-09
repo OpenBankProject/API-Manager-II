@@ -21,6 +21,7 @@
   const SYSTEM_ATTRIBUTES = [
     "api_collection_id",
     "monthly_subscription_amount",
+    "monthly_subscription_currency",
     "calls_per_second",
     "calls_per_minute",
     "calls_per_hour",
@@ -47,6 +48,7 @@
     parentProductCode: string;
     collectionId: string;
     monthlySubscription: string;
+    monthlySubscriptionCurrency: string;
     rateLimits: { perSecond: string; perMinute: string; perHour: string; perDay: string; perWeek: string; perMonth: string };
     customAttributes: Array<{ name: string; type: string; value: string }>;
   }) {
@@ -82,6 +84,9 @@
 
       if (formData.monthlySubscription) {
         attributesToCreate.push({ name: "monthly_subscription_amount", type: "DOUBLE", value: formData.monthlySubscription });
+      }
+      if (formData.monthlySubscriptionCurrency) {
+        attributesToCreate.push({ name: "monthly_subscription_currency", type: "STRING", value: formData.monthlySubscriptionCurrency });
       }
       if (formData.rateLimits.perSecond) {
         attributesToCreate.push({ name: "calls_per_second", type: "INTEGER", value: formData.rateLimits.perSecond });
@@ -202,6 +207,7 @@
           initialParentProductCode={product.parent_product_code || ""}
           initialCollectionId={getAttrValue("api_collection_id")}
           initialSubscription={getAttrValue("monthly_subscription_amount")}
+          initialSubscriptionCurrency={getAttrValue("monthly_subscription_currency") || "EUR"}
           initialRateLimits={{
             perSecond: getAttrValue("calls_per_second"),
             perMinute: getAttrValue("calls_per_minute"),
