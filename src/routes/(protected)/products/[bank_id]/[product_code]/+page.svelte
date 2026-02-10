@@ -9,14 +9,14 @@
   } from "$lib/utils/errorHandler";
   import { trackedFetch } from "$lib/utils/trackedFetch";
 
-  const bankId = $page.params.bank_id;
-  const productCode = $page.params.product_code;
+  const bankId = $page.params.bank_id!;
+  const productCode = $page.params.product_code!;
 
   const apiExplorerUrl =
     $page.data.externalLinks?.API_EXPLORER_URL ||
     "https://apiexplorer-ii-sandbox.openbankproject.com";
 
-  const apiExplorerProductUrl = `${apiExplorerUrl}/resource-docs/OBPv6.0.0?operationid=OBPv4.0.0-getProduct`;
+  const apiExplorerProductUrl = `${apiExplorerUrl}/resource-docs/OBPv6.0.0?operationid=OBPv6.0.0-getApiProduct`;
 
   let product = $state<any>(null);
   let isLoading = $state(true);
@@ -166,15 +166,15 @@
               {product.name || "Unnamed Product"}
             </h1>
             <span class="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-              {product.code || product.product_code || productCode}
+              {product.api_product_code || productCode}
             </span>
           </div>
           <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
             Bank: <code class="rounded bg-gray-100 px-2 py-0.5 dark:bg-gray-700">{bankId}</code>
           </p>
-          {#if product.parent_product_code}
+          {#if product.parent_api_product_code}
             <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-              Parent Product: <a href="/products/{bankId}/{product.parent_product_code}" class="text-blue-600 hover:underline dark:text-blue-400">{product.parent_product_code}</a>
+              Parent Product: <a href="/products/{bankId}/{product.parent_api_product_code}" class="text-blue-600 hover:underline dark:text-blue-400">{product.parent_api_product_code}</a>
             </p>
           {/if}
         </div>

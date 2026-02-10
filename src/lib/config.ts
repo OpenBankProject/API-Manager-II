@@ -1,6 +1,8 @@
 import { env } from "$env/dynamic/public";
 import { browser } from "$app/environment";
 
+declare const process: { env: Record<string, string | undefined>; argv: string[] };
+
 // Application configuration interface
 export interface AppConfiguration {
   obp: {
@@ -197,8 +199,7 @@ export const configHelpers = {
   },
 };
 
-// Export types for external use
-export type { AppConfiguration };
+// AppConfiguration is already exported at its definition above
 
 // Constants for common use
 export const OBP_HOST = config.obp.host;

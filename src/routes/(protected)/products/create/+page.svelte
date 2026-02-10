@@ -55,7 +55,7 @@
           body: JSON.stringify({
             name: formData.name,
             description: formData.description,
-            parent_product_code: formData.parentProductCode,
+            parent_api_product_code: formData.parentProductCode,
           }),
         },
       );
@@ -67,7 +67,6 @@
 
       // Step 2: Create the API Product attributes
       const attributesToCreate: Array<{ name: string; type: string; value: string }> = [
-        { name: "product_type", type: "STRING", value: "API_PRODUCT" },
         { name: "api_collection_id", type: "STRING", value: formData.collectionId },
       ];
 

@@ -541,39 +541,22 @@
 	{#if options.displayConnectionPips}
 		<div class="flex flex-col items-center">
 			<!-- Connection Pip with Tooltip -->
-			<Tooltip
-				classes="z-10"
-				positioning={{ placement: 'top' }}
-				contentBase="card bg-primary-200-800 text-xs p-1"
-				arrowBackground="var(--color-primary-200-800)"
-				arrow
-			>
-				<!-- Added z-10 for higher stacking -->
-				{#snippet trigger()}
+			<Tooltip positioning={{ placement: 'top' }}>
+				<Tooltip.Trigger>
 					<div class="badge-icon {connectionPipColor} h-3 w-3">
 						<ShieldUserIcon size={12} />
 					</div>
-				{/snippet}
-				{#snippet content()}Opey Connection Status: {connectionStatusString}{/snippet}
+				</Tooltip.Trigger>
+				<Tooltip.Content>Opey Connection Status: {connectionStatusString}</Tooltip.Content>
 			</Tooltip>
 			<!-- Authentication Pip with Tooltip -->
-			<Tooltip
-				classes="z-10"
-				open={authPipOpenState}
-				contentBase="card bg-primary-200-800 text-xs p-1"
-				arrowBackground="var(--color-primary-200-800)"
-				onclick={() => {
-					authPipOpenState = !authPipOpenState;
-				}}
-				arrow
-			>
-				<!-- Added z-10 for higher stacking -->
-				{#snippet trigger()}
+			<Tooltip open={authPipOpenState}>
+				<Tooltip.Trigger>
 					<div class="badge-icon {authPipColor} h-3 w-3">
 						<ShieldUserIcon size={12} />
 					</div>
-				{/snippet}
-				{#snippet content()}
+				</Tooltip.Trigger>
+				<Tooltip.Content>
 					{#if session.status === 'loading'}
 						Authenticating...
 					{:else if session.status === 'error'}
@@ -590,7 +573,7 @@
 					{:else}
 						Not Authenticated
 					{/if}
-				{/snippet}
+				</Tooltip.Content>
 			</Tooltip>
 			<!-- {#if !session.isAuthenticated}
 				<button class="btn btn-sm btn-primary" onclick={upgradeSession} disabled={session.status === 'loading'}>

@@ -34,8 +34,8 @@ export const GET: RequestHandler = async ({ locals, params }) => {
   }
 
   try {
-    logger.info(`=== PRODUCT API CALL for bank ${bankId}, product ${productCode} ===`);
-    const endpoint = `/obp/v6.0.0/banks/${bankId}/products/${productCode}`;
+    logger.info(`=== API PRODUCT API CALL for bank ${bankId}, product ${productCode} ===`);
+    const endpoint = `/obp/v6.0.0/banks/${bankId}/api-products/${productCode}`;
     logger.info(`Request: ${endpoint}`);
 
     const response = await obp_requests.get(endpoint, accessToken);
@@ -88,8 +88,8 @@ export const PUT: RequestHandler = async ({ locals, params, request }) => {
   try {
     const body = await request.json();
 
-    logger.info(`=== CREATE/UPDATE PRODUCT API CALL for bank ${bankId}, product ${productCode} ===`);
-    const endpoint = `/obp/v6.0.0/banks/${bankId}/products/${productCode}`;
+    logger.info(`=== CREATE/UPDATE API PRODUCT API CALL for bank ${bankId}, product ${productCode} ===`);
+    const endpoint = `/obp/v6.0.0/banks/${bankId}/api-products/${productCode}`;
     logger.info(`Request: ${endpoint}`);
 
     const response = await obp_requests.put(endpoint, body, accessToken);
@@ -140,9 +140,8 @@ export const DELETE: RequestHandler = async ({ locals, params }) => {
   }
 
   try {
-    logger.info(`=== DELETE PRODUCT CASCADE API CALL for bank ${bankId}, product ${productCode} ===`);
-    // Use cascade delete to remove product and all related data
-    const endpoint = `/obp/v6.0.0/management/cascading/banks/${bankId}/products/${productCode}`;
+    logger.info(`=== DELETE API PRODUCT API CALL for bank ${bankId}, product ${productCode} ===`);
+    const endpoint = `/obp/v6.0.0/banks/${bankId}/api-products/${productCode}`;
     logger.info(`Request: ${endpoint}`);
 
     const response = await obp_requests.delete(endpoint, accessToken);

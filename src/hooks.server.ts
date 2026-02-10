@@ -11,6 +11,8 @@ import { oauth2ProviderManager } from "$lib/oauth/providerManager";
 import { SessionOAuthHelper } from "$lib/oauth/sessionHelper";
 import { resourceDocsCache } from "$lib/stores/resourceDocsCache";
 
+declare const process: { env: Record<string, string | undefined>; argv: string[] };
+
 // Constants
 const DEFAULT_PORT = 3003;
 

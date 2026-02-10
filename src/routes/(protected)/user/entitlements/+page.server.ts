@@ -95,7 +95,7 @@ export const actions = {
                 const updatedEntitlements = await obp_requests.get('/obp/v6.0.0/my/entitlements', token);
                 // Update the session with the new entitlements
                 if (updatedEntitlements && locals.session.data.user) {
-                    locals.session.data.user.entitlements = updatedEntitlements;
+                    (locals.session.data.user as any).entitlements = updatedEntitlements;
                     await locals.session.save();
                 }
             } catch (refreshError) {

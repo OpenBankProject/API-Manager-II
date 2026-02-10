@@ -7,7 +7,7 @@ import { createLogger } from "$lib/utils/logger";
 
 const logger = createLogger("ProductsAPI");
 
-export const GET: RequestHandler = async ({ locals, params, url }) => {
+export const GET: RequestHandler = async ({ locals, params }) => {
   const session = locals.session;
   const bankId = params.bank_id;
 
@@ -29,18 +29,17 @@ export const GET: RequestHandler = async ({ locals, params, url }) => {
   }
 
   try {
-    logger.info(`=== PRODUCTS API CALL for bank ${bankId} ===`);
-    const queryString = url.searchParams.toString();
-    const endpoint = `/obp/v6.0.0/banks/${bankId}/products${queryString ? `?${queryString}` : ""}`;
+    logger.info(`=== API PRODUCTS API CALL for bank ${bankId} ===`);
+    const endpoint = `/obp/v6.0.0/banks/${bankId}/api-products`;
     logger.info(`Request: ${endpoint}`);
 
     const response = await obp_requests.get(endpoint, accessToken);
 
-    logger.info(`Response: ${response?.products?.length || 0} products`);
+    logger.info(`Response: ${response?.api_products?.length || 0} api products`);
 
     return json({
-      products: response.products || [],
-      count: response.products?.length || 0,
+      products: response.api_products || [],
+      count: response.api_products?.length || 0,
     });
   } catch (err) {
     logger.error("Error fetching products:", err);

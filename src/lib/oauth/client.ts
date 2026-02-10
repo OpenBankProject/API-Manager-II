@@ -9,11 +9,13 @@ import { jwtDecode } from "jwt-decode";
 
 export class OAuth2ClientWithConfig extends OAuth2Client {
   OIDCConfig?: OpenIdConnectConfiguration;
+  private _redirectURI: string;
+  private _clientSecret: string;
 
   constructor(clientId: string, clientSecret: string, redirectUri: string) {
     super(clientId, clientSecret, redirectUri);
-
-    // get the OIDC configuration from the well-known URL if provided
+    this._redirectURI = redirectUri;
+    this._clientSecret = clientSecret;
   }
 
   async initOIDCConfig(OIDCConfigUrl: string): Promise<void> {
@@ -94,11 +96,11 @@ export class OAuth2ClientWithConfig extends OAuth2Client {
     const body = new URLSearchParams();
     body.set("grant_type", "authorization_code");
     body.set("code", code);
-    body.set("redirect_uri", this.redirectURI);
+    body.set("redirect_uri", this._redirectURI);
     body.set("client_id", this.clientId);
 
-    if (this.clientSecret) {
-      body.set("client_secret", this.clientSecret);
+    if (this._clientSecret) {
+      body.set("client_secret", this._clientSecret);
     }
 
     if (codeVerifier) {

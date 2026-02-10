@@ -27,8 +27,18 @@
   // Make all derived values reactive
   let schema = $derived(getSchema(entity));
   let entityName = $derived(getEntityName(entity));
-  let properties = $derived(schema?.properties || {});
-  let requiredFields = $derived(schema?.required || []);
+  interface FieldDef {
+    type?: string;
+    description?: string;
+    example?: unknown;
+    minimum?: number;
+    maximum?: number;
+    minLength?: number;
+    maxLength?: number;
+  }
+
+  let properties = $derived<Record<string, FieldDef>>(schema?.properties || {});
+  let requiredFields = $derived<string[]>(schema?.required || []);
 
   // Define required roles for CRUD operations on this dynamic entity
   let requiredRoles = $derived.by(() => {
@@ -180,7 +190,7 @@
 
   // Filter records based on search
   let filteredRecords = $derived(
-    dataRecords.filter((record) => {
+    dataRecords.filter((record: any) => {
       if (searchQuery === "") return true;
       const query = searchQuery.toLowerCase();
       const recordString = JSON.stringify(record).toLowerCase();

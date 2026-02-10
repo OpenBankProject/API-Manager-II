@@ -28,6 +28,7 @@ import {
   Package,
   CircleHelp,
   Rocket,
+  Banknote,
 } from "@lucide/svelte";
 import { env } from "$env/dynamic/public";
 
@@ -366,6 +367,11 @@ function buildProductsItems(): NavigationItem[] {
   const items: NavigationItem[] = [
     { href: "/products", label: "API Products", iconComponent: Package },
     {
+      href: "/products/financial",
+      label: "Financial Products",
+      iconComponent: Banknote,
+    },
+    {
       href: "/products/collections",
       label: "Product Collections",
       iconComponent: FolderOpen,
@@ -384,7 +390,10 @@ export function getActiveProductsMenuItem(pathname: string) {
     if (item.external) {
       return false;
     }
-    return pathname.startsWith(item.href);
+    if (item.href === "/products" && pathname === "/products") {
+      return true;
+    }
+    return pathname.startsWith(item.href) && item.href !== "/products";
   });
 
   return found || productsItems[0];

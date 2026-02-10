@@ -9,8 +9,8 @@
 
   let { data } = $props<{ data: PageData }>();
 
-  const bankId = $page.params.bank_id;
-  const productCode = $page.params.product_code;
+  const bankId = $page.params.bank_id!;
+  const productCode = $page.params.product_code!;
 
   let hasApiAccess = $derived(data.hasApiAccess);
   let error = $derived(data.error);
@@ -67,7 +67,7 @@
           body: JSON.stringify({
             name: formData.name,
             description: formData.description,
-            parent_product_code: formData.parentProductCode,
+            parent_api_product_code: formData.parentProductCode,
           }),
         },
       );
@@ -204,7 +204,7 @@
           initialName={product.name || ""}
           initialDescription={product.description || ""}
           initialProductCode={productCode}
-          initialParentProductCode={product.parent_product_code || ""}
+          initialParentProductCode={product.parent_api_product_code || ""}
           initialCollectionId={getAttrValue("api_collection_id")}
           initialSubscription={getAttrValue("monthly_subscription_amount")}
           initialSubscriptionCurrency={getAttrValue("monthly_subscription_currency") || "EUR"}

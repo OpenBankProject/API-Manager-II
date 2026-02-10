@@ -173,7 +173,7 @@
           body: JSON.stringify({
             name: product.name,
             description: product.description,
-            parent_product_code: "",
+            parent_api_product_code: "",
           }),
         },
       );
@@ -186,7 +186,6 @@
       // Step 2: Add attributes
       const collectionId = collectionIds[collection.collection_name] || "";
       const attributes = [
-        { name: "product_type", type: "STRING", value: "API_PRODUCT", is_active: true },
         { name: "api_collection_id", type: "STRING", value: collectionId, is_active: true },
         { name: "monthly_subscription_amount", type: "DOUBLE", value: product.monthly_subscription_amount, is_active: true },
         { name: "monthly_subscription_currency", type: "STRING", value: product.monthly_subscription_currency, is_active: true },

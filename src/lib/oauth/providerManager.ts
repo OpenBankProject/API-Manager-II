@@ -26,9 +26,9 @@ class OAuth2ProviderManager {
     ready: false,
     providers: [],
   };
-  private retryIntervalId: NodeJS.Timeout | null = null;
+  private retryIntervalId: ReturnType<typeof setInterval> | null = null;
   private retryIntervalMs: number = 30000; // Retry every 30 seconds
-  private refreshIntervalId: NodeJS.Timeout | null = null;
+  private refreshIntervalId: ReturnType<typeof setInterval> | null = null;
   private refreshIntervalMs: number = 60000; // Refresh provider status every 60 seconds
   private definedProviders: string[] = [];
 

@@ -9,7 +9,7 @@ import type { OBPConsentInfo } from "$lib/obp/types";
 
 import { env } from "$env/dynamic/private";
 import { env as publicEnv } from "$env/dynamic/public";
-import { LESS } from "$env/static/private";
+
 
 export interface RootLayoutData {
   userId?: string;

@@ -26,7 +26,7 @@
     }
   }
 
-  const canCreateEntitlements = userEntitlements.some((entitlement) =>
+  const canCreateEntitlements = userEntitlements.some((entitlement: any) =>
     ["CanCreateEntitlementAtAnyBank", "CanCreateEntitlementAtOneBank"].includes(
       entitlement.role_name,
     ),

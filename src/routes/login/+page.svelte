@@ -10,7 +10,7 @@
         goto('/login', { replaceState: true });
     }
 
-    let refreshInterval: NodeJS.Timeout | undefined;
+    let refreshInterval: ReturnType<typeof setTimeout> | undefined;
 
     function formatProviderName(provider: string): string {
         switch (provider) {

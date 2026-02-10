@@ -134,5 +134,5 @@ export class DefaultOBPIntegrationService implements OBPIntegrationService {
 }
 
 export const obpIntegrationService = new DefaultOBPIntegrationService(
-  env.OPEY_CONSUMER_ID,
+  env.OPEY_CONSUMER_ID || "",
 );

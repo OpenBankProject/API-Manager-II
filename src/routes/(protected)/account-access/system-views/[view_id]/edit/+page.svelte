@@ -83,15 +83,15 @@
       if (grantAccessViews.trim()) {
         requestBody.can_grant_access_to_views = grantAccessViews
           .split(",")
-          .map((v) => v.trim())
-          .filter((v) => v);
+          .map((v: string) => v.trim())
+          .filter((v: string) => v);
       }
 
       if (revokeAccessViews.trim()) {
         requestBody.can_revoke_access_to_views = revokeAccessViews
           .split(",")
-          .map((v) => v.trim())
-          .filter((v) => v);
+          .map((v: string) => v.trim())
+          .filter((v: string) => v);
       }
 
       const response = await fetch(`/api/system-views/${data.view?.view_id}`, {

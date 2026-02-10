@@ -3,7 +3,7 @@
 
   let { data } = $props();
   const consumers = data.consumers;
-  const errorMessage = data.errorMessage;
+  const errorMessage = data.error;
   const userEntitlements = data.userEntitlements || [];
   const requiredRoles = data.requiredRoles || [];
 

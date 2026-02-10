@@ -47,7 +47,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
     // Fetch product and collections in parallel
     const [product, collectionsResponse] = await Promise.all([
       obp_requests.get(
-        `/obp/v6.0.0/banks/${bankId}/products/${productCode}`,
+        `/obp/v6.0.0/banks/${bankId}/api-products/${productCode}`,
         accessToken,
       ),
       obp_requests.get(
