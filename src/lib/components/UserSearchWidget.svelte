@@ -36,7 +36,27 @@
   let searchResults = $state<UserResult[]>([]);
   let showResults = $state(false);
   let searchError = $state("");
+  let searchType = $state<"email" | "userid" | "username">("username");
   let debounceTimer: number | null = null;
+
+  // Detect search type based on input
+  function detectSearchType(input: string): "email" | "userid" | "username" {
+    if (input.includes("@") && input.includes(".")) {
+      return "email";
+    }
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidRegex.test(input)) {
+      return "userid";
+    }
+    return "username";
+  }
+
+  const searchTypeLabels: Record<string, string> = {
+    email: "Searching by email",
+    userid: "Looking up User ID",
+    username: "Searching by username",
+  };
 
   // Trigger search on mount if initialUsername is provided
   $effect(() => {
@@ -46,19 +66,29 @@
   });
 
   async function searchUsers(query: string) {
-    if (!query.trim()) {
+    const trimmed = query.trim();
+    if (!trimmed) {
       searchResults = [];
       showResults = false;
       return;
     }
 
+    const type = detectSearchType(trimmed);
+    searchType = type;
     isSearching = true;
     searchError = "";
 
     try {
-      const response = await trackedFetch(
-        `/api/users/search?q=${encodeURIComponent(query)}`,
-      );
+      let url: string;
+      if (type === "email") {
+        url = `/api/users/search-by-email?email=${encodeURIComponent(trimmed)}`;
+      } else if (type === "userid") {
+        url = `/api/users/search-by-userid?user_id=${encodeURIComponent(trimmed)}`;
+      } else {
+        url = `/api/users/search?q=${encodeURIComponent(trimmed)}`;
+      }
+
+      const response = await trackedFetch(url);
 
       if (!response.ok) {
         const errorDetails = await extractErrorFromResponse(
@@ -72,18 +102,40 @@
       }
 
       const data = await response.json();
-      // Filter out users without a username AND filter by search query
-      const searchLower = query.toLowerCase();
-      searchResults = (data.users || []).filter((user: UserResult) => {
-        if (!user.username || user.username.trim() === "") {
-          return false;
-        }
-        // Match if username or email contains the search query
-        const usernameMatch = user.username.toLowerCase().includes(searchLower);
-        const emailMatch = user.email?.toLowerCase().includes(searchLower);
-        return usernameMatch || emailMatch;
-      });
-      showResults = true;
+
+      // Normalize response: userid endpoint returns {user: {...}}, others return {users: [...]}
+      let users: UserResult[];
+      if (type === "userid") {
+        users = data.user ? [data.user] : [];
+      } else {
+        users = data.users || [];
+      }
+
+      // Filter out users without a username
+      users = users.filter(
+        (user: UserResult) => user.username && user.username.trim() !== "",
+      );
+
+      // For username searches, also filter by search query match
+      if (type === "username") {
+        const searchLower = trimmed.toLowerCase();
+        users = users.filter((user: UserResult) => {
+          const usernameMatch = user.username
+            .toLowerCase()
+            .includes(searchLower);
+          const emailMatch = user.email?.toLowerCase().includes(searchLower);
+          return usernameMatch || emailMatch;
+        });
+      }
+
+      searchResults = users;
+
+      // Auto-select if userid lookup returned exactly one result
+      if (type === "userid" && users.length === 1) {
+        handleSelectUser(users[0]);
+      } else {
+        showResults = true;
+      }
     } catch (error) {
       console.error("User search error:", error);
       searchError =
@@ -141,7 +193,7 @@
       <input
         type="text"
         class="search-input"
-        placeholder="Search users by username or email..."
+        placeholder="Enter username, email, or user ID..."
         value={searchQuery}
         oninput={handleSearchInput}
         onfocus={() => {
@@ -164,6 +216,12 @@
         <div class="loading-spinner">⏳</div>
       {/if}
     </div>
+
+    {#if searchQuery.trim() && !selectedUserId}
+      <div class="search-type-indicator">
+        {searchTypeLabels[searchType]}
+      </div>
+    {/if}
 
     {#if showResults && searchResults.length > 0}
       <div class="search-results">
@@ -317,6 +375,17 @@
     to {
       transform: rotate(360deg);
     }
+  }
+
+  .search-type-indicator {
+    font-size: 0.7rem;
+    color: #6b7280;
+    padding: 0.25rem 0;
+    font-style: italic;
+  }
+
+  :global([data-mode="dark"]) .search-type-indicator {
+    color: var(--color-surface-400);
   }
 
   .search-results {
