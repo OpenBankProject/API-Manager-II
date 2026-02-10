@@ -164,7 +164,8 @@
     productErrors[product.id] = "";
 
     try {
-      // Step 1: Create product via PUT
+      // Create product via PUT with all core fields
+      const collectionId = collectionIds[collection.collection_name] || "";
       const res = await trackedFetch(
         `/api/products/${selectedBankId}/${product.product_code}`,
         {
@@ -174,6 +175,15 @@
             name: product.name,
             description: product.description,
             parent_api_product_code: "",
+            collection_id: collectionId,
+            monthly_subscription_amount: product.monthly_subscription_amount,
+            monthly_subscription_currency: product.monthly_subscription_currency,
+            per_second_call_limit: Number(product.per_second_call_limit) || -1,
+            per_minute_call_limit: Number(product.per_minute_call_limit) || -1,
+            per_hour_call_limit: Number(product.per_hour_call_limit) || -1,
+            per_day_call_limit: Number(product.per_day_call_limit) || -1,
+            per_week_call_limit: Number(product.per_week_call_limit) || -1,
+            per_month_call_limit: Number(product.per_month_call_limit) || -1,
           }),
         },
       );
@@ -183,41 +193,9 @@
         throw new Error(data.error || "Failed to create product");
       }
 
-      // Step 2: Add attributes
-      const collectionId = collectionIds[collection.collection_name] || "";
-      const attributes = [
-        { name: "api_collection_id", type: "STRING", value: collectionId, is_active: true },
-        { name: "monthly_subscription_amount", type: "DOUBLE", value: product.monthly_subscription_amount, is_active: true },
-        { name: "monthly_subscription_currency", type: "STRING", value: product.monthly_subscription_currency, is_active: true },
-      ];
-
-      let attrWarnings = 0;
-      for (const attr of attributes) {
-        try {
-          const attrRes = await trackedFetch(
-            `/api/products/${selectedBankId}/${product.product_code}/attribute`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(attr),
-            },
-          );
-          if (!attrRes.ok) attrWarnings++;
-        } catch {
-          attrWarnings++;
-        }
-      }
-
       productStatus[product.id] = "created";
+      toast.success("Product Created", `"${product.name}"`);
 
-      if (attrWarnings > 0) {
-        toast.warning(
-          `Product "${product.name}" created`,
-          `${attrWarnings} attribute(s) could not be set`,
-        );
-      } else {
-        toast.success("Product Created", `"${product.name}"`);
-      }
     } catch (err) {
       productStatus[product.id] = "error";
       const msg = err instanceof Error ? err.message : "Unknown error";

@@ -372,6 +372,16 @@ export function getActiveDynamicEndpointsMenuItem(pathname: string) {
 function buildProductsItems(): NavigationItem[] {
   const items: NavigationItem[] = [
     { href: "/products", label: "API Products", iconComponent: Package },
+    { href: "/products/bootstrap", label: "Bootstrap", iconComponent: Rocket },
+    { href: "/products/help", label: "Help", iconComponent: CircleHelp },
+  ];
+
+  return items;
+}
+
+// Financial Products navigation items
+function buildFinancialProductsItems(): NavigationItem[] {
+  const items: NavigationItem[] = [
     {
       href: "/products/financial",
       label: "Financial Products",
@@ -382,12 +392,12 @@ function buildProductsItems(): NavigationItem[] {
       label: "Product Collections",
       iconComponent: FolderOpen,
     },
-    { href: "/products/bootstrap", label: "Bootstrap", iconComponent: Rocket },
-    { href: "/products/help", label: "Help", iconComponent: CircleHelp },
   ];
 
   return items;
 }
+
+export const financialProductsItems = buildFinancialProductsItems();
 
 export const productsItems = buildProductsItems();
 
@@ -438,7 +448,8 @@ export const navSections: NavigationSection[] = [
   { id: "integration", label: "Integration", iconComponent: Plug, items: integrationItems, basePaths: ["/integration"] },
   { id: "metrics", label: "Metrics", iconComponent: BarChart3, items: metricsItems, basePaths: ["/metrics", "/aggregate-metrics", "/connector-metrics", "/connector-counts"] },
   { id: "abac", label: "ABAC", iconComponent: Lock, items: abacItems, basePaths: ["/abac"] },
-  { id: "products", label: "Products", iconComponent: Package, items: productsItems, basePaths: ["/products"] },
+  { id: "products", label: "API Products", iconComponent: Package, items: productsItems, basePaths: ["/products"] },
+  { id: "financial-products", label: "Financial Products", iconComponent: Banknote, items: financialProductsItems, basePaths: ["/products/financial", "/products/collections"] },
   { id: "rbac", label: "RBAC", iconComponent: Shield, items: rbacItems, basePaths: ["/rbac"] },
   { id: "account-access", label: "Account Access", iconComponent: Landmark, items: accountAccessItems, basePaths: ["/account-access"] },
   { id: "dynamic-entities", label: "Dynamic Entities", iconComponent: Box, items: dynamicEntitiesItems, basePaths: ["/dynamic-entities"] },

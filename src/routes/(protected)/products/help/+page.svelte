@@ -30,7 +30,7 @@
         <div>
           <h1 class="panel-title">API Products Guide</h1>
           <div class="panel-subtitle">
-            Learn how to define and publish an API Product
+            Learn how to define and publish API Products
           </div>
         </div>
       </div>
@@ -45,7 +45,7 @@
           <p class="section-text">
             An API Product bundles a set of API endpoints (via an <strong>API Collection</strong>)
             with access controls, rate limits, and pricing. Third-party providers (TPPs) subscribe to
-            an API Product to gain access to the endpoints it contains, subject to the quotas and
+            API Products to gain access to the endpoints they contain, subject to the quotas and
             pricing you configure.
           </p>
         </section>
@@ -57,11 +57,11 @@
             <div class="concept-item">
               <h3 class="concept-title">API Collection</h3>
               <p class="concept-text">
-                A named group of API endpoints that forms the core of your product offering.
+                A named group of API endpoints that forms the core of your API Product offering.
               </p>
             </div>
             <div class="concept-item">
-              <h3 class="concept-title">Product Attribute</h3>
+              <h3 class="concept-title">API Product Attribute</h3>
               <p class="concept-text">
                 Key-value pairs storing rate limits, pricing, and linked API Collection ID.
               </p>
@@ -73,7 +73,7 @@
               </p>
             </div>
             <div class="concept-item">
-              <h3 class="concept-title">Product Code</h3>
+              <h3 class="concept-title">API Product Code</h3>
               <p class="concept-text">
                 Unique identifier (e.g. <code>payments-api-v2</code>) used across the system.
               </p>
@@ -116,11 +116,11 @@
             <div class="step-body">
               <h3 class="step-title">Create an API Product</h3>
               <p class="step-text">
-                Link your product to the API Collection, give it a name and a unique product code
+                Link your API Product to the API Collection, give it a name and a unique API Product code
                 that identifies it across the system.
               </p>
               <a href="/products/create" class="step-link">
-                Create a Product &rarr;
+                Create an API Product &rarr;
               </a>
             </div>
           </div>
@@ -167,7 +167,7 @@
             <div class="step-body">
               <h3 class="step-title">Publish</h3>
               <p class="step-text">
-                Make the product available for TPPs to discover and subscribe to through the
+                Make the API Product available for TPPs to discover and subscribe to through the
                 API Marketplace.
               </p>
             </div>

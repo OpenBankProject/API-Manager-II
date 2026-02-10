@@ -2,7 +2,7 @@ import { createToaster } from '@skeletonlabs/skeleton-svelte';
 
 // Create a single toaster instance for the entire application
 export const toaster = createToaster({
-    max: 3,
+    max: 5,
     duration: 3000,
 });
 
@@ -15,10 +15,10 @@ export const toast = {
         toaster.success({ title, description });
     },
     warning: (title: string, description?: string) => {
-        toaster.warning({ title, description });
+        toaster.warning({ title, description, duration: 10000 });
     },
     error: (title: string, description?: string) => {
-        toaster.error({ title, description });
+        toaster.error({ title, description, duration: 0 });
     },
     promise: <T>(promise: Promise<T>, options: any) => {
         return toaster.promise(promise, options);

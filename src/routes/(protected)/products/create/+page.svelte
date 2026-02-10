@@ -24,6 +24,9 @@
     description: string;
     productCode: string;
     parentProductCode: string;
+    category: string;
+    moreInfoUrl: string;
+    termsAndConditionsUrl: string;
     collectionId: string;
     monthlySubscription: string;
     monthlySubscriptionCurrency: string;
@@ -46,7 +49,7 @@
     }
 
     try {
-      // Step 1: Create the product
+      // Create the product with all core fields in the PUT body
       const productResponse = await trackedFetch(
         `/api/products/${selectedBankId}/${formData.productCode}`,
         {
@@ -56,6 +59,18 @@
             name: formData.name,
             description: formData.description,
             parent_api_product_code: formData.parentProductCode,
+            category: formData.category,
+            more_info_url: formData.moreInfoUrl,
+            terms_and_conditions_url: formData.termsAndConditionsUrl,
+            collection_id: formData.collectionId,
+            monthly_subscription_amount: formData.monthlySubscription,
+            monthly_subscription_currency: formData.monthlySubscriptionCurrency,
+            per_second_call_limit: Number(formData.rateLimits.perSecond) || -1,
+            per_minute_call_limit: Number(formData.rateLimits.perMinute) || -1,
+            per_hour_call_limit: Number(formData.rateLimits.perHour) || -1,
+            per_day_call_limit: Number(formData.rateLimits.perDay) || -1,
+            per_week_call_limit: Number(formData.rateLimits.perWeek) || -1,
+            per_month_call_limit: Number(formData.rateLimits.perMonth) || -1,
           }),
         },
       );
@@ -65,39 +80,10 @@
         throw new Error(errorData.error || "Failed to create product");
       }
 
-      // Step 2: Create the API Product attributes
-      const attributesToCreate: Array<{ name: string; type: string; value: string }> = [
-        { name: "api_collection_id", type: "STRING", value: formData.collectionId },
-      ];
-
-      if (formData.monthlySubscription) {
-        attributesToCreate.push({ name: "monthly_subscription_amount", type: "DOUBLE", value: formData.monthlySubscription });
-      }
-      if (formData.monthlySubscriptionCurrency) {
-        attributesToCreate.push({ name: "monthly_subscription_currency", type: "STRING", value: formData.monthlySubscriptionCurrency });
-      }
-      if (formData.rateLimits.perSecond) {
-        attributesToCreate.push({ name: "calls_per_second", type: "INTEGER", value: formData.rateLimits.perSecond });
-      }
-      if (formData.rateLimits.perMinute) {
-        attributesToCreate.push({ name: "calls_per_minute", type: "INTEGER", value: formData.rateLimits.perMinute });
-      }
-      if (formData.rateLimits.perHour) {
-        attributesToCreate.push({ name: "calls_per_hour", type: "INTEGER", value: formData.rateLimits.perHour });
-      }
-      if (formData.rateLimits.perDay) {
-        attributesToCreate.push({ name: "calls_per_day", type: "INTEGER", value: formData.rateLimits.perDay });
-      }
-      if (formData.rateLimits.perWeek) {
-        attributesToCreate.push({ name: "calls_per_week", type: "INTEGER", value: formData.rateLimits.perWeek });
-      }
-      if (formData.rateLimits.perMonth) {
-        attributesToCreate.push({ name: "calls_per_month", type: "INTEGER", value: formData.rateLimits.perMonth });
-      }
-
+      // Create custom attributes (if any)
       const failedAttributes: string[] = [];
 
-      for (const attr of attributesToCreate) {
+      for (const attr of formData.customAttributes) {
         try {
           const attrResponse = await trackedFetch(
             `/api/products/${selectedBankId}/${formData.productCode}/attribute`,

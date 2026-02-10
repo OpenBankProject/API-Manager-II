@@ -56,7 +56,7 @@
   }
 
   async function deleteProduct() {
-    if (!confirm(`Are you sure you want to delete the product "${productCode}"? This action cannot be undone and will also delete all related attributes and fees.`)) {
+    if (!confirm(`Are you sure you want to delete the API Product "${productCode}"? This action cannot be undone and will also delete all related attributes.`)) {
       return;
     }
 
@@ -232,36 +232,104 @@
 
     <!-- Product Details Grid -->
     <div class="mb-6 grid gap-6 md:grid-cols-2">
-      <!-- Classification -->
+      <!-- Subscription & Collection -->
       <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-        <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">Classification</h2>
+        <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">Subscription & Collection</h2>
         <dl class="space-y-3">
+          {#if product.collection_id}
+            <div>
+              <dt class="text-sm font-medium text-gray-600 dark:text-gray-400">API Collection</dt>
+              <dd class="mt-1 flex items-center gap-3">
+                <a
+                  href="/api-collections/{product.collection_id}"
+                  class="inline-flex items-center gap-1.5 text-blue-600 hover:underline dark:text-blue-400"
+                >
+                  <code class="rounded bg-blue-50 px-2 py-0.5 text-sm dark:bg-blue-900/30">{product.collection_id}</code>
+                </a>
+                <a
+                  href="{apiExplorerUrl}/api-collections/{product.collection_id}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-1 rounded border border-purple-300 bg-purple-600 px-2 py-0.5 text-xs font-medium text-white hover:bg-purple-700 dark:border-purple-600 dark:bg-purple-500 dark:hover:bg-purple-600"
+                  title="View in API Explorer"
+                >
+                  <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                  API Explorer
+                </a>
+              </dd>
+            </div>
+          {/if}
+          {#if product.monthly_subscription_amount}
+            <div>
+              <dt class="text-sm font-medium text-gray-600 dark:text-gray-400">Monthly Subscription</dt>
+              <dd class="mt-1 text-gray-900 dark:text-gray-100">{product.monthly_subscription_amount} {product.monthly_subscription_currency || ""}</dd>
+            </div>
+          {/if}
           {#if product.category}
             <div>
               <dt class="text-sm font-medium text-gray-600 dark:text-gray-400">Category</dt>
               <dd class="mt-1 text-gray-900 dark:text-gray-100">{product.category}</dd>
             </div>
           {/if}
-          {#if product.family}
-            <div>
-              <dt class="text-sm font-medium text-gray-600 dark:text-gray-400">Family</dt>
-              <dd class="mt-1 text-gray-900 dark:text-gray-100">{product.family}</dd>
-            </div>
-          {/if}
-          {#if product.super_family}
-            <div>
-              <dt class="text-sm font-medium text-gray-600 dark:text-gray-400">Super Family / Asset Class</dt>
-              <dd class="mt-1 text-gray-900 dark:text-gray-100">{product.super_family}</dd>
-            </div>
-          {/if}
-          {#if !product.category && !product.family && !product.super_family}
-            <p class="text-sm text-gray-500 dark:text-gray-400">No classification information available</p>
+          {#if !product.collection_id && !product.monthly_subscription_amount && !product.category}
+            <p class="text-sm text-gray-500 dark:text-gray-400">No subscription or collection configured</p>
           {/if}
         </dl>
       </div>
 
-      <!-- Links -->
+      <!-- Rate Limits -->
       <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+        <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">Rate Limits</h2>
+        {#if product.per_second_call_limit || product.per_minute_call_limit || product.per_hour_call_limit || product.per_day_call_limit || product.per_week_call_limit || product.per_month_call_limit}
+          <div class="grid grid-cols-3 gap-3">
+            {#if product.per_second_call_limit}
+              <div class="rounded-lg border border-gray-100 bg-gray-50 p-3 text-center dark:border-gray-600 dark:bg-gray-700/50">
+                <div class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Per Second</div>
+                <div class="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">{Number(product.per_second_call_limit).toLocaleString()}</div>
+              </div>
+            {/if}
+            {#if product.per_minute_call_limit}
+              <div class="rounded-lg border border-gray-100 bg-gray-50 p-3 text-center dark:border-gray-600 dark:bg-gray-700/50">
+                <div class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Per Minute</div>
+                <div class="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">{Number(product.per_minute_call_limit).toLocaleString()}</div>
+              </div>
+            {/if}
+            {#if product.per_hour_call_limit}
+              <div class="rounded-lg border border-gray-100 bg-gray-50 p-3 text-center dark:border-gray-600 dark:bg-gray-700/50">
+                <div class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Per Hour</div>
+                <div class="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">{Number(product.per_hour_call_limit).toLocaleString()}</div>
+              </div>
+            {/if}
+            {#if product.per_day_call_limit}
+              <div class="rounded-lg border border-gray-100 bg-gray-50 p-3 text-center dark:border-gray-600 dark:bg-gray-700/50">
+                <div class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Per Day</div>
+                <div class="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">{Number(product.per_day_call_limit).toLocaleString()}</div>
+              </div>
+            {/if}
+            {#if product.per_week_call_limit}
+              <div class="rounded-lg border border-gray-100 bg-gray-50 p-3 text-center dark:border-gray-600 dark:bg-gray-700/50">
+                <div class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Per Week</div>
+                <div class="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">{Number(product.per_week_call_limit).toLocaleString()}</div>
+              </div>
+            {/if}
+            {#if product.per_month_call_limit}
+              <div class="rounded-lg border border-gray-100 bg-gray-50 p-3 text-center dark:border-gray-600 dark:bg-gray-700/50">
+                <div class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Per Month</div>
+                <div class="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">{Number(product.per_month_call_limit).toLocaleString()}</div>
+              </div>
+            {/if}
+          </div>
+        {:else}
+          <p class="text-sm text-gray-500 dark:text-gray-400">No rate limits configured</p>
+        {/if}
+      </div>
+    </div>
+
+    <!-- Links -->
+    {#if product.more_info_url || product.terms_and_conditions_url}
+      <div class="mb-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
         <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">Links</h2>
         <dl class="space-y-3">
           {#if product.more_info_url}
@@ -284,12 +352,9 @@
               </dd>
             </div>
           {/if}
-          {#if !product.more_info_url && !product.terms_and_conditions_url}
-            <p class="text-sm text-gray-500 dark:text-gray-400">No links available</p>
-          {/if}
         </dl>
       </div>
-    </div>
+    {/if}
 
     <!-- Attributes -->
     {#if product.attributes && product.attributes.length > 0}

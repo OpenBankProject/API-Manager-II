@@ -17,35 +17,28 @@
   let collections = $derived(data.collections || []);
   const product = data.product;
 
-  // System attributes managed via dedicated form fields
-  const SYSTEM_ATTRIBUTES = [
-    "api_collection_id",
-    "monthly_subscription_amount",
-    "monthly_subscription_currency",
-    "calls_per_second",
-    "calls_per_minute",
-    "calls_per_hour",
-    "calls_per_day",
-    "calls_per_week",
-    "calls_per_month",
-  ];
-
   const productAttrs = (product?.attributes || []) as Array<{ name: string; type: string; value: string }>;
 
-  function getAttrValue(attrName: string): string {
-    const attr = productAttrs.find((a) => a.name === attrName);
-    return attr?.value || "";
-  }
-
-  const initialCustomAttributes = productAttrs
-    .filter((a) => !SYSTEM_ATTRIBUTES.includes(a.name))
-    .map((a) => ({ name: a.name, type: a.type || "STRING", value: a.value }));
+  // All custom attributes (non-core fields are now just true custom attributes)
+  const initialCustomAttributes = Object.values(
+    productAttrs
+      .reduce((acc, a) => {
+        // Deduplicate by name, preferring non-empty values
+        if (!acc[a.name] || (a.value && a.value.trim() !== "" && (!acc[a.name].value || acc[a.name].value.trim() === ""))) {
+          acc[a.name] = { name: a.name, type: a.type || "STRING", value: a.value };
+        }
+        return acc;
+      }, {} as Record<string, { name: string; type: string; value: string }>)
+  );
 
   async function handleSubmit(formData: {
     name: string;
     description: string;
     productCode: string;
     parentProductCode: string;
+    category: string;
+    moreInfoUrl: string;
+    termsAndConditionsUrl: string;
     collectionId: string;
     monthlySubscription: string;
     monthlySubscriptionCurrency: string;
@@ -58,7 +51,7 @@
     }
 
     try {
-      // Step 1: Update the product
+      // Update the product with all core fields in the PUT body
       const productResponse = await trackedFetch(
         `/api/products/${bankId}/${encodeURIComponent(productCode)}`,
         {
@@ -68,6 +61,18 @@
             name: formData.name,
             description: formData.description,
             parent_api_product_code: formData.parentProductCode,
+            category: formData.category,
+            more_info_url: formData.moreInfoUrl,
+            terms_and_conditions_url: formData.termsAndConditionsUrl,
+            collection_id: formData.collectionId,
+            monthly_subscription_amount: formData.monthlySubscription,
+            monthly_subscription_currency: formData.monthlySubscriptionCurrency,
+            per_second_call_limit: Number(formData.rateLimits.perSecond) || -1,
+            per_minute_call_limit: Number(formData.rateLimits.perMinute) || -1,
+            per_hour_call_limit: Number(formData.rateLimits.perHour) || -1,
+            per_day_call_limit: Number(formData.rateLimits.perDay) || -1,
+            per_week_call_limit: Number(formData.rateLimits.perWeek) || -1,
+            per_month_call_limit: Number(formData.rateLimits.perMonth) || -1,
           }),
         },
       );
@@ -77,44 +82,10 @@
         throw new Error(errorData.error || "Failed to update product");
       }
 
-      // Step 2: Create/update attributes
-      const attributesToCreate: Array<{ name: string; type: string; value: string }> = [
-        { name: "api_collection_id", type: "STRING", value: formData.collectionId },
-      ];
-
-      if (formData.monthlySubscription) {
-        attributesToCreate.push({ name: "monthly_subscription_amount", type: "DOUBLE", value: formData.monthlySubscription });
-      }
-      if (formData.monthlySubscriptionCurrency) {
-        attributesToCreate.push({ name: "monthly_subscription_currency", type: "STRING", value: formData.monthlySubscriptionCurrency });
-      }
-      if (formData.rateLimits.perSecond) {
-        attributesToCreate.push({ name: "calls_per_second", type: "INTEGER", value: formData.rateLimits.perSecond });
-      }
-      if (formData.rateLimits.perMinute) {
-        attributesToCreate.push({ name: "calls_per_minute", type: "INTEGER", value: formData.rateLimits.perMinute });
-      }
-      if (formData.rateLimits.perHour) {
-        attributesToCreate.push({ name: "calls_per_hour", type: "INTEGER", value: formData.rateLimits.perHour });
-      }
-      if (formData.rateLimits.perDay) {
-        attributesToCreate.push({ name: "calls_per_day", type: "INTEGER", value: formData.rateLimits.perDay });
-      }
-      if (formData.rateLimits.perWeek) {
-        attributesToCreate.push({ name: "calls_per_week", type: "INTEGER", value: formData.rateLimits.perWeek });
-      }
-      if (formData.rateLimits.perMonth) {
-        attributesToCreate.push({ name: "calls_per_month", type: "INTEGER", value: formData.rateLimits.perMonth });
-      }
-
-      // Add custom attributes
-      for (const attr of formData.customAttributes) {
-        attributesToCreate.push(attr);
-      }
-
+      // Create/update custom attributes only
       const failedAttributes: string[] = [];
 
-      for (const attr of attributesToCreate) {
+      for (const attr of formData.customAttributes) {
         try {
           const attrResponse = await trackedFetch(
             `/api/products/${bankId}/${encodeURIComponent(productCode)}/attribute`,
@@ -205,16 +176,19 @@
           initialDescription={product.description || ""}
           initialProductCode={productCode}
           initialParentProductCode={product.parent_api_product_code || ""}
-          initialCollectionId={getAttrValue("api_collection_id")}
-          initialSubscription={getAttrValue("monthly_subscription_amount")}
-          initialSubscriptionCurrency={getAttrValue("monthly_subscription_currency") || "EUR"}
+          initialCategory={product.category || ""}
+          initialMoreInfoUrl={product.more_info_url || ""}
+          initialTermsAndConditionsUrl={product.terms_and_conditions_url || ""}
+          initialCollectionId={product.collection_id || ""}
+          initialSubscription={product.monthly_subscription_amount || ""}
+          initialSubscriptionCurrency={product.monthly_subscription_currency || "EUR"}
           initialRateLimits={{
-            perSecond: getAttrValue("calls_per_second"),
-            perMinute: getAttrValue("calls_per_minute"),
-            perHour: getAttrValue("calls_per_hour"),
-            perDay: getAttrValue("calls_per_day"),
-            perWeek: getAttrValue("calls_per_week"),
-            perMonth: getAttrValue("calls_per_month"),
+            perSecond: product.per_second_call_limit || "",
+            perMinute: product.per_minute_call_limit || "",
+            perHour: product.per_hour_call_limit || "",
+            perDay: product.per_day_call_limit || "",
+            perWeek: product.per_week_call_limit || "",
+            perMonth: product.per_month_call_limit || "",
           }}
           {initialCustomAttributes}
           onSubmit={handleSubmit}

@@ -14,6 +14,9 @@
     description: string;
     productCode: string;
     parentProductCode: string;
+    category: string;
+    moreInfoUrl: string;
+    termsAndConditionsUrl: string;
     collectionId: string;
     monthlySubscription: string;
     monthlySubscriptionCurrency: string;
@@ -35,6 +38,9 @@
     initialDescription = "",
     initialProductCode = "",
     initialParentProductCode = "",
+    initialCategory = "",
+    initialMoreInfoUrl = "",
+    initialTermsAndConditionsUrl = "",
     initialCollectionId = "",
     initialSubscription = "",
     initialSubscriptionCurrency = "EUR",
@@ -51,6 +57,9 @@
     initialDescription?: string;
     initialProductCode?: string;
     initialParentProductCode?: string;
+    initialCategory?: string;
+    initialMoreInfoUrl?: string;
+    initialTermsAndConditionsUrl?: string;
     initialCollectionId?: string;
     initialSubscription?: string;
     initialSubscriptionCurrency?: string;
@@ -70,6 +79,9 @@
   let selectedCollectionId = $state(initialCollectionId);
   let monthlySubscriptionAmount = $state(initialSubscription);
   let monthlySubscriptionCurrency = $state(initialSubscriptionCurrency);
+  let category = $state(initialCategory);
+  let moreInfoUrl = $state(initialMoreInfoUrl);
+  let termsAndConditionsUrl = $state(initialTermsAndConditionsUrl);
   let isSubmitting = $state(false);
 
   // Rate limits
@@ -122,6 +134,9 @@
         description: description.trim(),
         productCode: productCode.trim(),
         parentProductCode: parentProductCode.trim(),
+        category: category.trim(),
+        moreInfoUrl: moreInfoUrl.trim(),
+        termsAndConditionsUrl: termsAndConditionsUrl.trim(),
         collectionId: selectedCollectionId.trim(),
         monthlySubscription: String(monthlySubscriptionAmount || "").trim(),
         monthlySubscriptionCurrency: String(monthlySubscriptionCurrency || "").trim(),
@@ -294,6 +309,60 @@
       />
       <div class="form-help">
         Optional parent product code for hierarchy
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="product-category" class="form-label">
+        Category
+      </label>
+      <input
+        id="product-category"
+        type="text"
+        class="form-input"
+        placeholder="e.g., Payments, Accounts"
+        bind:value={category}
+        disabled={isSubmitting}
+      />
+      <div class="form-help">
+        Optional category for this product
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 3: More Info URL + Terms and Conditions URL -->
+  <div class="form-row-2">
+    <div class="form-group">
+      <label for="more-info-url" class="form-label">
+        More Info URL
+      </label>
+      <input
+        id="more-info-url"
+        type="url"
+        class="form-input"
+        placeholder="https://example.com/docs"
+        bind:value={moreInfoUrl}
+        disabled={isSubmitting}
+      />
+      <div class="form-help">
+        Link to additional product information
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="terms-url" class="form-label">
+        Terms and Conditions URL
+      </label>
+      <input
+        id="terms-url"
+        type="url"
+        class="form-input"
+        placeholder="https://example.com/terms"
+        bind:value={termsAndConditionsUrl}
+        disabled={isSubmitting}
+      />
+      <div class="form-help">
+        Link to terms and conditions
       </div>
     </div>
   </div>
@@ -486,6 +555,12 @@
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
+  }
+
+  .form-row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
   }
 
   .form-row-3 {
@@ -869,6 +944,7 @@
   }
 
   @media (max-width: 768px) {
+    .form-row-2,
     .form-row-3 {
       grid-template-columns: 1fr;
       gap: 1rem;
