@@ -112,7 +112,7 @@
       }
 
       // Step 2: Add endpoints
-      let endpointWarnings = 0;
+      let failedEndpoints: string[] = [];
       for (const ep of collection.endpoints) {
         try {
           const epRes = await trackedFetch(
@@ -123,18 +123,18 @@
               body: JSON.stringify({ operation_id: ep.operation_id }),
             },
           );
-          if (!epRes.ok) endpointWarnings++;
+          if (!epRes.ok) failedEndpoints.push(ep.operation_id);
         } catch {
-          endpointWarnings++;
+          failedEndpoints.push(ep.operation_id);
         }
       }
 
       collectionStatus[collection.id] = "created";
 
-      if (endpointWarnings > 0) {
+      if (failedEndpoints.length > 0) {
         toast.warning(
           `Collection "${collection.collection_name}" created`,
-          `${endpointWarnings} of ${collection.endpoints.length} endpoints could not be added`,
+          `${failedEndpoints.length} of ${collection.endpoints.length} endpoints could not be added: ${failedEndpoints.join(", ")}`,
         );
       } else {
         toast.success(

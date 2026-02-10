@@ -110,36 +110,15 @@
     return date.toISOString();
   }
 
-  function updateDates() {
-    if (autoRefresh === "none") return;
-
-    const now = new Date();
-    queryForm.to_date = now.toISOString().slice(0, 19);
-
-    const refreshSeconds = parseInt(autoRefresh);
-    const fromDate = new Date(now);
-    fromDate.setSeconds(fromDate.getSeconds() - refreshSeconds);
-    queryForm.from_date = fromDate.toISOString().slice(0, 19);
-  }
-
   async function refreshMetrics() {
-    if (autoRefresh !== "none") {
-      updateDates();
-    }
-
     isLoading = true;
     lastRefreshTime = new Date().toLocaleString();
     timestampColorIndex = (timestampColorIndex + 1) % 2;
 
     try {
       const response = await trackedFetch(`/api/connector-metrics?${currentQueryString}`);
-      const correlationId =
-        response.headers.get("X-Correlation-Id") ||
-        response.headers.get("x-correlation-id") ||
-        "N/A";
-      lastCorrelationId = correlationId;
-
       const responseData = await response.json();
+      lastCorrelationId = responseData.correlation_id || "N/A";
 
       // Always store the raw response for debugging
       rawResponse = responseData;
@@ -264,10 +243,8 @@
     if (typeof window !== "undefined" && !initialized && check.hasAllRoles) {
       initialized = true;
 
-      // Set default from_date to 5 minutes ago
-      const fiveMinutesAgo = new Date();
-      fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5);
-      queryForm.from_date = fiveMinutesAgo.toISOString().slice(0, 16);
+      // Set default from_date to current time
+      queryForm.from_date = new Date().toISOString().slice(0, 16);
 
       refreshMetrics();
       startAutoRefresh();
