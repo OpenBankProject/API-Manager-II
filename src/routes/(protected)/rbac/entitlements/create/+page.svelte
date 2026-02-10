@@ -5,7 +5,7 @@
   import { toast } from "$lib/utils/toastService";
   import { trackedFetch } from "$lib/utils/trackedFetch";
   import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
-  import UserSearchWidget from "$lib/components/UserSearchWidget.svelte";
+  import UserSearchPickerWidget from "$lib/components/UserSearchPickerWidget.svelte";
   import RoleSearchWidget from "$lib/components/RoleSearchWidget.svelte";
   import { currentBank } from "$lib/stores/currentBank.svelte";
   import type { PageData } from "./$types";
@@ -153,7 +153,7 @@
             User
             <span class="required">*</span>
           </label>
-          <UserSearchWidget
+          <UserSearchPickerWidget
             onSelect={handleUserSelect}
             bind:selectedUserId={userId}
             bind:selectedUsername={username}

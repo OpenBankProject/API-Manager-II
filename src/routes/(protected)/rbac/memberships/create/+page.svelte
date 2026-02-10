@@ -11,7 +11,7 @@
   import { toast } from "$lib/utils/toastService";
   import { trackedFetch } from "$lib/utils/trackedFetch";
   import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
-  import UserSearchWidget from "$lib/components/UserSearchWidget.svelte";
+  import UserSearchPickerWidget from "$lib/components/UserSearchPickerWidget.svelte";
 
   let { data } = $props<{ data: PageData }>();
 
@@ -166,7 +166,7 @@
             User
             <span class="required">*</span>
           </label>
-          <UserSearchWidget
+          <UserSearchPickerWidget
             onSelect={handleUserSelect}
             bind:selectedUserId
             bind:selectedUsername
