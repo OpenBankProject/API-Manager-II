@@ -432,12 +432,14 @@
             {/if}
           </div>
         {:else}
-          <span class="mx-4 hover:text-tertiary-400"
-            ><a href="{data.externalLinks.PORTAL_URL}/register">Register</a>
-          </span>
-          <button type="button" class="btn preset-filled-surface-950-50"
-            ><a href="/login">Login</a></button
-          >
+          <div class="flex items-center">
+            <span class="mx-4 hover:text-tertiary-400"
+              ><a href="{data.externalLinks.PORTAL_URL}/register">Register</a>
+            </span>
+            <button type="button" class="btn preset-filled-surface-950-50"
+              ><a href="/login">Login</a></button
+            >
+          </div>
         {/if}
       </div>
 

@@ -29,6 +29,7 @@ import {
   CircleHelp,
   Rocket,
   Banknote,
+  Hash,
 } from "@lucide/svelte";
 import { env } from "$env/dynamic/public";
 
@@ -178,6 +179,11 @@ function buildMetricsItems(): NavigationItem[] {
       href: "/connector-metrics",
       label: "Connector Metrics",
       iconComponent: Plug,
+    },
+    {
+      href: "/connector-counts",
+      label: "Connector Counts",
+      iconComponent: Hash,
     },
   ];
 
@@ -430,7 +436,7 @@ export const navSections: NavigationSection[] = [
   { id: "my-account", label: "My Account", iconComponent: User, items: myAccountItems, basePaths: ["/user"] },
   { id: "system", label: "System", iconComponent: Server, items: systemItems, basePaths: ["/system"] },
   { id: "integration", label: "Integration", iconComponent: Plug, items: integrationItems, basePaths: ["/integration"] },
-  { id: "metrics", label: "Metrics", iconComponent: BarChart3, items: metricsItems, basePaths: ["/metrics", "/aggregate-metrics", "/connector-metrics"] },
+  { id: "metrics", label: "Metrics", iconComponent: BarChart3, items: metricsItems, basePaths: ["/metrics", "/aggregate-metrics", "/connector-metrics", "/connector-counts"] },
   { id: "abac", label: "ABAC", iconComponent: Lock, items: abacItems, basePaths: ["/abac"] },
   { id: "products", label: "Products", iconComponent: Package, items: productsItems, basePaths: ["/products"] },
   { id: "rbac", label: "RBAC", iconComponent: Shield, items: rbacItems, basePaths: ["/rbac"] },

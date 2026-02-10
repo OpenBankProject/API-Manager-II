@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import { ShieldUserIcon } from '@lucide/svelte';
 	import { Tooltip, Dialog, Portal } from '@skeletonlabs/skeleton-svelte';
 	import { createLogger } from '$lib/utils/logger';
 
@@ -256,11 +255,6 @@
 		}
 	});
 
-	let authPipOpenState = $state(false);
-
-	// async function formatAuthStatusPip(session: SessionSnapshot, consentInfo?: OBPConsentInfo): {
-	// 	const
-	// }
 
 	async function sendMessage(text: string) {
 		if (!text.trim()) return;
@@ -539,47 +533,53 @@
 
 {#snippet statusPips(session: SessionSnapshot, consentInfo?: OBPConsentInfo)}
 	{#if options.displayConnectionPips}
-		<div class="flex flex-col items-center">
+		<div class="flex flex-row items-center gap-1.5">
 			<!-- Connection Pip with Tooltip -->
-			<Tooltip positioning={{ placement: 'top' }}>
+			<Tooltip>
 				<Tooltip.Trigger>
-					<div class="badge-icon {connectionPipColor} h-3 w-3">
-						<ShieldUserIcon size={12} />
-					</div>
+					<div class="h-2 w-2 rounded-full {connectionPipColor} cursor-pointer transition-all hover:scale-125"></div>
 				</Tooltip.Trigger>
-				<Tooltip.Content>Opey Connection Status: {connectionStatusString}</Tooltip.Content>
+				<Portal>
+					<Tooltip.Positioner class="z-10">
+						<Tooltip.Content class="card bg-primary-200-800 text-xs p-2">
+							Opey Connection Status: {connectionStatusString}
+							<Tooltip.Arrow class="[--arrow-size:--spacing(2)] [--arrow-background:var(--color-primary-200-800)]">
+								<Tooltip.ArrowTip />
+							</Tooltip.Arrow>
+						</Tooltip.Content>
+					</Tooltip.Positioner>
+				</Portal>
 			</Tooltip>
-			<!-- Authentication Pip with Tooltip -->
-			<Tooltip open={authPipOpenState}>
+			<!-- Authentication/Consent Pip with Tooltip -->
+			<Tooltip>
 				<Tooltip.Trigger>
-					<div class="badge-icon {authPipColor} h-3 w-3">
-						<ShieldUserIcon size={12} />
-					</div>
+					<a
+						href="/user#opey-consent"
+						class="h-2 w-2 rounded-full {authPipColor} cursor-pointer transition-all hover:scale-125 block"
+						aria-label="View Opey consent"
+					></a>
 				</Tooltip.Trigger>
-				<Tooltip.Content>
-					{#if session.status === 'loading'}
-						Authenticating...
-					{:else if session.status === 'error'}
-						Error during authentication: {session.error}
-					{:else if session.isAuthenticated}
-						<h1 class="font-bold text-success-500">Authenticated</h1>
-						{#if consentInfo}
-							<br />
-							Consent ID:
-							<a href="/user#opey-consent" aria-label="view opey consent"
-								>{consentInfo.consent_id}</a
-							>
-						{/if}
-					{:else}
-						Not Authenticated
-					{/if}
-				</Tooltip.Content>
+				<Portal>
+					<Tooltip.Positioner class="z-10">
+						<Tooltip.Content class="card bg-primary-200-800 text-xs p-2">
+							{#if session.status === 'loading'}
+								Authenticating...
+							{:else if session.status === 'error'}
+								Error: {session.error}
+							{:else if session.isAuthenticated && consentInfo}
+								Click to view consent
+							{:else if session.isAuthenticated}
+								Authenticated (no consent info)
+							{:else}
+								Not Authenticated
+							{/if}
+							<Tooltip.Arrow class="[--arrow-size:--spacing(2)] [--arrow-background:var(--color-primary-200-800)]">
+								<Tooltip.ArrowTip />
+							</Tooltip.Arrow>
+						</Tooltip.Content>
+					</Tooltip.Positioner>
+				</Portal>
 			</Tooltip>
-			<!-- {#if !session.isAuthenticated}
-				<button class="btn btn-sm btn-primary" onclick={upgradeSession} disabled={session.status === 'loading'}>
-					Log in to connect banking data
-				</button>
-			{/if} -->
 		</div>
 	{/if}
 {/snippet}
