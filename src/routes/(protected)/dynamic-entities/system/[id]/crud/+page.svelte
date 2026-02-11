@@ -48,21 +48,25 @@
         operation: "Create",
         role: `CanCreateDynamicEntity_System${entityName}`,
         description: `Create new ${entityName} records`,
+        endpoint: `POST /obp/dynamic-entity/${entityName}`,
       },
       {
         operation: "Read",
         role: `CanGetDynamicEntity_System${entityName}`,
         description: `View ${entityName} records`,
+        endpoint: `GET /obp/dynamic-entity/${entityName}`,
       },
       {
         operation: "Update",
         role: `CanUpdateDynamicEntity_System${entityName}`,
         description: `Update existing ${entityName} records`,
+        endpoint: `PUT /obp/dynamic-entity/${entityName}/{RECORD_ID}`,
       },
       {
         operation: "Delete",
         role: `CanDeleteDynamicEntity_System${entityName}`,
         description: `Delete ${entityName} records`,
+        endpoint: `DELETE /obp/dynamic-entity/${entityName}/{RECORD_ID}`,
       },
     ];
   });
@@ -109,11 +113,6 @@
       }
 
       requestSuccess[roleName] = true;
-
-      // Reload page after a short delay to show success and update entitlements
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
     } catch (error) {
       requestErrors[roleName] =
         error instanceof Error ? error.message : "Failed to submit request";
@@ -732,27 +731,19 @@
                   >
                     {roleReq.role}
                   </p>
+                  <p
+                    class="mt-1 font-mono text-xs text-blue-600 dark:text-blue-400"
+                  >
+                    {roleReq.endpoint}
+                  </p>
                 </div>
                 {#if !userHasRole(roleReq.role)}
                   <div class="ml-4 flex flex-col items-end gap-1">
                     {#if requestSuccess[roleReq.role]}
                       <div
-                        class="flex items-center gap-1 rounded-lg bg-green-100 px-3 py-2 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                        class="rounded-lg bg-green-100 px-3 py-2 text-xs text-green-800 dark:bg-green-900/30 dark:text-green-300"
                       >
-                        <svg
-                          class="h-3 w-3"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                        Request Submitted
+                        Thanks, request generated. Ask your admin to accept it on the <a href="/rbac/entitlement-requests" class="font-semibold underline hover:text-green-900 dark:hover:text-green-200">Entitlement Requests page</a>.
                       </div>
                     {:else}
                       <button

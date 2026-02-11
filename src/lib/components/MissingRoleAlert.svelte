@@ -102,11 +102,6 @@
       }
 
       submitSuccess = true;
-
-      // Redirect after a short delay to show success message
-      setTimeout(() => {
-        window.location.href = "/user";
-      }, 1500);
     } catch (error) {
       submitError =
         error instanceof Error ? error.message : "Failed to submit request";
@@ -189,8 +184,7 @@
 
       {#if submitSuccess}
         <div class="submit-success">
-          ✅ Entitlement request{roles.length > 1 ? "s" : ""} submitted successfully!
-          Redirecting...
+          Thanks, an Entitlement Request has been generated. Please ask your administrator to accept it using the <a href="/rbac/entitlement-requests" class="entitlement-requests-link">Entitlement Requests page</a>.
         </div>
       {:else}
         <div class="alert-actions">
@@ -448,6 +442,24 @@
     background: rgba(16, 185, 129, 0.2);
     border-color: rgba(16, 185, 129, 0.4);
     color: rgb(var(--color-success-200));
+  }
+
+  .submit-success :global(.entitlement-requests-link) {
+    color: #1e40af;
+    text-decoration: underline;
+    font-weight: 600;
+  }
+
+  .submit-success :global(.entitlement-requests-link:hover) {
+    color: #1d4ed8;
+  }
+
+  :global([data-mode="dark"]) .submit-success :global(.entitlement-requests-link) {
+    color: #93c5fd;
+  }
+
+  :global([data-mode="dark"]) .submit-success :global(.entitlement-requests-link:hover) {
+    color: #bfdbfe;
   }
 
   .tip-box {
