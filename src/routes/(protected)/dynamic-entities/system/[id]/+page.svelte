@@ -43,24 +43,35 @@
         role: `CanCreateDynamicEntity_System${entityName}`,
         description: `Create new ${entityName} records`,
         endpoint: `POST /obp/dynamic-entity/${entityName}`,
+        explorerUrl: `${apiExplorerUrl}/resource-docs/OBPdynamic-entity?operationid=OBPv4.0.0-dynamicEntity_create${entityName}_`,
       },
       {
-        operation: "Read",
+        operation: "Read (list)",
         role: `CanGetDynamicEntity_System${entityName}`,
-        description: `View ${entityName} records`,
+        description: `List all ${entityName} records`,
         endpoint: `GET /obp/dynamic-entity/${entityName}`,
+        explorerUrl: `${apiExplorerUrl}/resource-docs/OBPdynamic-entity?operationid=OBPv4.0.0-dynamicEntity_get${entityName}List_`,
+      },
+      {
+        operation: "Read (single)",
+        role: `CanGetDynamicEntity_System${entityName}`,
+        description: `View a single ${entityName} record by ID`,
+        endpoint: `GET /obp/dynamic-entity/${entityName}/{RECORD_ID}`,
+        explorerUrl: `${apiExplorerUrl}/resource-docs/OBPdynamic-entity?operationid=OBPv4.0.0-dynamicEntity_getSingle${entityName}_`,
       },
       {
         operation: "Update",
         role: `CanUpdateDynamicEntity_System${entityName}`,
         description: `Update existing ${entityName} records`,
         endpoint: `PUT /obp/dynamic-entity/${entityName}/{RECORD_ID}`,
+        explorerUrl: `${apiExplorerUrl}/resource-docs/OBPdynamic-entity?operationid=OBPv4.0.0-dynamicEntity_update${entityName}_`,
       },
       {
         operation: "Delete",
         role: `CanDeleteDynamicEntity_System${entityName}`,
         description: `Delete ${entityName} records`,
         endpoint: `DELETE /obp/dynamic-entity/${entityName}/{RECORD_ID}`,
+        explorerUrl: `${apiExplorerUrl}/resource-docs/OBPdynamic-entity?operationid=OBPv4.0.0-dynamicEntity_delete${entityName}_`,
       },
     ];
   });
@@ -519,8 +530,20 @@
               <p class="mt-1 font-mono text-xs text-gray-500 dark:text-gray-500">
                 {roleReq.role}
               </p>
-              <p class="mt-1 font-mono text-xs text-blue-600 dark:text-blue-400">
-                {roleReq.endpoint}
+              <p class="mt-1 flex items-center gap-2 font-mono text-xs text-blue-600 dark:text-blue-400">
+                <span>{roleReq.endpoint}</span>
+                <a
+                  href={roleReq.explorerUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-1 rounded bg-purple-100 px-1.5 py-0.5 text-xs font-medium text-purple-700 no-underline hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:hover:bg-purple-900/50"
+                  title="Open in API Explorer"
+                >
+                  <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                  API Explorer
+                </a>
               </p>
             </div>
             {#if !userHasRole(roleReq.role)}
