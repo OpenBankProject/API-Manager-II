@@ -21,6 +21,8 @@
   let rolesMetadata = $state<Map<string, boolean>>(new Map());
   let loadingMetadata = $state(false);
   let selectedBankId = $state(currentBank.bankId);
+  // "bank" = bank-scoped (send bank_id), "system" = system-wide (send empty string)
+  let scopeChoice = $state<"bank" | "system">("bank");
 
   $effect(() => {
     selectedBankId = currentBank.bankId;
@@ -38,6 +40,13 @@
       });
       rolesMetadata = metadataMap;
 
+      // Default scope based on whether role requires bank_id
+      const anyRequiresBank = Array.from(metadataMap.values()).some((v) => v);
+      if (!anyRequiresBank) {
+        scopeChoice = "system";
+      } else {
+        scopeChoice = "bank";
+      }
     } catch (error) {
       console.error("Failed to fetch role metadata:", error);
     } finally {
@@ -50,15 +59,17 @@
     Array.from(rolesMetadata.values()).some((requires) => requires),
   );
 
-  // The effective bank_id to use (provided prop or from currentBank)
-  let effectiveBankId = $derived(bankId || selectedBankId);
+  // The effective bank_id to use: empty for system-wide, otherwise provided prop or currentBank
+  let effectiveBankId = $derived(
+    scopeChoice === "system" ? "" : (bankId || selectedBankId)
+  );
 
   async function handleRequestClick() {
     if (isSubmitting) return;
 
-    // Validate bank selection if required
-    if (requiresBankId && !bankId && !selectedBankId) {
-      submitError = "Please select a bank in My Account for this role.";
+    // Validate bank selection if bank-scoped
+    if (scopeChoice === "bank" && !bankId && !selectedBankId) {
+      submitError = "Please select a bank in My Account for this bank-scoped role.";
       return;
     }
 
@@ -129,23 +140,43 @@
         {/each}
       </div>
 
-      {#if bankId}
+      <!-- Scope selector: System-wide vs Bank-scoped -->
+      {#if !bankId}
+        <div class="scope-selector">
+          <p class="scope-label"><strong>Role scope:</strong></p>
+          <label class="scope-option">
+            <input
+              type="radio"
+              name="scope-choice"
+              value="system"
+              bind:group={scopeChoice}
+            />
+            <span class="scope-option-text">
+              System-wide <span class="scope-hint">(no bank_id — for system roles)</span>
+            </span>
+          </label>
+          <label class="scope-option">
+            <input
+              type="radio"
+              name="scope-choice"
+              value="bank"
+              bind:group={scopeChoice}
+            />
+            <span class="scope-option-text">
+              Bank-scoped
+              {#if selectedBankId}
+                <code class="bank-code">{selectedBankId}</code>
+                <span class="scope-hint">(from current bank selection)</span>
+              {:else}
+                <span class="scope-hint">— <a href="/user" style="color: #3b82f6; text-decoration: underline;">select a bank</a> first</span>
+              {/if}
+            </span>
+          </label>
+        </div>
+      {:else}
         <p class="bank-info">
           <strong>Bank ID:</strong> <code class="bank-code">{bankId}</code>
         </p>
-      {/if}
-
-      {#if requiresBankId && !bankId}
-        {#if selectedBankId}
-          <p class="bank-info">
-            <strong>Bank ID:</strong> <code class="bank-code">{selectedBankId}</code>
-            <span class="bank-hint">(from current bank selection)</span>
-          </p>
-        {:else}
-          <div class="bank-selector">
-            <p>This role requires a bank. Please select a bank in <a href="/user" style="color: #3b82f6; text-decoration: underline;">My Account</a> first.</p>
-          </div>
-        {/if}
       {/if}
 
       {#if message}
@@ -473,6 +504,55 @@
   .required {
     color: #dc2626;
     margin-left: 0.25rem;
+  }
+
+  .scope-selector {
+    margin: 1rem 0;
+    padding: 0.75rem 1rem;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 6px;
+  }
+
+  :global([data-mode="dark"]) .scope-selector {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.4);
+  }
+
+  .scope-label {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.875rem;
+  }
+
+  .scope-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0;
+    font-size: 0.875rem;
+    cursor: pointer;
+  }
+
+  .scope-option input[type="radio"] {
+    margin: 0;
+    cursor: pointer;
+  }
+
+  .scope-option-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    flex-wrap: wrap;
+  }
+
+  .scope-hint {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-weight: normal;
+  }
+
+  :global([data-mode="dark"]) .scope-hint {
+    color: rgb(var(--color-surface-400));
   }
 
 </style>

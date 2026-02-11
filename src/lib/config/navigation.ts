@@ -100,6 +100,11 @@ function buildSystemItems(): NavigationItem[] {
   const items: NavigationItem[] = [
     { href: "/system/cache", label: "Cache", iconComponent: HardDrive },
     {
+      href: "/system/config-props",
+      label: "Config Props",
+      iconComponent: FileText,
+    },
+    {
       href: "/system/database-pool",
       label: "Database Pool",
       iconComponent: Waves,
@@ -178,6 +183,11 @@ function buildMetricsItems(): NavigationItem[] {
     {
       href: "/connector-metrics",
       label: "Connector Metrics",
+      iconComponent: Plug,
+    },
+    {
+      href: "/connector-traces",
+      label: "Connector Traces",
       iconComponent: Plug,
     },
     {
@@ -446,7 +456,7 @@ export const navSections: NavigationSection[] = [
   { id: "my-account", label: "My Account", iconComponent: User, items: myAccountItems, basePaths: ["/user"] },
   { id: "system", label: "System", iconComponent: Server, items: systemItems, basePaths: ["/system"] },
   { id: "integration", label: "Integration", iconComponent: Plug, items: integrationItems, basePaths: ["/integration"] },
-  { id: "metrics", label: "Metrics", iconComponent: BarChart3, items: metricsItems, basePaths: ["/metrics", "/aggregate-metrics", "/connector-metrics", "/connector-counts"] },
+  { id: "metrics", label: "Metrics", iconComponent: BarChart3, items: metricsItems, basePaths: ["/metrics", "/aggregate-metrics", "/connector-metrics", "/connector-traces", "/connector-counts"] },
   { id: "abac", label: "ABAC", iconComponent: Lock, items: abacItems, basePaths: ["/abac"] },
   { id: "products", label: "API Products", iconComponent: Package, items: productsItems, basePaths: ["/products"] },
   { id: "financial-products", label: "Financial Products", iconComponent: Banknote, items: financialProductsItems, basePaths: ["/products/financial", "/products/collections"] },
