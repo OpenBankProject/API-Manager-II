@@ -111,10 +111,23 @@ export const load: PageServerLoad = async ({ locals }) => {
     // Sort by entity name
     diagnostics.sort((a, b) => a.entityName.localeCompare(b.entityName));
 
+    // Fetch orphaned entities from the diagnostics endpoint
+    let orphanedEntities: any[] = [];
+    try {
+      const diagEndpoint = "/obp/v6.0.0/management/diagnostics/dynamic-entities";
+      logger.info(`Fetching orphaned entities from: ${diagEndpoint}`);
+      const diagResponse = await obp_requests.get(diagEndpoint, accessToken);
+      orphanedEntities = diagResponse.orphaned_entities || [];
+      logger.info(`Found ${orphanedEntities.length} orphaned entities`);
+    } catch (err: any) {
+      logger.warn("Could not fetch orphaned entities:", err?.message);
+    }
+
     return {
       diagnostics,
       totalEntities: diagnostics.length,
       totalRecords: diagnostics.reduce((sum, d) => sum + d.recordCount, 0),
+      orphanedEntities,
     };
   } catch (err: any) {
     logger.error("Error in diagnostics:", err);

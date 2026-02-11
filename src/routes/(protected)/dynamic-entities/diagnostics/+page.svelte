@@ -5,6 +5,7 @@
   const diagnostics = data.diagnostics || [];
   const totalEntities = data.totalEntities || 0;
   const totalRecords = data.totalRecords || 0;
+  const orphanedEntities = data.orphanedEntities || [];
 
   let searchQuery = $state("");
   let copiedId = $state<string | null>(null);
@@ -158,6 +159,62 @@ ${diag.triedKeys ? `Tried Keys: ${diag.triedKeys.join(", ")}` : ""}
     </div>
   </div>
 </div>
+
+<!-- Orphaned Entities -->
+{#if orphanedEntities.length > 0}
+  <div class="mb-6 rounded-lg border-2 border-yellow-400 bg-yellow-50 shadow-sm dark:border-yellow-600 dark:bg-yellow-900/20">
+    <div class="border-b border-yellow-300 p-4 dark:border-yellow-700">
+      <div class="flex items-center gap-2">
+        <svg class="h-5 w-5 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+        </svg>
+        <h2 class="text-lg font-semibold text-yellow-800 dark:text-yellow-200">
+          Orphaned Entities ({orphanedEntities.length})
+        </h2>
+      </div>
+      <p class="mt-1 text-sm text-yellow-700 dark:text-yellow-300">
+        Data records whose Dynamic Entity definition has been deleted. These records still exist in the database but have no schema and cannot be accessed via the API.
+      </p>
+    </div>
+    <div class="p-4">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-yellow-300 dark:divide-yellow-700">
+          <thead>
+            <tr>
+              <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-yellow-700 dark:text-yellow-300">Entity Name</th>
+              <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-yellow-700 dark:text-yellow-300">Bank ID</th>
+              <th class="px-4 py-2 text-right text-xs font-medium uppercase tracking-wider text-yellow-700 dark:text-yellow-300">Record Count</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-yellow-200 dark:divide-yellow-800">
+            {#each orphanedEntities as orphan}
+              <tr class="hover:bg-yellow-100 dark:hover:bg-yellow-900/30">
+                <td class="whitespace-nowrap px-4 py-3 text-sm font-mono font-semibold text-yellow-900 dark:text-yellow-100">
+                  {orphan.entity_name}
+                </td>
+                <td class="whitespace-nowrap px-4 py-3 text-sm font-mono text-yellow-800 dark:text-yellow-200">
+                  {orphan.bank_id || ""}
+                </td>
+                <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-mono font-semibold text-yellow-900 dark:text-yellow-100">
+                  {orphan.record_count}
+                </td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{:else}
+  <div class="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20">
+    <div class="flex items-center gap-2">
+      <svg class="h-5 w-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <p class="text-sm font-medium text-green-800 dark:text-green-200">No orphaned entities detected.</p>
+    </div>
+  </div>
+{/if}
 
 <!-- Search -->
 <div class="mb-6">
@@ -411,7 +468,7 @@ ${diag.triedKeys ? `Tried Keys: ${diag.triedKeys.join(", ")}` : ""}
         class="whitespace-pre-wrap break-words rounded-lg bg-gray-50 p-4 text-xs dark:bg-gray-900"><code
           class="text-gray-900 dark:text-gray-100"
           >{JSON.stringify(
-            { diagnostics, totalEntities, totalRecords },
+            { diagnostics, totalEntities, totalRecords, orphanedEntities },
             null,
             2,
           )}</code
