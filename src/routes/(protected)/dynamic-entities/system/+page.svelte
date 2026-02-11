@@ -94,6 +94,36 @@
     }
   }
 
+  let backingUp = $state<Record<string, boolean>>({});
+
+  async function backupEntity(entityId: string, entityName: string) {
+    if (backingUp[entityId]) return;
+
+    backingUp[entityId] = true;
+
+    try {
+      const response = await fetch(`/api/dynamic-entities/${entityId}/backup`, {
+        method: "POST",
+      });
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        throw new Error(responseData.error || "Failed to backup entity");
+      }
+
+      alert(`Backup created: ${responseData.entity_name}`);
+      window.location.reload();
+    } catch (error) {
+      const errorMsg =
+        error instanceof Error ? error.message : "Failed to backup entity";
+      alert(`Error: ${errorMsg}`);
+      console.error("Backup error:", error);
+    } finally {
+      backingUp[entityId] = false;
+    }
+  }
+
   function getPropertyCount(entity: any): number {
     const schema = getSchema(entity);
     return schema?.properties ? Object.keys(schema.properties).length : 0;
@@ -355,37 +385,32 @@
           <thead class="bg-gray-50 dark:bg-gray-900">
             <tr>
               <th
-                class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
               >
-                Entity Name
+                Name
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
               >
                 Description
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                class="px-3 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
               >
-                Properties
+                Props
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                class="px-3 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
               >
-                Required Fields
+                Req
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                class="px-3 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
               >
                 Records
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
-              >
-                Personal
-              </th>
-              <th
-                class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                class="px-3 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
               >
                 Actions
               </th>
@@ -397,7 +422,7 @@
             {#each filteredEntities as entity}
               {@const schema = getSchema(entity)}
               <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                <td class="whitespace-nowrap px-6 py-4 text-sm font-medium">
+                <td class="whitespace-nowrap px-3 py-3 text-sm font-medium">
                   <a
                     href="/dynamic-entities/system/{entity.dynamic_entity_id}"
                     class="text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
@@ -406,49 +431,27 @@
                   </a>
                 </td>
                 <td
-                  class="max-w-md px-6 py-4 text-sm text-gray-700 dark:text-gray-300"
+                  class="max-w-xs truncate px-3 py-3 text-sm text-gray-700 dark:text-gray-300"
+                  title={schema?.description || ""}
                 >
                   {schema?.description || "No description"}
                 </td>
                 <td
-                  class="whitespace-nowrap px-6 py-4 text-sm text-gray-700 dark:text-gray-300"
+                  class="whitespace-nowrap px-3 py-3 text-center text-sm text-gray-700 dark:text-gray-300"
                 >
-                  <span
-                    class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                  >
-                    {getPropertyCount(entity)}
-                  </span>
+                  {getPropertyCount(entity)}
                 </td>
                 <td
-                  class="whitespace-nowrap px-6 py-4 text-sm text-gray-700 dark:text-gray-300"
+                  class="whitespace-nowrap px-3 py-3 text-center text-sm text-gray-700 dark:text-gray-300"
                 >
-                  <span
-                    class="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-200"
-                  >
-                    {getRequiredFieldsCount(entity)}
-                  </span>
+                  {getRequiredFieldsCount(entity)}
                 </td>
-                <td class="whitespace-nowrap px-6 py-4 text-sm">
+                <td class="whitespace-nowrap px-3 py-3 text-center text-sm">
                   <span class="font-medium text-gray-900 dark:text-gray-100">
                     {entity.record_count}
                   </span>
                 </td>
-                <td class="whitespace-nowrap px-6 py-4 text-sm">
-                  {#if entity.has_personal_entity}
-                    <span
-                      class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200"
-                    >
-                      Yes
-                    </span>
-                  {:else}
-                    <span
-                      class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-200"
-                    >
-                      No
-                    </span>
-                  {/if}
-                </td>
-                <td class="whitespace-nowrap px-6 py-4 text-right text-sm">
+                <td class="whitespace-nowrap px-3 py-3 text-right text-sm">
                   <div class="flex justify-end gap-2">
                     <button
                       type="button"
@@ -478,6 +481,53 @@
                           d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                         />
                       </svg>
+                    </button>
+                    <button
+                      type="button"
+                      onclick={() =>
+                        backupEntity(
+                          entity.dynamic_entity_id,
+                          getEntityName(entity),
+                        )}
+                      disabled={backingUp[entity.dynamic_entity_id]}
+                      class="text-green-600 hover:text-green-900 disabled:opacity-50 dark:text-green-400 dark:hover:text-green-300"
+                      title="Backup Entity (definition + data)"
+                    >
+                      {#if backingUp[entity.dynamic_entity_id]}
+                        <svg
+                          class="h-5 w-5 animate-spin"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            class="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            stroke-width="4"
+                          />
+                          <path
+                            class="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                      {:else}
+                        <svg
+                          class="h-5 w-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                          />
+                        </svg>
+                      {/if}
                     </button>
                     <button
                       type="button"

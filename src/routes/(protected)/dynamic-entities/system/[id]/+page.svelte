@@ -192,6 +192,36 @@
     );
   }
 
+  let isBackingUp = $state(false);
+
+  async function handleBackup() {
+    if (isBackingUp) return;
+
+    isBackingUp = true;
+
+    try {
+      const response = await fetch(
+        `/api/dynamic-entities/${entity.dynamic_entity_id}/backup`,
+        { method: "POST" },
+      );
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        throw new Error(responseData.error || "Failed to backup entity");
+      }
+
+      alert(`Backup created: ${responseData.entity_name}`);
+    } catch (error) {
+      const errorMsg =
+        error instanceof Error ? error.message : "Failed to backup entity";
+      alert(`Error: ${errorMsg}`);
+      console.error("Backup error:", error);
+    } finally {
+      isBackingUp = false;
+    }
+  }
+
   let exportCopied = $state(false);
 
   function createExportDefinition(): any {
@@ -815,6 +845,51 @@
         />
       </svg>
       Download
+    </button>
+    <button
+      type="button"
+      onclick={handleBackup}
+      disabled={isBackingUp}
+      class="inline-flex items-center rounded-lg border border-blue-300 bg-white px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 disabled:opacity-50 dark:border-blue-600 dark:bg-gray-800 dark:text-blue-400 dark:hover:bg-blue-900/20"
+      title="Backup entity definition and all data"
+    >
+      {#if isBackingUp}
+        <svg
+          class="mr-2 h-4 w-4 animate-spin"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          />
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          />
+        </svg>
+        Backing up...
+      {:else}
+        <svg
+          class="mr-2 h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+          />
+        </svg>
+        Backup
+      {/if}
     </button>
     <button
       type="button"

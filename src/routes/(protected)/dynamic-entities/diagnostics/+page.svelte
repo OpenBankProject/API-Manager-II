@@ -9,6 +9,36 @@
 
   let searchQuery = $state("");
   let copiedId = $state<string | null>(null);
+  let cleaningUp = $state(false);
+  let cleanupResult = $state<{ deleted_orphaned_entities: any[]; total_records_deleted: number } | null>(null);
+  let cleanupError = $state<string | null>(null);
+  let showCleanupConfirm = $state(false);
+
+  async function handleCleanup() {
+    showCleanupConfirm = false;
+    cleaningUp = true;
+    cleanupError = null;
+    cleanupResult = null;
+
+    try {
+      const response = await fetch("/api/dynamic-entities/diagnostics/cleanup", {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        cleanupError = data.error || "Failed to clean up orphaned records";
+        return;
+      }
+
+      cleanupResult = data;
+    } catch (err: any) {
+      cleanupError = err?.message || "Failed to clean up orphaned records";
+    } finally {
+      cleaningUp = false;
+    }
+  }
 
   const filteredDiagnostics = $derived(
     diagnostics.filter((diag: any) => {
@@ -202,6 +232,99 @@ ${diag.triedKeys ? `Tried Keys: ${diag.triedKeys.join(", ")}` : ""}
             {/each}
           </tbody>
         </table>
+      </div>
+
+      <!-- Cleanup Button -->
+      <div class="border-t border-yellow-300 p-4 dark:border-yellow-700">
+        {#if showCleanupConfirm}
+          <div class="rounded-lg border border-red-300 bg-red-50 p-4 dark:border-red-700 dark:bg-red-900/20">
+            <p class="mb-3 text-sm font-medium text-red-800 dark:text-red-200">
+              Are you sure you want to delete all orphaned records? This will permanently remove {orphanedEntities.reduce((sum: number, o: any) => sum + (o.record_count || 0), 0)} record(s) across {orphanedEntities.length} orphaned entit{orphanedEntities.length === 1 ? 'y' : 'ies'}.
+            </p>
+            <div class="flex gap-2">
+              <button
+                type="button"
+                onclick={handleCleanup}
+                class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+              >
+                Yes, Delete Orphaned Records
+              </button>
+              <button
+                type="button"
+                onclick={() => showCleanupConfirm = false}
+                class="rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        {:else}
+          <button
+            type="button"
+            onclick={() => showCleanupConfirm = true}
+            disabled={cleaningUp}
+            class="inline-flex items-center gap-2 rounded-lg bg-red-100 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-200 disabled:opacity-50 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
+          >
+            {#if cleaningUp}
+              <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Cleaning up...
+            {:else}
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Clean Up Orphaned Records
+            {/if}
+          </button>
+        {/if}
+
+        <!-- Cleanup Result -->
+        {#if cleanupResult}
+          <div class="mt-4 rounded-lg border border-green-300 bg-green-50 p-4 dark:border-green-700 dark:bg-green-900/20">
+            <div class="flex items-center gap-2 mb-2">
+              <svg class="h-5 w-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p class="text-sm font-semibold text-green-800 dark:text-green-200">
+                Cleanup complete: {cleanupResult.total_records_deleted} record(s) deleted
+              </p>
+            </div>
+            {#if cleanupResult.deleted_orphaned_entities && cleanupResult.deleted_orphaned_entities.length > 0}
+              <div class="mt-2 overflow-x-auto">
+                <table class="min-w-full divide-y divide-green-300 dark:divide-green-700">
+                  <thead>
+                    <tr>
+                      <th class="px-3 py-1.5 text-left text-xs font-medium uppercase text-green-700 dark:text-green-300">Entity Name</th>
+                      <th class="px-3 py-1.5 text-right text-xs font-medium uppercase text-green-700 dark:text-green-300">Records Deleted</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-green-200 dark:divide-green-800">
+                    {#each cleanupResult.deleted_orphaned_entities as deleted}
+                      <tr>
+                        <td class="whitespace-nowrap px-3 py-2 text-sm font-mono text-green-900 dark:text-green-100">{deleted.entity_name}</td>
+                        <td class="whitespace-nowrap px-3 py-2 text-right text-sm font-mono text-green-900 dark:text-green-100">{deleted.records_deleted}</td>
+                      </tr>
+                    {/each}
+                  </tbody>
+                </table>
+              </div>
+            {/if}
+          </div>
+        {/if}
+
+        <!-- Cleanup Error -->
+        {#if cleanupError}
+          <div class="mt-4 rounded-lg border border-red-300 bg-red-50 p-4 dark:border-red-700 dark:bg-red-900/20">
+            <div class="flex items-center gap-2">
+              <svg class="h-5 w-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p class="text-sm font-medium text-red-800 dark:text-red-200">{cleanupError}</p>
+            </div>
+          </div>
+        {/if}
       </div>
     </div>
   </div>
