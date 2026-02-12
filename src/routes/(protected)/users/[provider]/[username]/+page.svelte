@@ -1,7 +1,11 @@
 <script lang="ts">
   import type { PageData } from "./$types";
+  import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
 
   let { data } = $props<{ data: PageData }>();
+
+  const userEntitlements = data.userEntitlements || [];
+  const requiredRoles = data.requiredRoles || [];
 
   let user = $derived(data.user);
   let hasApiAccess = $derived(data.hasApiAccess);
@@ -28,6 +32,7 @@
   <title>User Details - {data.username} - API Manager II</title>
 </svelte:head>
 
+<PageRoleCheck {userEntitlements} {requiredRoles}>
 <div class="container mx-auto px-4 py-8">
   <!-- Breadcrumb Navigation -->
   <nav class="breadcrumb mb-6">
@@ -233,6 +238,7 @@
     </div>
   {/if}
 </div>
+</PageRoleCheck>
 
 <style>
   .container {

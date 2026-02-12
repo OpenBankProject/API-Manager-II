@@ -31,12 +31,17 @@ export const load: PageServerLoad = async ({ locals }) => {
   const sessionOAuth = SessionOAuthHelper.getSessionOAuth(session);
   const accessToken = sessionOAuth?.accessToken;
 
+  const userEntitlements = (session.data.user as any)?.entitlements?.list || [];
+  const requiredRoles = [{ role: "CanGetAnyUser" }];
+
   if (!accessToken) {
     logger.warn("No access token available for users API calls");
     return {
       users: null,
       hasApiAccess: false,
       error: "No API access token available",
+      userEntitlements,
+      requiredRoles,
     };
   }
 
@@ -61,6 +66,8 @@ export const load: PageServerLoad = async ({ locals }) => {
       return {
         users: sortedUsers,
         hasApiAccess: true,
+        userEntitlements,
+        requiredRoles,
       };
     } else {
       logger.warn("NO USERS DATA IN RESPONSE");
@@ -68,6 +75,8 @@ export const load: PageServerLoad = async ({ locals }) => {
         users: [],
         hasApiAccess: true,
         error: "No users data found in API response",
+        userEntitlements,
+        requiredRoles,
       };
     }
   } catch (err) {
@@ -84,6 +93,8 @@ export const load: PageServerLoad = async ({ locals }) => {
       users: [],
       hasApiAccess: true,
       error: err instanceof Error ? err.message : "Failed to load users",
+      userEntitlements,
+      requiredRoles,
     };
   }
 };
