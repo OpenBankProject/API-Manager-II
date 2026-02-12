@@ -108,7 +108,8 @@ export const actions = {
 
         } catch (error) {
             logger.error("Error adding entitlement:", error);
-            return fail(500, {entitlement: entitlement, error: 'Failed to add entitlement.', ...(bank_id ? { bank_id: bank_id } : {})});
+            const errorMessage = error instanceof Error ? error.message : 'Failed to add entitlement.';
+            return fail(500, {entitlement: entitlement, error: errorMessage, ...(bank_id ? { bank_id: bank_id } : {})});
         }
     }
 } satisfies Actions
