@@ -34,6 +34,8 @@
   "required": ["name"]
 }`);
   let hasPersonalEntity = $state(false);
+  let hasPublicAccess = $state(false);
+  let hasCommunityAccess = $state(false);
   let isSubmitting = $state(false);
   let schemaError = $state("");
 
@@ -89,6 +91,8 @@
           properties: schema.properties,
         },
         has_personal_entity: hasPersonalEntity,
+        has_public_access: hasPublicAccess,
+        has_community_access: hasCommunityAccess,
       };
 
       const response = await fetch(`/api/dynamic-entities/system/create`, {
@@ -232,6 +236,58 @@
         </div>
       </div>
 
+      <!-- Has Public Access -->
+      <div>
+        <div class="flex items-start">
+          <div class="flex h-6 items-center">
+            <input
+              type="checkbox"
+              id="hasPublicAccess"
+              bind:checked={hasPublicAccess}
+              class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600"
+            />
+          </div>
+          <div class="ml-3">
+            <label
+              for="hasPublicAccess"
+              class="text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Has Public Access
+            </label>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              When enabled, records of this entity type can be accessed publicly
+              without authentication.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Has Community Access -->
+      <div>
+        <div class="flex items-start">
+          <div class="flex h-6 items-center">
+            <input
+              type="checkbox"
+              id="hasCommunityAccess"
+              bind:checked={hasCommunityAccess}
+              class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600"
+            />
+          </div>
+          <div class="ml-3">
+            <label
+              for="hasCommunityAccess"
+              class="text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Has Community Access
+            </label>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              When enabled, records of this entity type can be accessed by any
+              authenticated user (community member).
+            </p>
+          </div>
+        </div>
+      </div>
+
       <!-- Schema JSON -->
       <div>
         <label
@@ -271,19 +327,28 @@
           </li>
           <li>
             <strong>type:</strong> Can be "string", "number", "integer", "boolean",
-            "json", "DATE_WITH_DAY"
+            "json", "DATE_WITH_DAY" (also "reference:..." types)
           </li>
           <li>
-            <strong>required:</strong> Array of required field names (optional)
-          </li>
-          <li>
-            <strong>minimum/maximum:</strong> For numeric validation (optional)
+            <strong>required:</strong> Array of required field names (must be present, can be empty [])
           </li>
           <li>
             <strong>minLength/maxLength:</strong> For string validation (optional)
           </li>
           <li>
             <strong>example:</strong> Example value for the field (required)
+          </li>
+          <li>
+            <strong>description:</strong> Human-readable description of the field (optional)
+          </li>
+          <li>
+            <strong>has_personal_entity:</strong> Allow each user to create their own private records (optional, default true)
+          </li>
+          <li>
+            <strong>has_public_access:</strong> Allow unauthenticated public access to records (optional, default false)
+          </li>
+          <li>
+            <strong>has_community_access:</strong> Allow any authenticated user with CanGet role to access ALL records (optional, default false)
           </li>
         </ul>
         {#if data.externalLinks?.API_EXPLORER_URL}
