@@ -36,6 +36,7 @@
   let hasPersonalEntity = $state(false);
   let hasPublicAccess = $state(false);
   let hasCommunityAccess = $state(false);
+  let personalRequiresRole = $state(false);
   let isSubmitting = $state(false);
   let schemaError = $state("");
 
@@ -93,6 +94,7 @@
         has_personal_entity: hasPersonalEntity,
         has_public_access: hasPublicAccess,
         has_community_access: hasCommunityAccess,
+        personal_requires_role: personalRequiresRole,
       };
 
       const response = await fetch(`/api/dynamic-entities/system/create`, {
@@ -288,6 +290,32 @@
         </div>
       </div>
 
+      <!-- Personal Requires Role -->
+      <div>
+        <div class="flex items-start">
+          <div class="flex h-6 items-center">
+            <input
+              type="checkbox"
+              id="personalRequiresRole"
+              bind:checked={personalRequiresRole}
+              class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600"
+            />
+          </div>
+          <div class="ml-3">
+            <label
+              for="personalRequiresRole"
+              class="text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Personal Requires Role
+            </label>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Restricts who can create personal entity records to those who have
+              the role.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <!-- Schema JSON -->
       <div>
         <label
@@ -349,6 +377,9 @@
           </li>
           <li>
             <strong>has_community_access:</strong> Allow any authenticated user with CanGet role to access ALL records (optional, default false)
+          </li>
+          <li>
+            <strong>personal_requires_role:</strong> Restricts who can create personal entity records to those who have the role (optional, default false)
           </li>
         </ul>
         {#if data.externalLinks?.API_EXPLORER_URL}

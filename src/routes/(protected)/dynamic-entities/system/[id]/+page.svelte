@@ -232,6 +232,7 @@
       has_personal_entity: entity.has_personal_entity || false,
       has_public_access: entity.has_public_access || false,
       has_community_access: entity.has_community_access || false,
+      personal_requires_role: entity.personal_requires_role || false,
     };
   }
 
@@ -486,6 +487,26 @@
             <p class="mt-1 font-mono text-xs text-blue-600 dark:text-blue-400">
               GET /obp/dynamic-entity/community/{entityName}
             </p>
+          {:else}
+            <span
+              class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+            >
+              No
+            </span>
+          {/if}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">
+          Personal Requires Role
+        </dt>
+        <dd class="mt-1 text-sm">
+          {#if entity.personal_requires_role}
+            <span
+              class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200"
+            >
+              Yes
+            </span>
           {:else}
             <span
               class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-200"
