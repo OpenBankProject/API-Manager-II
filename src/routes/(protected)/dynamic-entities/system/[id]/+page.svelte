@@ -527,10 +527,132 @@
     </dl>
   </div>
 
+  <!-- Schema Properties -->
+  <div
+    class="rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800"
+  >
+    <div class="border-b border-gray-200 p-6 dark:border-gray-700">
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        Schema Properties
+      </h2>
+      <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+        {Object.keys(properties).length} properties defined
+        {#if requiredFields.length > 0}
+          ({requiredFields.length} required)
+        {/if}
+      </p>
+    </div>
+
+    {#if Object.keys(properties).length === 0}
+      <div class="flex flex-col items-center justify-center py-12 text-center">
+        <svg
+          class="mb-4 h-16 w-16 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+        <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
+          No Properties Defined
+        </h3>
+        <p class="text-gray-600 dark:text-gray-400">
+          This entity has no schema properties defined.
+        </p>
+      </div>
+    {:else}
+      <div class="divide-y divide-gray-200 dark:divide-gray-700">
+        {#each Object.entries(properties) as [fieldName, fieldDef]}
+          {@const fieldDefTyped = fieldDef as any}
+          {@const isRequired = requiredFields.includes(fieldName)}
+          <div class="p-6">
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <h3
+                    class="font-mono text-base font-semibold text-gray-900 dark:text-gray-100"
+                  >
+                    {fieldName}
+                  </h3>
+                  {#if isRequired}
+                    <span
+                      class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900 dark:text-red-200"
+                    >
+                      Required
+                    </span>
+                  {/if}
+                  <span
+                    class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium {getTypeBadgeColor(
+                      fieldDefTyped.type,
+                    )}"
+                  >
+                    {getTypeDisplayName(fieldDefTyped.type)}
+                  </span>
+                </div>
+                {#if fieldDefTyped.description}
+                  <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                    {fieldDefTyped.description}
+                  </p>
+                {/if}
+                <dl class="mt-3 space-y-1">
+                  {#if fieldDefTyped.example !== undefined}
+                    <div class="flex gap-2">
+                      <dt
+                        class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                      >
+                        Example:
+                      </dt>
+                      <dd
+                        class="font-mono text-sm text-gray-900 dark:text-gray-100"
+                      >
+                        {typeof fieldDefTyped.example === "boolean"
+                          ? fieldDefTyped.example.toString()
+                          : fieldDefTyped.example}
+                      </dd>
+                    </div>
+                  {/if}
+                  {#if fieldDefTyped.minLength !== undefined}
+                    <div class="flex gap-2">
+                      <dt
+                        class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                      >
+                        Min Length:
+                      </dt>
+                      <dd class="text-sm text-gray-900 dark:text-gray-100">
+                        {fieldDefTyped.minLength}
+                      </dd>
+                    </div>
+                  {/if}
+                  {#if fieldDefTyped.maxLength !== undefined}
+                    <div class="flex gap-2">
+                      <dt
+                        class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                      >
+                        Max Length:
+                      </dt>
+                      <dd class="text-sm text-gray-900 dark:text-gray-100">
+                        {fieldDefTyped.maxLength}
+                      </dd>
+                    </div>
+                  {/if}
+                </dl>
+              </div>
+            </div>
+          </div>
+        {/each}
+      </div>
+    {/if}
+  </div>
+
   {#if entity.has_personal_entity}
     <!-- Allowed Operations Section (for Personal Entities) -->
     <div
-      class="mb-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+      class="mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800"
     >
       <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
         Allowed Operations
@@ -582,7 +704,7 @@
   {:else}
     <!-- Required Roles Section (for System-only Entities) -->
     <div
-      class="mb-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+      class="mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800"
     >
       <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
         Required Roles for CRUD Operations
@@ -710,128 +832,6 @@
       </div>
     </div>
   {/if}
-
-  <!-- Schema Properties -->
-  <div
-    class="rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800"
-  >
-    <div class="border-b border-gray-200 p-6 dark:border-gray-700">
-      <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-        Schema Properties
-      </h2>
-      <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-        {Object.keys(properties).length} properties defined
-        {#if requiredFields.length > 0}
-          ({requiredFields.length} required)
-        {/if}
-      </p>
-    </div>
-
-    {#if Object.keys(properties).length === 0}
-      <div class="flex flex-col items-center justify-center py-12 text-center">
-        <svg
-          class="mb-4 h-16 w-16 text-gray-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
-        <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
-          No Properties Defined
-        </h3>
-        <p class="text-gray-600 dark:text-gray-400">
-          This entity has no schema properties defined.
-        </p>
-      </div>
-    {:else}
-      <div class="divide-y divide-gray-200 dark:divide-gray-700">
-        {#each Object.entries(properties) as [fieldName, fieldDef]}
-          {@const fieldDefTyped = fieldDef as any}
-          {@const isRequired = requiredFields.includes(fieldName)}
-          <div class="p-6">
-            <div class="flex items-start justify-between">
-              <div class="flex-1">
-                <div class="flex items-center gap-2">
-                  <h3
-                    class="font-mono text-base font-semibold text-gray-900 dark:text-gray-100"
-                  >
-                    {fieldName}
-                  </h3>
-                  {#if isRequired}
-                    <span
-                      class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900 dark:text-red-200"
-                    >
-                      Required
-                    </span>
-                  {/if}
-                  <span
-                    class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium {getTypeBadgeColor(
-                      fieldDefTyped.type,
-                    )}"
-                  >
-                    {getTypeDisplayName(fieldDefTyped.type)}
-                  </span>
-                </div>
-                {#if fieldDefTyped.description}
-                  <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                    {fieldDefTyped.description}
-                  </p>
-                {/if}
-                <dl class="mt-3 space-y-1">
-                  {#if fieldDefTyped.example !== undefined}
-                    <div class="flex gap-2">
-                      <dt
-                        class="text-sm font-medium text-gray-500 dark:text-gray-400"
-                      >
-                        Example:
-                      </dt>
-                      <dd
-                        class="font-mono text-sm text-gray-900 dark:text-gray-100"
-                      >
-                        {typeof fieldDefTyped.example === "boolean"
-                          ? fieldDefTyped.example.toString()
-                          : fieldDefTyped.example}
-                      </dd>
-                    </div>
-                  {/if}
-                  {#if fieldDefTyped.minLength !== undefined}
-                    <div class="flex gap-2">
-                      <dt
-                        class="text-sm font-medium text-gray-500 dark:text-gray-400"
-                      >
-                        Min Length:
-                      </dt>
-                      <dd class="text-sm text-gray-900 dark:text-gray-100">
-                        {fieldDefTyped.minLength}
-                      </dd>
-                    </div>
-                  {/if}
-                  {#if fieldDefTyped.maxLength !== undefined}
-                    <div class="flex gap-2">
-                      <dt
-                        class="text-sm font-medium text-gray-500 dark:text-gray-400"
-                      >
-                        Max Length:
-                      </dt>
-                      <dd class="text-sm text-gray-900 dark:text-gray-100">
-                        {fieldDefTyped.maxLength}
-                      </dd>
-                    </div>
-                  {/if}
-                </dl>
-              </div>
-            </div>
-          </div>
-        {/each}
-      </div>
-    {/if}
-  </div>
 
   <!-- Raw JSON View -->
   <div
