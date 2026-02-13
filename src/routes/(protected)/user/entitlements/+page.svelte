@@ -1,6 +1,6 @@
 <script lang="ts">
   import { currentBank } from "$lib/stores/currentBank.svelte";
-  import { Building2, Globe, KeyRound } from "@lucide/svelte";
+  import { Building2, Globe, KeyRound, Plus, ChevronDown, Check, X } from "@lucide/svelte";
   import RoleSearchWidget from "$lib/components/RoleSearchWidget.svelte";
 
   const { data, form } = $props();
@@ -28,50 +28,50 @@
     }
   }
 
+  // Check if user can create entitlements (include SuperAdmin)
   const canCreateEntitlements = userEntitlements.some((entitlement: any) =>
-    ["CanCreateEntitlementAtAnyBank", "CanCreateEntitlementAtOneBank"].includes(
+    ["SuperAdmin", "CanCreateEntitlementAtAnyBank", "CanCreateEntitlementAtOneBank"].includes(
       entitlement.role_name,
     ),
   );
 
-  let selectedEntitlementRole = $state("");
-  let roleScope = $state<"all" | "system" | "bank">("all");
-  let selectedBankId = $state(currentBank.bankId);
+  // Roles needed to create entitlements — different for system vs bank
+  const systemRequiredRoles = ["SuperAdmin", "CanCreateEntitlementAtAnyBank"];
+  const bankRequiredRoles = ["SuperAdmin", "CanCreateEntitlementAtAnyBank", "CanCreateEntitlementAtOneBank"];
+  const userRoleNames = new Set(userEntitlements.map((e: any) => e.role_name));
 
-  // Determine if selected role requires bank_id
-  let selectedRoleRequiresBank = $derived.by(() => {
-    if (selectedEntitlementRole) {
-      const role = allEntitlements.find((r: any) => r.role === selectedEntitlementRole);
-      if (role) return role.requires_bank_id;
-    }
-    // When no role selected yet, use scope as hint
-    return roleScope === "bank";
-  });
+  // Pre-filtered role lists for each widget
+  let systemRoles = $derived(allEntitlements.filter((r: any) => !r.requires_bank_id));
+  let bankRoles = $derived(allEntitlements.filter((r: any) => r.requires_bank_id));
 
-  // Sync bankId based on whether the role needs a bank
-  $effect(() => {
-    if (selectedRoleRequiresBank) {
-      selectedBankId = currentBank.bankId;
-    } else {
-      selectedBankId = "";
-    }
-  });
+  // Separate widget state
+  let systemExpanded = $state(false);
+  let bankExpanded = $state(false);
+  let systemSelectedRole = $state("");
+  let bankSelectedRole = $state("");
 
-  // Pre-select entitlement if form data exists (on validation errors)
-  if (form?.entitlement && !form?.success) {
-    selectedEntitlementRole = String(form.entitlement);
-  }
-
-  if (form?.bank_id && !form?.success) {
-    selectedBankId = String(form.bank_id);
-  }
-
-  // Reset form on success
+  // Handle form success: collapse both and clear selections
   if (form?.success) {
-    selectedEntitlementRole = "";
+    systemSelectedRole = "";
+    bankSelectedRole = "";
+    systemExpanded = false;
+    bankExpanded = false;
   }
 
-  // Split entitlements into system-wide and bank-level (for current bank)
+  // Handle form error: pre-fill the correct widget
+  if (form?.entitlement && !form?.success) {
+    const roleName = String(form.entitlement);
+    const roleInfo = allEntitlements.find((r: any) => r.role === roleName);
+    if (roleInfo && roleInfo.requires_bank_id) {
+      bankSelectedRole = roleName;
+      bankExpanded = true;
+    } else {
+      systemSelectedRole = roleName;
+      systemExpanded = true;
+    }
+  }
+
+  // Split user's existing entitlements into system-wide and bank-level
   let systemEntitlements = $derived(
     userEntitlements.filter((e: any) => !e.bank_id),
   );
@@ -89,14 +89,77 @@
   );
 </script>
 
+{#if form?.success}
+  <div class="alert variant-filled-success mb-4">
+    <p>{form.message}</p>
+  </div>
+{/if}
+
 <div class="columns-grid mb-6">
-  <!-- System-wide Roles -->
+  <!-- System-wide Roles Column -->
   <div class="section">
+    <!-- Collapsible Add System Entitlement Widget -->
+    <div class="widget-wrapper">
+      <button
+        type="button"
+        class="widget-toggle"
+        onclick={() => systemExpanded = !systemExpanded}
+      >
+        <span class="widget-toggle-icon" class:expanded={systemExpanded}>
+          {#if systemExpanded}
+            <ChevronDown size={14} />
+          {:else}
+            <Plus size={14} />
+          {/if}
+        </span>
+        <span>Add System Entitlement</span>
+      </button>
+
+      {#if systemExpanded}
+        <div class="widget-content">
+          {#if canCreateEntitlements}
+            <form method="POST" action="?/create" class="widget-form">
+              <input type="hidden" name="entitlement" value={systemSelectedRole} />
+              <RoleSearchWidget
+                roles={systemRoles}
+                bind:selectedRole={systemSelectedRole}
+                roleScope="system"
+                hideScopeToggle
+              />
+              {#if form?.missing && systemExpanded}<p class="text-error-500 text-xs mt-2">Please select an entitlement to add.</p>{/if}
+              {#if form?.error && systemExpanded}<p class="text-error-500 text-xs mt-2">{form.error}</p>{/if}
+              <button class="btn-add-entitlement mt-3" type="submit" disabled={!systemSelectedRole}>
+                Add Entitlement
+              </button>
+            </form>
+          {:else}
+            <div class="missing-roles-info">
+              <p class="missing-roles-title">You need one of these roles to add system entitlements:</p>
+              <ul class="missing-roles-list">
+                {#each systemRequiredRoles as role}
+                  <li class="missing-role-item" class:has-role={userRoleNames.has(role)}>
+                    {#if userRoleNames.has(role)}
+                      <Check size={14} class="role-check-icon" />
+                      <span class="role-has">{role}</span>
+                    {:else}
+                      <X size={14} class="role-missing-icon" />
+                      <span class="role-missing">{role}</span>
+                    {/if}
+                  </li>
+                {/each}
+              </ul>
+            </div>
+          {/if}
+        </div>
+      {/if}
+    </div>
+
     <div class="section-header">
       <Globe size={18} />
       <h3 class="section-title">System-wide Roles</h3>
       <span class="section-count">{systemEntitlements.length}</span>
     </div>
+
     {#if systemEntitlements.length > 0}
       <ul class="role-list">
         {#each systemEntitlements as row}
@@ -126,13 +189,75 @@
     {/if}
   </div>
 
-  <!-- Bank-level Roles -->
+  <!-- Bank-level Roles Column -->
   <div class="section">
+    <!-- Collapsible Add Bank Entitlement Widget -->
+    <div class="widget-wrapper">
+      <button
+        type="button"
+        class="widget-toggle"
+        onclick={() => bankExpanded = !bankExpanded}
+      >
+        <span class="widget-toggle-icon" class:expanded={bankExpanded}>
+          {#if bankExpanded}
+            <ChevronDown size={14} />
+          {:else}
+            <Plus size={14} />
+          {/if}
+        </span>
+        <span>Add Bank Entitlement</span>
+      </button>
+
+      {#if bankExpanded}
+        <div class="widget-content">
+          {#if canCreateEntitlements}
+            <form method="POST" action="?/create" class="widget-form">
+              <input type="hidden" name="entitlement" value={bankSelectedRole} />
+              <input type="hidden" name="bank_id" value={currentBank.bankId} />
+              <RoleSearchWidget
+                roles={bankRoles}
+                bind:selectedRole={bankSelectedRole}
+                roleScope="bank"
+                hideScopeToggle
+              />
+              <div class="scope-info mt-3">
+                <Building2 size={16} />
+                <span>Bank: <strong>{currentBank.bankId || "none selected"}</strong></span>
+              </div>
+              {#if form?.missing && bankExpanded}<p class="text-error-500 text-xs mt-2">Please select an entitlement to add.</p>{/if}
+              {#if form?.error && bankExpanded}<p class="text-error-500 text-xs mt-2">{form.error}</p>{/if}
+              <button class="btn-add-entitlement mt-3" type="submit" disabled={!bankSelectedRole}>
+                Add Entitlement
+              </button>
+            </form>
+          {:else}
+            <div class="missing-roles-info">
+              <p class="missing-roles-title">You need one of these roles to add bank entitlements:</p>
+              <ul class="missing-roles-list">
+                {#each bankRequiredRoles as role}
+                  <li class="missing-role-item" class:has-role={userRoleNames.has(role)}>
+                    {#if userRoleNames.has(role)}
+                      <Check size={14} class="role-check-icon" />
+                      <span class="role-has">{role}</span>
+                    {:else}
+                      <X size={14} class="role-missing-icon" />
+                      <span class="role-missing">{role}</span>
+                    {/if}
+                  </li>
+                {/each}
+              </ul>
+            </div>
+          {/if}
+        </div>
+      {/if}
+    </div>
+
     <div class="section-header">
       <Building2 size={18} />
       <h3 class="section-title">Bank Roles: {currentBank.bankId || "—"}</h3>
       <span class="section-count">{bankEntitlements.length}</span>
     </div>
+
     {#if bankEntitlements.length > 0}
       <ul class="role-list">
         {#each bankEntitlements as row}
@@ -167,64 +292,6 @@
     {/if}
   </div>
 </div>
-
-{#if canCreateEntitlements}
-  <h2 class="mt-8 mb-4 text-xl font-semibold">Add New Entitlement</h2>
-
-  {#if form?.success}
-    <div class="alert variant-filled-success mb-4">
-      <p>{form.message}</p>
-    </div>
-  {/if}
-
-  <form
-    method="POST"
-    action="?/create"
-    class="w-full max-w-2xl space-y-4"
-  >
-    <!-- Hidden inputs for form submission -->
-    <input type="hidden" name="entitlement" value={selectedEntitlementRole} />
-    {#if selectedRoleRequiresBank}
-      <input type="hidden" name="bank_id" value={selectedBankId} />
-    {/if}
-
-    <div class="form-group">
-      <label class="form-label">
-        <KeyRound size={18} />
-        <span>Select Role</span>
-      </label>
-      <RoleSearchWidget
-        roles={allEntitlements}
-        bind:selectedRole={selectedEntitlementRole}
-        bind:roleScope
-      />
-    </div>
-
-    {#if form?.missing}<p class="text-error-500 text-xs">
-        Please select an entitlement to add.
-      </p>{/if}
-    {#if form?.error}<p class="text-error-500 text-xs">{form.error}</p>{/if}
-
-    <!-- Bank ID info -->
-    {#if selectedRoleRequiresBank}
-      <div class="scope-info">
-        <Building2 size={16} />
-        <span>Bank-level role — using current bank: <strong>{selectedBankId || "none selected"}</strong></span>
-      </div>
-    {:else if selectedEntitlementRole}
-      <div class="scope-info">
-        <Globe size={16} />
-        <span>This is a system-wide role — no bank ID required</span>
-      </div>
-    {/if}
-
-    <button class="btn preset-outlined-tertiary-500" type="submit"
-      >Add Entitlement</button
-    >
-  </form>
-{:else if !canCreateEntitlements}
-  <h2 class="mt-8 mb-4 text-xl font-semibold">Request Entitlement</h2>
-{/if}
 
 <style>
   .columns-grid {
@@ -293,6 +360,196 @@
     color: var(--color-surface-300);
   }
 
+  /* Widget toggle and content */
+  .widget-wrapper {
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  :global([data-mode="dark"]) .widget-wrapper {
+    border-bottom-color: rgb(var(--color-surface-700));
+  }
+
+  .widget-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.5rem 1rem;
+    background: #f0fdf4;
+    border: none;
+    border-left: 3px solid #22c55e;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #15803d;
+    text-align: left;
+    transition: background 0.2s;
+  }
+
+  .widget-toggle:hover {
+    background: #dcfce7;
+  }
+
+  :global([data-mode="dark"]) .widget-toggle {
+    background: rgba(34, 197, 94, 0.1);
+    border-left-color: #22c55e;
+    color: #4ade80;
+  }
+
+  :global([data-mode="dark"]) .widget-toggle:hover {
+    background: rgba(34, 197, 94, 0.18);
+  }
+
+  .widget-toggle-icon {
+    display: flex;
+    align-items: center;
+    transition: transform 0.2s;
+  }
+
+  .widget-content {
+    padding: 1rem;
+    background: #fafff9;
+    animation: slideDown 0.2s ease-out;
+  }
+
+  :global([data-mode="dark"]) .widget-content {
+    background: rgba(34, 197, 94, 0.05);
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .widget-form {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .btn-add-entitlement {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    background: #22c55e;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    align-self: flex-start;
+  }
+
+  .btn-add-entitlement:hover:not(:disabled) {
+    background: #16a34a;
+  }
+
+  .btn-add-entitlement:disabled {
+    background: #d1d5db;
+    color: #9ca3af;
+    cursor: not-allowed;
+  }
+
+  :global([data-mode="dark"]) .btn-add-entitlement {
+    background: #22c55e;
+  }
+
+  :global([data-mode="dark"]) .btn-add-entitlement:hover:not(:disabled) {
+    background: #16a34a;
+  }
+
+  :global([data-mode="dark"]) .btn-add-entitlement:disabled {
+    background: rgb(var(--color-surface-600));
+    color: var(--color-surface-400);
+  }
+
+  /* Missing roles info */
+  .missing-roles-info {
+    padding: 0.5rem;
+  }
+
+  .missing-roles-title {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin: 0 0 0.5rem 0;
+  }
+
+  :global([data-mode="dark"]) .missing-roles-title {
+    color: var(--color-surface-400);
+  }
+
+  .missing-roles-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+
+  .missing-role-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    padding: 0.375rem 0.5rem;
+    border-radius: 4px;
+  }
+
+  .missing-role-item.has-role {
+    background: #f0fdf4;
+  }
+
+  :global([data-mode="dark"]) .missing-role-item.has-role {
+    background: rgba(34, 197, 94, 0.1);
+  }
+
+  .missing-role-item :global(.role-check-icon) {
+    color: #16a34a;
+    flex-shrink: 0;
+  }
+
+  .missing-role-item :global(.role-missing-icon) {
+    color: #dc2626;
+    flex-shrink: 0;
+  }
+
+  :global([data-mode="dark"]) .missing-role-item :global(.role-check-icon) {
+    color: rgb(var(--color-success-400));
+  }
+
+  :global([data-mode="dark"]) .missing-role-item :global(.role-missing-icon) {
+    color: rgb(var(--color-error-400));
+  }
+
+  .role-has {
+    color: #166534;
+    text-decoration: line-through;
+    opacity: 0.7;
+  }
+
+  :global([data-mode="dark"]) .role-has {
+    color: rgb(var(--color-success-300));
+  }
+
+  .role-missing {
+    color: #991b1b;
+    font-weight: 600;
+  }
+
+  :global([data-mode="dark"]) .role-missing {
+    color: rgb(var(--color-error-300));
+  }
+
+  /* Existing styles */
   .role-list {
     list-style: none;
     margin: 0;
@@ -370,25 +627,6 @@
   :global([data-mode="dark"]) .other-banks-note {
     color: var(--color-surface-400);
     border-top-color: rgb(var(--color-surface-700));
-  }
-
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .form-label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #374151;
-  }
-
-  :global([data-mode="dark"]) .form-label {
-    color: var(--color-surface-200);
   }
 
   .scope-info {

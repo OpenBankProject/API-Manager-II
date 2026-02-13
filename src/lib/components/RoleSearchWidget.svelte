@@ -11,6 +11,7 @@
     selectedRole?: string;
     roleScope?: "all" | "system" | "bank";
     disabled?: boolean;
+    hideScopeToggle?: boolean;
   }
 
   let {
@@ -18,6 +19,7 @@
     selectedRole = $bindable(""),
     roleScope = $bindable<"all" | "system" | "bank">("all"),
     disabled = false,
+    hideScopeToggle = false,
   }: Props = $props();
 
   let searchQuery = $state("");
@@ -68,46 +70,48 @@
     </div>
 
     <!-- Scope Toggle -->
-    <div class="scope-toggle">
-      <button
-        type="button"
-        class="scope-button"
-        class:active={roleScope === "all"}
-        onclick={() => {
-          roleScope = "all";
-          selectedRole = "";
-        }}
-        {disabled}
-      >
-        All
-      </button>
-      <button
-        type="button"
-        class="scope-button"
-        class:active={roleScope === "system"}
-        onclick={() => {
-          roleScope = "system";
-          selectedRole = "";
-        }}
-        {disabled}
-      >
-        <Globe size={14} />
-        System
-      </button>
-      <button
-        type="button"
-        class="scope-button"
-        class:active={roleScope === "bank"}
-        onclick={() => {
-          roleScope = "bank";
-          selectedRole = "";
-        }}
-        {disabled}
-      >
-        <Building2 size={14} />
-        Bank
-      </button>
-    </div>
+    {#if !hideScopeToggle}
+      <div class="scope-toggle">
+        <button
+          type="button"
+          class="scope-button"
+          class:active={roleScope === "all"}
+          onclick={() => {
+            roleScope = "all";
+            selectedRole = "";
+          }}
+          {disabled}
+        >
+          All
+        </button>
+        <button
+          type="button"
+          class="scope-button"
+          class:active={roleScope === "system"}
+          onclick={() => {
+            roleScope = "system";
+            selectedRole = "";
+          }}
+          {disabled}
+        >
+          <Globe size={14} />
+          System
+        </button>
+        <button
+          type="button"
+          class="scope-button"
+          class:active={roleScope === "bank"}
+          onclick={() => {
+            roleScope = "bank";
+            selectedRole = "";
+          }}
+          {disabled}
+        >
+          <Building2 size={14} />
+          Bank
+        </button>
+      </div>
+    {/if}
   </div>
 
   <!-- Role Selection -->
