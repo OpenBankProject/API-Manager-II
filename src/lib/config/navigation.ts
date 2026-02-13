@@ -55,7 +55,7 @@ function buildMyAccountItems(): NavigationItem[] {
     { href: "/user/consents", label: "Consents", iconComponent: ShieldUser },
     {
       href: "/user/entitlements",
-      label: "Entitlements",
+      label: "My Entitlements",
       iconComponent: IdCardLanyard,
     },
     {

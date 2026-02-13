@@ -89,117 +89,83 @@
   );
 </script>
 
-<h2 class="mb-4 text-xl font-semibold">Your Entitlements</h2>
-
-<!-- System-wide Roles -->
-<div class="section mb-6">
-  <div class="section-header">
-    <Globe size={18} />
-    <h3 class="section-title">System-wide Roles</h3>
-    <span class="section-count">{systemEntitlements.length}</span>
-  </div>
-  {#if systemEntitlements.length > 0}
-    <div class="table-container">
-      <table class="table-hover table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each systemEntitlements as row}
-            <tr>
-              <td>{row.role_name}</td>
-              <td>
-                <button
-                  class="btn btn-sm variant-ghost-surface"
-                  onclick={() =>
-                    copyToClipboard(
-                      row.role_name,
-                      row.entitlement_id,
-                      row.bank_id,
-                      row.entitlement_id,
-                    )}
-                  title="Copy entitlement details"
-                >
-                  {#if copiedId === row.entitlement_id}
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                  {:else}
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                    </svg>
-                  {/if}
-                </button>
-              </td>
-            </tr>
-          {/each}
-        </tbody>
-      </table>
+<div class="columns-grid mb-6">
+  <!-- System-wide Roles -->
+  <div class="section">
+    <div class="section-header">
+      <Globe size={18} />
+      <h3 class="section-title">System-wide Roles</h3>
+      <span class="section-count">{systemEntitlements.length}</span>
     </div>
-  {:else}
-    <p class="empty-text">No system-wide roles</p>
-  {/if}
-</div>
-
-<!-- Bank-level Roles -->
-<div class="section mb-6">
-  <div class="section-header">
-    <Building2 size={18} />
-    <h3 class="section-title">Bank-level Roles for {currentBank.bankId || "—"}</h3>
-    <span class="section-count">{bankEntitlements.length}</span>
+    {#if systemEntitlements.length > 0}
+      <ul class="role-list">
+        {#each systemEntitlements as row}
+          <li class="role-item">
+            <span class="role-name">{row.role_name}</span>
+            <button
+              class="copy-btn"
+              onclick={() =>
+                copyToClipboard(row.role_name, row.entitlement_id, row.bank_id, row.entitlement_id)}
+              title="Copy entitlement details"
+            >
+              {#if copiedId === row.entitlement_id}
+                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              {:else}
+                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                </svg>
+              {/if}
+            </button>
+          </li>
+        {/each}
+      </ul>
+    {:else}
+      <p class="empty-text">No system-wide roles</p>
+    {/if}
   </div>
-  {#if bankEntitlements.length > 0}
-    <div class="table-container">
-      <table class="table-hover table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each bankEntitlements as row}
-            <tr>
-              <td>{row.role_name}</td>
-              <td>
-                <button
-                  class="btn btn-sm variant-ghost-surface"
-                  onclick={() =>
-                    copyToClipboard(
-                      row.role_name,
-                      row.entitlement_id,
-                      row.bank_id,
-                      row.entitlement_id,
-                    )}
-                  title="Copy entitlement details"
-                >
-                  {#if copiedId === row.entitlement_id}
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                  {:else}
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                    </svg>
-                  {/if}
-                </button>
-              </td>
-            </tr>
-          {/each}
-        </tbody>
-      </table>
+
+  <!-- Bank-level Roles -->
+  <div class="section">
+    <div class="section-header">
+      <Building2 size={18} />
+      <h3 class="section-title">Bank Roles: {currentBank.bankId || "—"}</h3>
+      <span class="section-count">{bankEntitlements.length}</span>
     </div>
-  {:else}
-    <p class="empty-text">No bank-level roles for this bank</p>
-  {/if}
-  {#if otherBankEntitlementCount > 0}
-    <p class="other-banks-note">
-      You also have {otherBankEntitlementCount} role{otherBankEntitlementCount === 1 ? "" : "s"} at other banks (switch bank to view).
-    </p>
-  {/if}
+    {#if bankEntitlements.length > 0}
+      <ul class="role-list">
+        {#each bankEntitlements as row}
+          <li class="role-item">
+            <span class="role-name">{row.role_name}</span>
+            <button
+              class="copy-btn"
+              onclick={() =>
+                copyToClipboard(row.role_name, row.entitlement_id, row.bank_id, row.entitlement_id)}
+              title="Copy entitlement details"
+            >
+              {#if copiedId === row.entitlement_id}
+                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              {:else}
+                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                </svg>
+              {/if}
+            </button>
+          </li>
+        {/each}
+      </ul>
+    {:else}
+      <p class="empty-text">No bank-level roles for this bank</p>
+    {/if}
+    {#if otherBankEntitlementCount > 0}
+      <p class="other-banks-note">
+        +{otherBankEntitlementCount} role{otherBankEntitlementCount === 1 ? "" : "s"} at other banks (switch bank to view)
+      </p>
+    {/if}
+  </div>
 </div>
 
 {#if canCreateEntitlements}
@@ -261,6 +227,19 @@
 {/if}
 
 <style>
+  .columns-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    align-items: start;
+  }
+
+  @media (max-width: 768px) {
+    .columns-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
   .section {
     background: white;
     border-radius: 8px;
@@ -276,7 +255,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 1rem 1.5rem;
+    padding: 0.75rem 1rem;
     border-bottom: 1px solid #e5e7eb;
   }
 
@@ -285,7 +264,7 @@
   }
 
   .section-title {
-    font-size: 1rem;
+    font-size: 0.875rem;
     font-weight: 600;
     color: #111827;
     margin: 0;
@@ -299,13 +278,13 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 1.5rem;
-    height: 1.5rem;
-    padding: 0 0.375rem;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    padding: 0 0.25rem;
     background: #f3f4f6;
     color: #6b7280;
     border-radius: 9999px;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 600;
   }
 
@@ -314,11 +293,67 @@
     color: var(--color-surface-300);
   }
 
+  .role-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .role-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .role-item:last-child {
+    border-bottom: none;
+  }
+
+  :global([data-mode="dark"]) .role-item {
+    border-bottom-color: rgb(var(--color-surface-700));
+  }
+
+  .role-name {
+    font-size: 0.8rem;
+    color: #111827;
+  }
+
+  :global([data-mode="dark"]) .role-name {
+    color: var(--color-surface-100);
+  }
+
+  .copy-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+    color: #9ca3af;
+    background: none;
+    border: none;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+
+  .copy-btn:hover {
+    color: #374151;
+  }
+
+  :global([data-mode="dark"]) .copy-btn {
+    color: var(--color-surface-500);
+  }
+
+  :global([data-mode="dark"]) .copy-btn:hover {
+    color: var(--color-surface-200);
+  }
+
   .empty-text {
     padding: 1.5rem;
     text-align: center;
     color: #6b7280;
-    font-size: 0.875rem;
+    font-size: 0.8rem;
   }
 
   :global([data-mode="dark"]) .empty-text {
@@ -326,8 +361,8 @@
   }
 
   .other-banks-note {
-    padding: 0.75rem 1.5rem;
-    font-size: 0.8rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
     color: #6b7280;
     border-top: 1px solid #e5e7eb;
   }
