@@ -1,12 +1,15 @@
 <script lang="ts">
   import { currentBank } from "$lib/stores/currentBank.svelte";
+  import { enhance } from "$app/forms";
+  import { invalidateAll } from "$app/navigation";
   import { Building2, Globe, KeyRound, Plus, ChevronDown, Check, X } from "@lucide/svelte";
   import RoleSearchWidget from "$lib/components/RoleSearchWidget.svelte";
 
   const { data, form } = $props();
-  const userEntitlements = data.userEntitlements;
-  const allEntitlements = data.allAvailableEntitlements;
-  const allBanks = data.allBanks;
+
+  // Reactive references so lists update after enhance submissions
+  let userEntitlements = $derived(data.userEntitlements);
+  let allEntitlements = $derived(data.allAvailableEntitlements);
 
   let copiedId = $state<string | null>(null);
 
@@ -29,16 +32,18 @@
   }
 
   // Check if user can create entitlements (include SuperAdmin)
-  const canCreateEntitlements = userEntitlements.some((entitlement: any) =>
-    ["SuperAdmin", "CanCreateEntitlementAtAnyBank", "CanCreateEntitlementAtOneBank"].includes(
-      entitlement.role_name,
+  let canCreateEntitlements = $derived(
+    userEntitlements.some((entitlement: any) =>
+      ["SuperAdmin", "CanCreateEntitlementAtAnyBank", "CanCreateEntitlementAtOneBank"].includes(
+        entitlement.role_name,
+      ),
     ),
   );
 
   // Roles needed to create entitlements — different for system vs bank
   const systemRequiredRoles = ["SuperAdmin", "CanCreateEntitlementAtAnyBank"];
   const bankRequiredRoles = ["SuperAdmin", "CanCreateEntitlementAtAnyBank", "CanCreateEntitlementAtOneBank"];
-  const userRoleNames = new Set(userEntitlements.map((e: any) => e.role_name));
+  let userRoleNames = $derived(new Set(userEntitlements.map((e: any) => e.role_name)));
 
   // Pre-filtered role lists for each widget
   let systemRoles = $derived(allEntitlements.filter((r: any) => !r.requires_bank_id));
@@ -50,6 +55,12 @@
   let systemSelectedRole = $state("");
   let bankSelectedRole = $state("");
 
+  // Inline feedback state
+  let systemSuccess = $state("");
+  let bankSuccess = $state("");
+  let systemError = $state("");
+  let bankError = $state("");
+
   // Check if user already has the selected role
   let alreadyHasSystemRole = $derived(
     systemSelectedRole && userEntitlements.some((e: any) => e.role_name === systemSelectedRole && !e.bank_id),
@@ -58,25 +69,40 @@
     bankSelectedRole && userEntitlements.some((e: any) => e.role_name === bankSelectedRole && e.bank_id === currentBank.bankId),
   );
 
-  // Handle form success: collapse both and clear selections
-  if (form?.success) {
-    systemSelectedRole = "";
-    bankSelectedRole = "";
-    systemExpanded = false;
-    bankExpanded = false;
+  function systemEnhance() {
+    systemSuccess = "";
+    systemError = "";
+    return async ({ result }: any) => {
+      if (result.type === "success") {
+        const roleName = systemSelectedRole;
+        systemSelectedRole = "";
+        await invalidateAll();
+        systemSuccess = `Added "${roleName}" successfully.`;
+        setTimeout(() => { systemSuccess = ""; }, 4000);
+      } else if (result.type === "failure") {
+        systemError = result.data?.error || "Failed to add entitlement.";
+      } else if (result.type === "error") {
+        systemError = result.error?.message || "An unexpected error occurred.";
+      }
+    };
   }
 
-  // Handle form error: pre-fill the correct widget
-  if (form?.entitlement && !form?.success) {
-    const roleName = String(form.entitlement);
-    const roleInfo = allEntitlements.find((r: any) => r.role === roleName);
-    if (roleInfo && roleInfo.requires_bank_id) {
-      bankSelectedRole = roleName;
-      bankExpanded = true;
-    } else {
-      systemSelectedRole = roleName;
-      systemExpanded = true;
-    }
+  function bankEnhance() {
+    bankSuccess = "";
+    bankError = "";
+    return async ({ result }: any) => {
+      if (result.type === "success") {
+        const roleName = bankSelectedRole;
+        bankSelectedRole = "";
+        await invalidateAll();
+        bankSuccess = `Added "${roleName}" successfully.`;
+        setTimeout(() => { bankSuccess = ""; }, 4000);
+      } else if (result.type === "failure") {
+        bankError = result.data?.error || "Failed to add entitlement.";
+      } else if (result.type === "error") {
+        bankError = result.error?.message || "An unexpected error occurred.";
+      }
+    };
   }
 
   // Split user's existing entitlements into system-wide and bank-level
@@ -96,24 +122,6 @@
     ).length,
   );
 </script>
-
-{#if form?.success}
-  <div class="alert variant-filled-success mb-4">
-    <p>{form.message}</p>
-  </div>
-{/if}
-
-{#if form?.error}
-  <div class="alert-error mb-4">
-    <p>{form.error}</p>
-  </div>
-{/if}
-
-{#if form?.missing}
-  <div class="alert-error mb-4">
-    <p>Please select an entitlement to add.</p>
-  </div>
-{/if}
 
 <div class="columns-grid mb-6">
   <!-- System-wide Roles Column -->
@@ -135,10 +143,17 @@
         <span>Add System Entitlement</span>
       </button>
 
+      {#if systemSuccess}
+        <div class="widget-success">{systemSuccess}</div>
+      {/if}
+      {#if systemError}
+        <div class="widget-error">{systemError}</div>
+      {/if}
+
       {#if systemExpanded}
         <div class="widget-content">
           {#if canCreateEntitlements}
-            <form method="POST" action="?/create" class="widget-form">
+            <form method="POST" action="?/create" class="widget-form" use:enhance={systemEnhance}>
               <input type="hidden" name="entitlement" value={systemSelectedRole} />
               <RoleSearchWidget
                 roles={systemRoles}
@@ -230,10 +245,17 @@
         <span>Add Bank Entitlement</span>
       </button>
 
+      {#if bankSuccess}
+        <div class="widget-success">{bankSuccess}</div>
+      {/if}
+      {#if bankError}
+        <div class="widget-error">{bankError}</div>
+      {/if}
+
       {#if bankExpanded}
         <div class="widget-content">
           {#if canCreateEntitlements}
-            <form method="POST" action="?/create" class="widget-form">
+            <form method="POST" action="?/create" class="widget-form" use:enhance={bankEnhance}>
               <input type="hidden" name="entitlement" value={bankSelectedRole} />
               <input type="hidden" name="bank_id" value={currentBank.bankId} />
               <RoleSearchWidget
@@ -318,23 +340,6 @@
 </div>
 
 <style>
-  .alert-error {
-    padding: 0.75rem 1rem;
-    background: #fef2f2;
-    border: 1px solid #fca5a5;
-    border-left: 3px solid #dc2626;
-    border-radius: 6px;
-    color: #991b1b;
-    font-size: 0.875rem;
-  }
-
-  :global([data-mode="dark"]) .alert-error {
-    background: rgba(220, 38, 38, 0.1);
-    border-color: rgba(220, 38, 38, 0.3);
-    border-left-color: #dc2626;
-    color: rgb(var(--color-error-200));
-  }
-
   .columns-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -511,6 +516,40 @@
   :global([data-mode="dark"]) .btn-add-entitlement:disabled {
     background: rgb(var(--color-surface-600));
     color: var(--color-surface-400);
+  }
+
+  .widget-success {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #166534;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 0;
+    padding: 0.5rem 1rem;
+  }
+
+  :global([data-mode="dark"]) .widget-success {
+    background: rgba(34, 197, 94, 0.1);
+    border-color: rgba(34, 197, 94, 0.3);
+    color: rgb(var(--color-success-300));
+  }
+
+  .widget-error {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #991b1b;
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    border-left: 3px solid #dc2626;
+    border-radius: 0;
+    padding: 0.5rem 1rem;
+  }
+
+  :global([data-mode="dark"]) .widget-error {
+    background: rgba(220, 38, 38, 0.1);
+    border-color: rgba(220, 38, 38, 0.3);
+    border-left-color: #dc2626;
+    color: rgb(var(--color-error-200));
   }
 
   .already-has-role {
