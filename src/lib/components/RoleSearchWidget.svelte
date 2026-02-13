@@ -295,7 +295,7 @@
   }
 
   .role-selector {
-    max-height: 400px;
+    max-height: 200px;
     overflow-y: auto;
     border: 1px solid #e5e7eb;
     border-radius: 6px;

@@ -50,6 +50,14 @@
   let systemSelectedRole = $state("");
   let bankSelectedRole = $state("");
 
+  // Check if user already has the selected role
+  let alreadyHasSystemRole = $derived(
+    systemSelectedRole && userEntitlements.some((e: any) => e.role_name === systemSelectedRole && !e.bank_id),
+  );
+  let alreadyHasBankRole = $derived(
+    bankSelectedRole && userEntitlements.some((e: any) => e.role_name === bankSelectedRole && e.bank_id === currentBank.bankId),
+  );
+
   // Handle form success: collapse both and clear selections
   if (form?.success) {
     systemSelectedRole = "";
@@ -95,6 +103,18 @@
   </div>
 {/if}
 
+{#if form?.error}
+  <div class="alert-error mb-4">
+    <p>{form.error}</p>
+  </div>
+{/if}
+
+{#if form?.missing}
+  <div class="alert-error mb-4">
+    <p>Please select an entitlement to add.</p>
+  </div>
+{/if}
+
 <div class="columns-grid mb-6">
   <!-- System-wide Roles Column -->
   <div class="section">
@@ -126,11 +146,13 @@
                 roleScope="system"
                 hideScopeToggle
               />
-              {#if form?.missing && systemExpanded}<p class="text-error-500 text-xs mt-2">Please select an entitlement to add.</p>{/if}
-              {#if form?.error && systemExpanded}<p class="text-error-500 text-xs mt-2">{form.error}</p>{/if}
-              <button class="btn-add-entitlement mt-3" type="submit" disabled={!systemSelectedRole}>
-                Add Entitlement
-              </button>
+              {#if alreadyHasSystemRole}
+                <p class="already-has-role mt-3">You already have this entitlement.</p>
+              {:else}
+                <button class="btn-add-entitlement mt-3" type="submit" disabled={!systemSelectedRole}>
+                  Add Entitlement
+                </button>
+              {/if}
             </form>
           {:else}
             <div class="missing-roles-info">
@@ -224,11 +246,13 @@
                 <Building2 size={16} />
                 <span>Bank: <strong>{currentBank.bankId || "none selected"}</strong></span>
               </div>
-              {#if form?.missing && bankExpanded}<p class="text-error-500 text-xs mt-2">Please select an entitlement to add.</p>{/if}
-              {#if form?.error && bankExpanded}<p class="text-error-500 text-xs mt-2">{form.error}</p>{/if}
-              <button class="btn-add-entitlement mt-3" type="submit" disabled={!bankSelectedRole}>
-                Add Entitlement
-              </button>
+              {#if alreadyHasBankRole}
+                <p class="already-has-role mt-3">You already have this entitlement.</p>
+              {:else}
+                <button class="btn-add-entitlement mt-3" type="submit" disabled={!bankSelectedRole}>
+                  Add Entitlement
+                </button>
+              {/if}
             </form>
           {:else}
             <div class="missing-roles-info">
@@ -294,6 +318,23 @@
 </div>
 
 <style>
+  .alert-error {
+    padding: 0.75rem 1rem;
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    border-left: 3px solid #dc2626;
+    border-radius: 6px;
+    color: #991b1b;
+    font-size: 0.875rem;
+  }
+
+  :global([data-mode="dark"]) .alert-error {
+    background: rgba(220, 38, 38, 0.1);
+    border-color: rgba(220, 38, 38, 0.3);
+    border-left-color: #dc2626;
+    color: rgb(var(--color-error-200));
+  }
+
   .columns-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -469,6 +510,22 @@
   :global([data-mode="dark"]) .btn-add-entitlement:disabled {
     background: rgb(var(--color-surface-600));
     color: var(--color-surface-400);
+  }
+
+  .already-has-role {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #b45309;
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+  }
+
+  :global([data-mode="dark"]) .already-has-role {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.3);
+    color: rgb(var(--color-warning-300));
   }
 
   /* Missing roles info */

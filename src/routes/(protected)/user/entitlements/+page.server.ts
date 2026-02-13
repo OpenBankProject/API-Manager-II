@@ -74,7 +74,7 @@ export const actions = {
         }
 
         const requestBody: OBPAddEntitlementBody = {
-            ...(formEntries.bank_id && { bank_id: String(formEntries.bank_id) }),
+            bank_id: formEntries.bank_id ? String(formEntries.bank_id) : "",
             role_name: formEntries.entitlement as string,
         };
 
