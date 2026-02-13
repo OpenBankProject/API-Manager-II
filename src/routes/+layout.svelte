@@ -12,7 +12,7 @@
   import { createLogger } from "$lib/utils/logger";
   import { resourceDocsCache } from "$lib/stores/resourceDocsCache";
   import { currentBank } from "$lib/stores/currentBank.svelte";
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
 
   const logger = createLogger("LayoutClient");
   const layoutStartTime = performance.now();
@@ -48,6 +48,14 @@
   let expandedSections = $state<Record<string, boolean>>({});
   let displayMode: "dark" | "light" = $state("dark");
   let userMenuOpen = $state(false);
+  let bankSelectorOpen = $state(false);
+  let bankSelectEl: HTMLSelectElement | undefined = $state();
+
+  async function openBankSelector() {
+    bankSelectorOpen = true;
+    await tick();
+    try { bankSelectEl?.showPicker(); } catch {}
+  }
   let systemDynamicEntities = $state<any[]>([]);
 
   async function clearCache() {
@@ -482,8 +490,37 @@
         style="height: 80px; flex-shrink: 0;"
       >
         <div>
-          {#if isAuthenticated && currentBank.bank}
-            <span class="text-sm">{currentBank.bank.full_name}: {currentBank.bank.bank_id} ({currentBank.bank.bank_code}) <a href="/user" class="hover:text-tertiary-400" title="Change current bank">&#9998;</a></span>
+          {#if isAuthenticated}
+            {#if bankSelectorOpen}
+              <div class="flex items-center gap-2">
+                <select
+                  bind:this={bankSelectEl}
+                  class="rounded-md border border-surface-300-700 bg-surface-100-900 px-2 py-1 text-sm"
+                  value={currentBank.bankId}
+                  onchange={(e) => {
+                    currentBank.selectById(e.currentTarget.value);
+                    bankSelectorOpen = false;
+                  }}
+                >
+                  <option value="">-- Select a bank --</option>
+                  {#each currentBank.banks as bank}
+                    <option value={bank.bank_id}>
+                      {bank.short_name} — {bank.full_name}
+                    </option>
+                  {/each}
+                </select>
+                <button
+                  type="button"
+                  class="text-sm opacity-60 hover:opacity-100"
+                  onclick={() => bankSelectorOpen = false}
+                  title="Close"
+                >&times;</button>
+              </div>
+            {:else if currentBank.bank}
+              <span class="text-sm">{currentBank.bank.full_name}: {currentBank.bank.bank_id} ({currentBank.bank.bank_code}) <button type="button" class="hover:text-tertiary-400" onclick={openBankSelector} title="Change current bank">&#9998;</button></span>
+            {:else}
+              <button type="button" class="text-sm opacity-70 hover:text-tertiary-400 hover:opacity-100" onclick={openBankSelector}>Select Bank &#9998;</button>
+            {/if}
           {/if}
         </div>
         {#if isAuthenticated}
