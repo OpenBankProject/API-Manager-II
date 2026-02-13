@@ -30,9 +30,19 @@ export interface UserEntitlement {
 }
 
 /**
- * Check if a user has all required roles
+ * Check if a user has at least one of the required roles (OR logic).
+ *
+ * The requiredRoles list represents alternative roles — the user needs ANY ONE
+ * of them to gain access. For example, createEntitlement lists SuperAdmin,
+ * CanCreateEntitlementAtAnyBank, and CanCreateEntitlementAtOneBank as alternatives.
+ *
+ * Note on SuperAdmin: SuperAdmin is a virtual/bootstrap role defined in the OBP
+ * Props file. It is used to initially grant specific roles like
+ * CanCreateEntitlementAtAnyBank. Once a user has the specific role, SuperAdmin
+ * is no longer required.
+ *
  * @param userEntitlements - List of entitlements the user has
- * @param requiredRoles - List of roles required
+ * @param requiredRoles - List of alternative roles (user needs at least one)
  * @returns RoleCheckResult with missing and present roles
  */
 export function checkRoles(
@@ -69,13 +79,17 @@ export function checkRoles(
     `Role check: ${hasRoles.length}/${requiredRoles.length} roles present`,
   );
 
-  if (missingRoles.length > 0) {
+  // OR logic: user needs at least one of the required roles
+  const hasAnyRequired =
+    requiredRoles.length === 0 || hasRoles.length > 0;
+
+  if (!hasAnyRequired) {
     logger.warn("Missing roles:", missingRoles.map((r) => r.role).join(", "));
   }
 
   return {
-    hasAllRoles: missingRoles.length === 0,
-    missingRoles,
+    hasAllRoles: hasAnyRequired,
+    missingRoles: hasAnyRequired ? [] : missingRoles,
     hasRoles,
   };
 }
@@ -122,15 +136,24 @@ export const ROLE_REQUIREMENTS = {
     },
   ],
 
+  // Note: SuperAdmin is a virtual/bootstrap role defined in OBP Props.
+  // It is used to initially grant CanCreateEntitlementAtAnyBank or
+  // CanCreateEntitlementAtOneBank. Once those specific roles exist,
+  // SuperAdmin is no longer required. These are OR alternatives.
   createEntitlement: [
     {
       role: "SuperAdmin",
-      description: "Super administrator with all permissions",
+      description: "Super administrator (bootstrap role for granting entitlement roles)",
       action: "create entitlements",
     },
     {
       role: "CanCreateEntitlementAtAnyBank",
-      description: "Create entitlements for users",
+      description: "Create entitlements for users at any bank",
+      action: "create entitlements",
+    },
+    {
+      role: "CanCreateEntitlementAtOneBank",
+      description: "Create entitlements for users at one bank",
       action: "create entitlements",
     },
   ],
@@ -138,7 +161,7 @@ export const ROLE_REQUIREMENTS = {
   deleteEntitlement: [
     {
       role: "SuperAdmin",
-      description: "Super administrator with all permissions",
+      description: "Super administrator (bootstrap role)",
       action: "delete entitlements",
     },
     {

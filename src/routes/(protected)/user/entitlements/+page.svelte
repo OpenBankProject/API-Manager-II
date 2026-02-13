@@ -70,77 +70,137 @@
   if (form?.success) {
     selectedEntitlementRole = "";
   }
+
+  // Split entitlements into system-wide and bank-level (for current bank)
+  let systemEntitlements = $derived(
+    userEntitlements.filter((e: any) => !e.bank_id),
+  );
+
+  let bankEntitlements = $derived(
+    userEntitlements.filter(
+      (e: any) => e.bank_id && e.bank_id === currentBank.bankId,
+    ),
+  );
+
+  let otherBankEntitlementCount = $derived(
+    userEntitlements.filter(
+      (e: any) => e.bank_id && e.bank_id !== currentBank.bankId,
+    ).length,
+  );
 </script>
 
 <h2 class="mb-4 text-xl font-semibold">Your Entitlements</h2>
 
-{#if userEntitlements.length > 0}
-  <div class="table-container">
-    <!-- Native Table Element -->
-    <table class="table-hover table">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>ID</th>
-          <th>Bank ID</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {#each userEntitlements as row, i}
-          <tr>
-            <td>{row.role_name}</td>
-            <td>{row.entitlement_id}</td>
-            <td>{row.bank_id}</td>
-            <td>
-              <button
-                class="btn btn-sm variant-ghost-surface"
-                onclick={() =>
-                  copyToClipboard(
-                    row.role_name,
-                    row.entitlement_id,
-                    row.bank_id,
-                    row.entitlement_id,
-                  )}
-                title="Copy entitlement details"
-              >
-                {#if copiedId === row.entitlement_id}
-                  <svg
-                    class="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M5 13l4 4L19 7"
-                    ></path>
-                  </svg>
-                {:else}
-                  <svg
-                    class="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                    ></path>
-                  </svg>
-                {/if}
-              </button>
-            </td>
-          </tr>
-        {/each}
-      </tbody>
-    </table>
+<!-- System-wide Roles -->
+<div class="section mb-6">
+  <div class="section-header">
+    <Globe size={18} />
+    <h3 class="section-title">System-wide Roles</h3>
+    <span class="section-count">{systemEntitlements.length}</span>
   </div>
-{/if}
+  {#if systemEntitlements.length > 0}
+    <div class="table-container">
+      <table class="table-hover table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {#each systemEntitlements as row}
+            <tr>
+              <td>{row.role_name}</td>
+              <td>
+                <button
+                  class="btn btn-sm variant-ghost-surface"
+                  onclick={() =>
+                    copyToClipboard(
+                      row.role_name,
+                      row.entitlement_id,
+                      row.bank_id,
+                      row.entitlement_id,
+                    )}
+                  title="Copy entitlement details"
+                >
+                  {#if copiedId === row.entitlement_id}
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                  {:else}
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                  {/if}
+                </button>
+              </td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    </div>
+  {:else}
+    <p class="empty-text">No system-wide roles</p>
+  {/if}
+</div>
+
+<!-- Bank-level Roles -->
+<div class="section mb-6">
+  <div class="section-header">
+    <Building2 size={18} />
+    <h3 class="section-title">Bank-level Roles for {currentBank.bankId || "—"}</h3>
+    <span class="section-count">{bankEntitlements.length}</span>
+  </div>
+  {#if bankEntitlements.length > 0}
+    <div class="table-container">
+      <table class="table-hover table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {#each bankEntitlements as row}
+            <tr>
+              <td>{row.role_name}</td>
+              <td>
+                <button
+                  class="btn btn-sm variant-ghost-surface"
+                  onclick={() =>
+                    copyToClipboard(
+                      row.role_name,
+                      row.entitlement_id,
+                      row.bank_id,
+                      row.entitlement_id,
+                    )}
+                  title="Copy entitlement details"
+                >
+                  {#if copiedId === row.entitlement_id}
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                  {:else}
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                  {/if}
+                </button>
+              </td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    </div>
+  {:else}
+    <p class="empty-text">No bank-level roles for this bank</p>
+  {/if}
+  {#if otherBankEntitlementCount > 0}
+    <p class="other-banks-note">
+      You also have {otherBankEntitlementCount} role{otherBankEntitlementCount === 1 ? "" : "s"} at other banks (switch bank to view).
+    </p>
+  {/if}
+</div>
 
 {#if canCreateEntitlements}
   <h2 class="mt-8 mb-4 text-xl font-semibold">Add New Entitlement</h2>
@@ -179,23 +239,11 @@
       </p>{/if}
     {#if form?.error}<p class="text-error-500 text-xs">{form.error}</p>{/if}
 
-    <!-- Bank ID Field (shown for bank-level roles) -->
+    <!-- Bank ID info -->
     {#if selectedRoleRequiresBank}
-      <div class="form-group">
-        <label for="bank-id-input" class="form-label">
-          <Building2 size={18} />
-          <span>Bank ID</span>
-        </label>
-        <input
-          type="text"
-          id="bank-id-input"
-          class="form-input"
-          bind:value={selectedBankId}
-          placeholder="Enter bank ID"
-        />
-        <div class="form-hint">
-          The bank to scope this entitlement to
-        </div>
+      <div class="scope-info">
+        <Building2 size={16} />
+        <span>Bank-level role — using current bank: <strong>{selectedBankId || "none selected"}</strong></span>
       </div>
     {:else if selectedEntitlementRole}
       <div class="scope-info">
@@ -213,6 +261,82 @@
 {/if}
 
 <style>
+  .section {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+
+  :global([data-mode="dark"]) .section {
+    background: rgb(var(--color-surface-800));
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  :global([data-mode="dark"]) .section-header {
+    border-bottom-color: rgb(var(--color-surface-700));
+  }
+
+  .section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+  }
+
+  :global([data-mode="dark"]) .section-title {
+    color: var(--color-surface-100);
+  }
+
+  .section-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    padding: 0 0.375rem;
+    background: #f3f4f6;
+    color: #6b7280;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  :global([data-mode="dark"]) .section-count {
+    background: rgb(var(--color-surface-700));
+    color: var(--color-surface-300);
+  }
+
+  .empty-text {
+    padding: 1.5rem;
+    text-align: center;
+    color: #6b7280;
+    font-size: 0.875rem;
+  }
+
+  :global([data-mode="dark"]) .empty-text {
+    color: var(--color-surface-400);
+  }
+
+  .other-banks-note {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.8rem;
+    color: #6b7280;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  :global([data-mode="dark"]) .other-banks-note {
+    color: var(--color-surface-400);
+    border-top-color: rgb(var(--color-surface-700));
+  }
+
   .form-group {
     display: flex;
     flex-direction: column;
@@ -230,41 +354,6 @@
 
   :global([data-mode="dark"]) .form-label {
     color: var(--color-surface-200);
-  }
-
-  .form-input {
-    width: 100%;
-    padding: 0.625rem 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 0.875rem;
-    transition: all 0.2s;
-  }
-
-  .form-input:focus {
-    outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-  }
-
-  :global([data-mode="dark"]) .form-input {
-    background: rgb(var(--color-surface-700));
-    border-color: rgb(var(--color-surface-600));
-    color: var(--color-surface-100);
-  }
-
-  :global([data-mode="dark"]) .form-input:focus {
-    border-color: rgb(var(--color-primary-500));
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-  }
-
-  .form-hint {
-    font-size: 0.75rem;
-    color: #6b7280;
-  }
-
-  :global([data-mode="dark"]) .form-hint {
-    color: var(--color-surface-400);
   }
 
   .scope-info {
