@@ -2,7 +2,11 @@
   import "../app.css";
   import { Navigation } from "@skeletonlabs/skeleton-svelte";
   import { page } from "$app/state";
-  import { navSections, type NavigationSection } from "$lib/config/navigation";
+  import { navSections as allNavSections, type NavigationSection } from "$lib/config/navigation";
+
+  // Separate My Account from other sections so it renders right after API Explorer
+  const myAccountSection = allNavSections.find(s => s.id === "my-account");
+  const navSections = allNavSections.filter(s => s.id !== "my-account");
   import Toast from "$lib/components/Toast.svelte";
   import ApiActivityIndicator from "$lib/components/ApiActivityIndicator.svelte";
   import { createLogger } from "$lib/utils/logger";
@@ -165,7 +169,9 @@
 
   // Some items in the menu are rendered conditionally based on the presence of URLs set in the environment variables.
   // This is to ensure no broken links
-  let menuItems = $state([
+
+  // Top menu items rendered before My Account
+  let topMenuItems = $state([
     ...(data.externalLinks.API_EXPLORER_URL
       ? [
           {
@@ -186,6 +192,10 @@
           },
         ]
       : []),
+  ]);
+
+  // Menu items rendered after My Account
+  let menuItems = $state([
     {
       label: "Users",
       href: "/users",
@@ -268,7 +278,80 @@
       </Navigation.Header>
 
       <Navigation.Content class="">
-        <!-- Main Menu Group -->
+        <!-- Top Menu: API Explorer, Portal -->
+        <Navigation.Group>
+          <Navigation.Menu class="flex flex-col gap-2 px-2">
+            {#each topMenuItems as item}
+              {@const Icon = item.iconComponent}
+              <a
+                href={item.href}
+                class="btn w-full justify-start gap-3 px-2 hover:preset-tonal"
+                class:preset-filled-primary-50-950={page.url.pathname ===
+                  item.href}
+                class:border={page.url.pathname === item.href}
+                class:border-solid-secondary-500={page.url.pathname ===
+                  item.href}
+                title={item.label}
+                aria-label={item.label}
+                target={item.external ? "_blank" : undefined}
+                rel={item.external ? "noopener noreferrer" : undefined}
+              >
+                <Icon class="size-5" />
+                <span>{item.label}</span>
+              </a>
+            {/each}
+          </Navigation.Menu>
+        </Navigation.Group>
+
+        <!-- My Account: right after Portal -->
+        {#if isAuthenticated && myAccountSection}
+          {@const SectionIcon = myAccountSection.iconComponent}
+          {@const active = isSectionActive(myAccountSection)}
+          <Navigation.Group>
+            <button
+              type="button"
+              class="btn w-full justify-start gap-3 px-2 hover:preset-tonal"
+              class:preset-filled-primary-50-950={active}
+              class:border={active}
+              class:border-solid-secondary-500={active}
+              onclick={() => toggleSection(myAccountSection.id)}
+            >
+              <SectionIcon class="size-5" />
+              <span>{myAccountSection.label}</span>
+              {#if expandedSections[myAccountSection.id]}
+                <ChevronDown class="h-4 w-4" />
+              {:else}
+                <ChevronRight class="h-4 w-4" />
+              {/if}
+            </button>
+
+            {#if expandedSections[myAccountSection.id]}
+              <Navigation.Menu class="mt-1 ml-4 flex flex-col gap-1 px-2">
+                {#each myAccountSection.items as subItem}
+                  {@const SubIcon = subItem.iconComponent}
+                  <a
+                    href={subItem.href}
+                    class="btn w-full justify-start gap-3 px-2 pl-6 text-sm hover:preset-tonal"
+                    class:preset-filled-secondary-50-950={page.url.pathname ===
+                      subItem.href}
+                    class:border-l-2={page.url.pathname === subItem.href}
+                    class:border-primary-500={page.url.pathname ===
+                      subItem.href}
+                    title={subItem.label}
+                    aria-label={subItem.label}
+                    target={subItem.external ? "_blank" : undefined}
+                    rel={subItem.external ? "noopener noreferrer" : undefined}
+                  >
+                    <SubIcon class="size-4" />
+                    <span>{subItem.label}</span>
+                  </a>
+                {/each}
+              </Navigation.Menu>
+            {/if}
+          </Navigation.Group>
+        {/if}
+
+        <!-- Other top-level items: Users, Consumers, etc. -->
         <Navigation.Group>
           <Navigation.Menu class="flex flex-col gap-2 px-2">
             {#each menuItems as item}
