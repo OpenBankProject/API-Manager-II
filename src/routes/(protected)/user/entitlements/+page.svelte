@@ -404,6 +404,7 @@
   /* Widget toggle and content */
   .widget-wrapper {
     border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 0.75rem;
   }
 
   :global([data-mode="dark"]) .widget-wrapper {
