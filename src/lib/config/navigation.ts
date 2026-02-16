@@ -323,6 +323,11 @@ function buildDynamicEntitiesItems(): NavigationItem[] {
       iconComponent: Settings,
     },
     {
+      href: "/dynamic-entities/personal",
+      label: "Personal",
+      iconComponent: User,
+    },
+    {
       href: "/dynamic-entities/diagnostics",
       label: "Diagnostics",
       iconComponent: FileCheck,
