@@ -19,7 +19,12 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
   // Get parent layout data to access externalLinks
   const parentData = await parent();
 
+  // Get user entitlements from session for role checking
+  const userEntitlements =
+    (session.data.user as any)?.entitlements?.list || [];
+
   return {
     externalLinks: parentData.externalLinks || {},
+    userEntitlements,
   };
 };

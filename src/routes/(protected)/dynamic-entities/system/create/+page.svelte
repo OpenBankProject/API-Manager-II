@@ -7,11 +7,54 @@
     logErrorDetails,
   } from "$lib/utils/errorHandler";
   import { currentBank } from "$lib/stores/currentBank.svelte";
+  import MissingRoleAlert from "$lib/components/MissingRoleAlert.svelte";
 
   let { data }: { data: PageData } = $props();
 
+  let userEntitlements = $derived(data.userEntitlements || []);
+
+  // Default level based on which role the user has
+  let hasSystemCreateRole = $derived(
+    userEntitlements.some((ent: any) => ent.role_name === "CanCreateSystemLevelDynamicEntity")
+  );
+  let hasBankCreateRole = $derived(
+    userEntitlements.some((ent: any) =>
+      ent.role_name === "CanCreateBankLevelDynamicEntity" && ent.bank_id === currentBank.bankId
+    )
+  );
+
   let entityLevel = $state<"system" | "bank">("system");
   let bankId = $derived(currentBank.bankId);
+
+  // Set initial level once entitlements are available
+  let initialLevelSet = false;
+  $effect(() => {
+    if (!initialLevelSet && userEntitlements.length > 0) {
+      if (hasSystemCreateRole) {
+        entityLevel = "system";
+      } else if (hasBankCreateRole) {
+        entityLevel = "bank";
+      }
+      initialLevelSet = true;
+    }
+  });
+
+  // Role required to create the dynamic entity definition
+  let requiredRole = $derived(
+    entityLevel === "system"
+      ? "CanCreateSystemLevelDynamicEntity"
+      : "CanCreateBankLevelDynamicEntity"
+  );
+
+  let hasRequiredRole = $derived(
+    userEntitlements.some((ent: any) => {
+      if (ent.role_name !== requiredRole) return false;
+      if (entityLevel === "bank") {
+        return ent.bank_id === bankId;
+      }
+      return true;
+    })
+  );
 
   let entityName = $state("");
   let entityDescription = $state("");
@@ -218,6 +261,15 @@
           </label>
         </div>
       </div>
+
+      <!-- Role Check -->
+      {#if !hasRequiredRole}
+        <MissingRoleAlert
+          roles={[requiredRole]}
+          bankId={entityLevel === "bank" ? bankId : undefined}
+          message={`You need the role ${requiredRole} to create a ${entityLevel}-level dynamic entity`}
+        />
+      {/if}
 
       <!-- Entity Name -->
       <div>
