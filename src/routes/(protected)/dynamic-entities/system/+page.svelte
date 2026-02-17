@@ -9,8 +9,20 @@
   import { page } from "$app/stores";
   import { currentBank } from "$lib/stores/currentBank.svelte";
   import { trackedFetch } from "$lib/utils/trackedFetch";
+  import MissingRoleAlert from "$lib/components/MissingRoleAlert.svelte";
 
   let { data }: { data: PageData } = $props();
+
+  let userEntitlements = $derived(data.userEntitlements || []);
+
+  let hasSystemReadRole = $derived(
+    userEntitlements.some((ent: any) => ent.role_name === "CanGetSystemLevelDynamicEntities")
+  );
+  let hasBankReadRole = $derived(
+    userEntitlements.some((ent: any) =>
+      ent.role_name === "CanGetBankLevelDynamicEntities" && ent.bank_id === currentBank.bankId
+    )
+  );
 
   const apiExplorerUrl =
     $page.data.externalLinks?.API_EXPLORER_URL ||
@@ -373,6 +385,21 @@
         Could not load bank-level entities for {currentBank.bank?.full_name || currentBank.bank?.short_name || currentBank.bankId || "selected bank"}: {bankEntitiesError}
       </p>
     </div>
+  {/if}
+
+  <!-- Role Checks -->
+  {#if !hasSystemReadRole}
+    <MissingRoleAlert
+      roles={["CanGetSystemLevelDynamicEntities"]}
+      message="You need this role to list system-level dynamic entities"
+    />
+  {/if}
+  {#if currentBank.bankId && !hasBankReadRole}
+    <MissingRoleAlert
+      roles={["CanGetBankLevelDynamicEntities"]}
+      bankId={currentBank.bankId}
+      message="You need this role to list bank-level dynamic entities for {currentBank.bank?.full_name || currentBank.bankId}"
+    />
   {/if}
 
   <!-- Search and Filters -->
