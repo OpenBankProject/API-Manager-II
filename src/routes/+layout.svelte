@@ -289,7 +289,7 @@
       <Navigation.Content class="">
         <!-- Top Menu: API Explorer, Portal -->
         <Navigation.Group>
-          <Navigation.Menu class="flex flex-col gap-2 px-2">
+          <Navigation.Menu class="flex flex-col gap-2">
             {#each topMenuItems as item}
               {@const Icon = item.iconComponent}
               <a
@@ -406,7 +406,7 @@
 
         <!-- Other top-level items: Users, Consumers, etc. -->
         <Navigation.Group>
-          <Navigation.Menu class="flex flex-col gap-2 px-2">
+          <Navigation.Menu class="flex flex-col gap-2">
             {#each menuItems as item}
               {@const Icon = item.iconComponent}
               <a
