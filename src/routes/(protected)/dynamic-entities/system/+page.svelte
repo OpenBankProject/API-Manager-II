@@ -53,7 +53,7 @@
 
   $effect(() => {
     const bankId = currentBank.bankId;
-    if (bankId) {
+    if (bankId && showBank && hasBankReadRole) {
       fetchBankEntities(bankId);
     } else {
       bankEntities = [];
