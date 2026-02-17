@@ -7,6 +7,8 @@
     logErrorDetails,
   } from "$lib/utils/errorHandler";
   import { page } from "$app/stores";
+  import { currentBank } from "$lib/stores/currentBank.svelte";
+  import { trackedFetch } from "$lib/utils/trackedFetch";
 
   let { data }: { data: PageData } = $props();
 
@@ -20,6 +22,43 @@
 
   let searchQuery = $state("");
 
+  // Bank-level dynamic entities (fetched client-side based on current bank)
+  let bankEntities = $state<any[]>([]);
+  let bankEntitiesLoading = $state(false);
+  let bankEntitiesError = $state<string | null>(null);
+
+  $effect(() => {
+    const bankId = currentBank.bankId;
+    if (bankId) {
+      fetchBankEntities(bankId);
+    } else {
+      bankEntities = [];
+      bankEntitiesError = null;
+    }
+  });
+
+  async function fetchBankEntities(bankId: string) {
+    bankEntitiesLoading = true;
+    bankEntitiesError = null;
+    try {
+      const response = await trackedFetch(`/api/dynamic-entities/bank/${bankId}/list`);
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to fetch bank-level dynamic entities");
+      }
+      bankEntities = (result.dynamic_entities || []).sort((a: any, b: any) => {
+        const nameA = (a.entity_name || "").toLowerCase();
+        const nameB = (b.entity_name || "").toLowerCase();
+        return nameA.localeCompare(nameB);
+      });
+    } catch (err) {
+      bankEntitiesError = err instanceof Error ? err.message : "Failed to fetch bank entities";
+      bankEntities = [];
+    } finally {
+      bankEntitiesLoading = false;
+    }
+  }
+
   // Helper function to extract entity name from the entity object
   function getEntityName(entity: any): string {
     // In v6.0.0, the entity name is in the entity_name field
@@ -32,8 +71,14 @@
     return entity.schema || null;
   }
 
+  // Combine system and bank entities with a level marker
+  const allEntities = $derived([
+    ...(data.entities || []).map((e: any) => ({ ...e, _level: "System" })),
+    ...bankEntities.map((e: any) => ({ ...e, _level: "Bank" })),
+  ]);
+
   const filteredEntities = $derived(
-    (data.entities || []).filter((entity: any) => {
+    allEntities.filter((entity: any) => {
       if (searchQuery === "") return true;
 
       const query = searchQuery.toLowerCase();
@@ -41,11 +86,13 @@
       const entityId = (entity.dynamic_entity_id || "").toLowerCase();
       const schema = getSchema(entity);
       const description = schema?.description?.toLowerCase() || "";
+      const level = entity._level.toLowerCase();
 
       return (
         entityName.includes(query) ||
         entityId.includes(query) ||
-        description.includes(query)
+        description.includes(query) ||
+        level.includes(query)
       );
     }),
   );
@@ -144,10 +191,10 @@
   <div class="mb-6 flex items-center justify-between">
     <div>
       <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-        System Dynamic Entities
+        Dynamic Entities
       </h1>
       <p class="mt-1 text-gray-600 dark:text-gray-400">
-        Manage system-wide dynamic data entities
+        System-wide and bank-level dynamic data entities
       </p>
     </div>
     <a
@@ -176,9 +223,25 @@
     <div
       class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
     >
-      <div class="text-sm text-gray-600 dark:text-gray-400">Total Entities</div>
+      <div class="text-sm text-gray-600 dark:text-gray-400">System</div>
       <div class="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
         {data.entities?.length || 0}
+      </div>
+    </div>
+    <div
+      class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+    >
+      <div class="text-sm text-gray-600 dark:text-gray-400">
+        Bank {#if currentBank.bank}({currentBank.bank.full_name || currentBank.bank.short_name || currentBank.bankId}){/if}
+      </div>
+      <div class="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
+        {#if bankEntitiesLoading}
+          <span class="text-sm text-gray-400">...</span>
+        {:else if currentBank.bankId}
+          {bankEntities.length}
+        {:else}
+          <span class="text-sm text-gray-400">-</span>
+        {/if}
       </div>
     </div>
     <div class="flex gap-2">
@@ -302,6 +365,16 @@
     </div>
   {/if}
 
+  {#if bankEntitiesError}
+    <div
+      class="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20"
+    >
+      <p class="text-sm text-amber-700 dark:text-amber-400">
+        Could not load bank-level entities for {currentBank.bank?.full_name || currentBank.bank?.short_name || currentBank.bankId || "selected bank"}: {bankEntitiesError}
+      </p>
+    </div>
+  {/if}
+
   <!-- Search and Filters -->
   <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
     <div class="flex-1">
@@ -387,6 +460,11 @@
               <th
                 class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
               >
+                Level
+              </th>
+              <th
+                class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+              >
                 Name
               </th>
               <th
@@ -422,6 +500,13 @@
             {#each filteredEntities as entity}
               {@const schema = getSchema(entity)}
               <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <td class="whitespace-nowrap px-3 py-3 text-sm">
+                  {#if entity._level === "System"}
+                    <span class="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">System</span>
+                  {:else}
+                    <span class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">Bank</span>
+                  {/if}
+                </td>
                 <td class="whitespace-nowrap px-3 py-3 text-sm font-medium">
                   <a
                     href="/dynamic-entities/system/{entity.dynamic_entity_id}"
@@ -594,7 +679,7 @@
         <div class="text-sm text-gray-700 dark:text-gray-300">
           Showing <span class="font-medium">{filteredEntities.length}</span>
           of
-          <span class="font-medium">{data.entities?.length || 0}</span>
+          <span class="font-medium">{allEntities.length}</span>
           entities
         </div>
       </div>

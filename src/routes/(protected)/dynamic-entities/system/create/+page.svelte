@@ -6,8 +6,12 @@
     formatErrorForDisplay,
     logErrorDetails,
   } from "$lib/utils/errorHandler";
+  import { currentBank } from "$lib/stores/currentBank.svelte";
 
   let { data }: { data: PageData } = $props();
+
+  let entityLevel = $state<"system" | "bank">("system");
+  let bankId = $derived(currentBank.bankId);
 
   let entityName = $state("");
   let entityDescription = $state("");
@@ -63,6 +67,11 @@
   async function handleSubmit(e: Event) {
     e.preventDefault();
 
+    if (entityLevel === "bank" && !bankId) {
+      alert("Please select a current bank first to create a bank-level entity");
+      return;
+    }
+
     if (!entityName.trim()) {
       alert("Entity name is required");
       return;
@@ -97,7 +106,11 @@
         personal_requires_role: personalRequiresRole,
       };
 
-      const response = await fetch(`/api/dynamic-entities/system/create`, {
+      const createUrl = entityLevel === "bank"
+        ? `/api/dynamic-entities/bank/${bankId}/create`
+        : `/api/dynamic-entities/system/create`;
+
+      const response = await fetch(createUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -111,12 +124,12 @@
           response,
           "Failed to create entity",
         );
-        logErrorDetails("Create System Dynamic Entity", errorDetails);
+        logErrorDetails(`Create ${entityLevel === "bank" ? "Bank" : "System"} Dynamic Entity`, errorDetails);
         const errorMessage = formatErrorForDisplay(errorDetails);
         throw new Error(errorMessage);
       }
 
-      alert("System dynamic entity created successfully");
+      alert(`${entityLevel === "bank" ? "Bank" : "System"} dynamic entity created successfully`);
       goto("/dynamic-entities/system");
     } catch (error) {
       const errorMsg =
@@ -133,7 +146,7 @@
   <title>Create System Dynamic Entity - API Manager</title>
 </svelte:head>
 
-<div class="container mx-auto max-w-4xl px-4 py-8">
+<div class="container mx-auto px-4 py-8">
   <!-- Header -->
   <div class="mb-6">
     <a
@@ -156,10 +169,10 @@
       Back to System Dynamic Entities
     </a>
     <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-      Create System Dynamic Entity
+      Create Dynamic Entity
     </h1>
     <p class="mt-1 text-gray-600 dark:text-gray-400">
-      Define a new system dynamic entity schema
+      Define a new dynamic entity schema
     </p>
   </div>
 
@@ -168,6 +181,44 @@
     class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800"
   >
     <form onsubmit={handleSubmit} class="space-y-6">
+      <!-- Level -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          Level
+        </label>
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          System entities are available across all banks. Bank entities are scoped to a specific bank.
+        </p>
+        <div class="mt-2 flex gap-4">
+          <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+            <input
+              type="radio"
+              name="entityLevel"
+              value="system"
+              bind:group={entityLevel}
+              class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            System
+          </label>
+          <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+            <input
+              type="radio"
+              name="entityLevel"
+              value="bank"
+              bind:group={entityLevel}
+              disabled={!bankId}
+              class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
+            />
+            Bank
+            {#if bankId}
+              <span class="text-xs text-gray-500 dark:text-gray-400">({currentBank.bank?.full_name || bankId})</span>
+            {:else}
+              <span class="text-xs text-gray-400">(no bank selected)</span>
+            {/if}
+          </label>
+        </div>
+      </div>
+
       <!-- Entity Name -->
       <div>
         <label

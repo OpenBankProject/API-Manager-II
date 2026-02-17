@@ -3,10 +3,18 @@
   import { toast } from "$lib/utils/toastService";
   import { trackedFetch } from "$lib/utils/trackedFetch";
   import { invalidateAll } from "$app/navigation";
+  import { currentBank } from "$lib/stores/currentBank.svelte";
 
   let { data }: { data: PageData } = $props();
 
   let bank = $derived(data.bank);
+
+  // Set current bank if not already this bank
+  $effect(() => {
+    if (bank && bank.bank_id !== currentBank.bankId) {
+      currentBank.select(bank);
+    }
+  });
 
   // Add attribute form state
   let showAddAttribute = $state(false);
@@ -140,6 +148,11 @@
     </div>
   </div>
 
+  <!-- Description -->
+  <p class="mb-6 text-sm text-gray-600 dark:text-gray-400">
+    In the Open Bank Project, a Bank acts as a tenancy boundary. Many permissions, accounts, products, and other operations are scoped at the bank level.
+  </p>
+
   <!-- Bank Details & Routings (side by side) -->
   <div class="mb-6 grid gap-6 lg:grid-cols-2">
     <!-- Details -->
@@ -217,8 +230,79 @@
     </div>
   </div>
 
-  <!-- Attributes & Related Pages (side by side) -->
+  <!-- Related Pages & Attributes (side by side) -->
   <div class="mb-6 grid gap-6 lg:grid-cols-2">
+    <!-- Related Pages -->
+    <div class="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+      <div class="border-b border-gray-200 px-6 py-3 dark:border-gray-700">
+        <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+          Related Pages
+        </h2>
+      </div>
+      <div class="grid grid-cols-2 gap-3 p-4">
+        <a
+          href="/account-access/accounts?bank_id={bank.bank_id}"
+          class="group flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2.5 transition-colors hover:border-blue-300 hover:bg-blue-50 dark:border-gray-700 dark:hover:border-blue-700 dark:hover:bg-blue-900/20"
+        >
+          <svg class="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+          </svg>
+          <span class="text-sm font-medium text-gray-900 group-hover:text-blue-700 dark:text-gray-100 dark:group-hover:text-blue-300">Accounts</span>
+        </a>
+
+        <a
+          href="/products?bank_id={bank.bank_id}"
+          class="group flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2.5 transition-colors hover:border-blue-300 hover:bg-blue-50 dark:border-gray-700 dark:hover:border-blue-700 dark:hover:bg-blue-900/20"
+        >
+          <svg class="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          </svg>
+          <span class="text-sm font-medium text-gray-900 group-hover:text-blue-700 dark:text-gray-100 dark:group-hover:text-blue-300">API Products</span>
+        </a>
+
+        <a
+          href="/products/financial?bank_id={bank.bank_id}"
+          class="group flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2.5 transition-colors hover:border-blue-300 hover:bg-blue-50 dark:border-gray-700 dark:hover:border-blue-700 dark:hover:bg-blue-900/20"
+        >
+          <svg class="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+          <span class="text-sm font-medium text-gray-900 group-hover:text-blue-700 dark:text-gray-100 dark:group-hover:text-blue-300">Financial Products</span>
+        </a>
+
+        <a
+          href="/dynamic-endpoints/bank?bank_id={bank.bank_id}"
+          class="group flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2.5 transition-colors hover:border-blue-300 hover:bg-blue-50 dark:border-gray-700 dark:hover:border-blue-700 dark:hover:bg-blue-900/20"
+        >
+          <svg class="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          <span class="text-sm font-medium text-gray-900 group-hover:text-blue-700 dark:text-gray-100 dark:group-hover:text-blue-300">Dynamic Endpoints</span>
+        </a>
+
+        <a
+          href="/rbac/entitlements?bank_id={bank.bank_id}"
+          class="group flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2.5 transition-colors hover:border-blue-300 hover:bg-blue-50 dark:border-gray-700 dark:hover:border-blue-700 dark:hover:bg-blue-900/20"
+        >
+          <svg class="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+          </svg>
+          <span class="text-sm font-medium text-gray-900 group-hover:text-blue-700 dark:text-gray-100 dark:group-hover:text-blue-300">Entitlements</span>
+        </a>
+
+        <a
+          href="/account-access/system-views?bank_id={bank.bank_id}"
+          class="group flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2.5 transition-colors hover:border-blue-300 hover:bg-blue-50 dark:border-gray-700 dark:hover:border-blue-700 dark:hover:bg-blue-900/20"
+        >
+          <svg class="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+          <span class="text-sm font-medium text-gray-900 group-hover:text-blue-700 dark:text-gray-100 dark:group-hover:text-blue-300">System Views</span>
+        </a>
+      </div>
+    </div>
+
     <!-- Attributes -->
     <div class="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
       <div class="flex items-center justify-between border-b border-gray-200 px-6 py-3 dark:border-gray-700">
@@ -340,77 +424,6 @@
           No attributes available.
         </div>
       {/if}
-    </div>
-
-    <!-- Related Pages -->
-    <div class="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-      <div class="border-b border-gray-200 px-6 py-3 dark:border-gray-700">
-        <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-          Related Pages
-        </h2>
-      </div>
-      <div class="grid grid-cols-2 gap-3 p-4">
-        <a
-          href="/account-access/accounts?bank_id={bank.bank_id}"
-          class="group flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2.5 transition-colors hover:border-blue-300 hover:bg-blue-50 dark:border-gray-700 dark:hover:border-blue-700 dark:hover:bg-blue-900/20"
-        >
-          <svg class="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-          </svg>
-          <span class="text-sm font-medium text-gray-900 group-hover:text-blue-700 dark:text-gray-100 dark:group-hover:text-blue-300">Accounts</span>
-        </a>
-
-        <a
-          href="/products?bank_id={bank.bank_id}"
-          class="group flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2.5 transition-colors hover:border-blue-300 hover:bg-blue-50 dark:border-gray-700 dark:hover:border-blue-700 dark:hover:bg-blue-900/20"
-        >
-          <svg class="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-          </svg>
-          <span class="text-sm font-medium text-gray-900 group-hover:text-blue-700 dark:text-gray-100 dark:group-hover:text-blue-300">API Products</span>
-        </a>
-
-        <a
-          href="/products/financial?bank_id={bank.bank_id}"
-          class="group flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2.5 transition-colors hover:border-blue-300 hover:bg-blue-50 dark:border-gray-700 dark:hover:border-blue-700 dark:hover:bg-blue-900/20"
-        >
-          <svg class="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
-          <span class="text-sm font-medium text-gray-900 group-hover:text-blue-700 dark:text-gray-100 dark:group-hover:text-blue-300">Financial Products</span>
-        </a>
-
-        <a
-          href="/dynamic-endpoints/bank?bank_id={bank.bank_id}"
-          class="group flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2.5 transition-colors hover:border-blue-300 hover:bg-blue-50 dark:border-gray-700 dark:hover:border-blue-700 dark:hover:bg-blue-900/20"
-        >
-          <svg class="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-          <span class="text-sm font-medium text-gray-900 group-hover:text-blue-700 dark:text-gray-100 dark:group-hover:text-blue-300">Dynamic Endpoints</span>
-        </a>
-
-        <a
-          href="/rbac/entitlements?bank_id={bank.bank_id}"
-          class="group flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2.5 transition-colors hover:border-blue-300 hover:bg-blue-50 dark:border-gray-700 dark:hover:border-blue-700 dark:hover:bg-blue-900/20"
-        >
-          <svg class="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-          </svg>
-          <span class="text-sm font-medium text-gray-900 group-hover:text-blue-700 dark:text-gray-100 dark:group-hover:text-blue-300">Entitlements</span>
-        </a>
-
-        <a
-          href="/account-access/system-views?bank_id={bank.bank_id}"
-          class="group flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2.5 transition-colors hover:border-blue-300 hover:bg-blue-50 dark:border-gray-700 dark:hover:border-blue-700 dark:hover:bg-blue-900/20"
-        >
-          <svg class="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-          </svg>
-          <span class="text-sm font-medium text-gray-900 group-hover:text-blue-700 dark:text-gray-100 dark:group-hover:text-blue-300">System Views</span>
-        </a>
-      </div>
     </div>
   </div>
 
