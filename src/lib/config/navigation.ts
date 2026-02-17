@@ -341,9 +341,19 @@ export function getActiveBanksMenuItem(pathname: string) {
 function buildDynamicEntitiesItems(): NavigationItem[] {
   const items: NavigationItem[] = [
     {
-      href: "/dynamic-entities/system",
+      href: "/dynamic-entities/system?level=system",
       label: "System",
       iconComponent: Settings,
+    },
+    {
+      href: "/dynamic-entities/system?level=bank",
+      label: "Bank",
+      iconComponent: Building2,
+    },
+    {
+      href: "/dynamic-entities/system?level=both",
+      label: "System + Bank",
+      iconComponent: Box,
     },
     {
       href: "/dynamic-entities/personal",

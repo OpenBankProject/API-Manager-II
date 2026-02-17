@@ -13,6 +13,18 @@
 
   let { data }: { data: PageData } = $props();
 
+  // Read level from query param: system, bank, or both (default)
+  let level = $derived<"system" | "bank" | "both">(
+    (() => {
+      const param = $page.url.searchParams.get("level");
+      if (param === "system" || param === "bank") return param;
+      return "both";
+    })()
+  );
+
+  let showSystem = $derived(level === "system" || level === "both");
+  let showBank = $derived(level === "bank" || level === "both");
+
   let userEntitlements = $derived(data.userEntitlements || []);
 
   let hasSystemReadRole = $derived(
@@ -83,10 +95,10 @@
     return entity.schema || null;
   }
 
-  // Combine system and bank entities with a level marker
+  // Combine system and bank entities with a level marker, filtered by query param
   const allEntities = $derived([
-    ...(data.entities || []).map((e: any) => ({ ...e, _level: "System" })),
-    ...bankEntities.map((e: any) => ({ ...e, _level: "Bank" })),
+    ...(showSystem ? (data.entities || []).map((e: any) => ({ ...e, _level: "System" })) : []),
+    ...(showBank ? bankEntities.map((e: any) => ({ ...e, _level: "Bank" })) : []),
   ]);
 
   const filteredEntities = $derived(
@@ -195,7 +207,7 @@
 </script>
 
 <svelte:head>
-  <title>System Dynamic Entities - API Manager</title>
+  <title>{level === "system" ? "System" : level === "bank" ? "Bank" : ""} Dynamic Entities - API Manager</title>
 </svelte:head>
 
 <div class="container mx-auto px-4 py-8">
@@ -203,10 +215,16 @@
   <div class="mb-6 flex items-center justify-between">
     <div>
       <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-        Dynamic Entities
+        {level === "system" ? "System" : level === "bank" ? "Bank" : ""} Dynamic Entities
       </h1>
       <p class="mt-1 text-gray-600 dark:text-gray-400">
-        System-wide and bank-level dynamic data entities
+        {#if level === "system"}
+          System-wide dynamic data entities
+        {:else if level === "bank"}
+          Bank-level dynamic data entities{#if currentBank.bank} for {currentBank.bank.full_name || currentBank.bankId}{/if}
+        {:else}
+          System-wide and bank-level dynamic data entities
+        {/if}
       </p>
     </div>
     <a
@@ -232,30 +250,34 @@
 
   <!-- Stats -->
   <div class="mb-6 flex items-center gap-4">
-    <div
-      class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
-    >
-      <div class="text-sm text-gray-600 dark:text-gray-400">System</div>
-      <div class="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
-        {data.entities?.length || 0}
+    {#if showSystem}
+      <div
+        class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+      >
+        <div class="text-sm text-gray-600 dark:text-gray-400">System</div>
+        <div class="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
+          {data.entities?.length || 0}
+        </div>
       </div>
-    </div>
-    <div
-      class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
-    >
-      <div class="text-sm text-gray-600 dark:text-gray-400">
-        Bank {#if currentBank.bank}({currentBank.bank.full_name || currentBank.bank.short_name || currentBank.bankId}){/if}
+    {/if}
+    {#if showBank}
+      <div
+        class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+      >
+        <div class="text-sm text-gray-600 dark:text-gray-400">
+          Bank {#if currentBank.bank}({currentBank.bank.full_name || currentBank.bank.short_name || currentBank.bankId}){/if}
+        </div>
+        <div class="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
+          {#if bankEntitiesLoading}
+            <span class="text-sm text-gray-400">...</span>
+          {:else if currentBank.bankId}
+            {bankEntities.length}
+          {:else}
+            <span class="text-sm text-gray-400">-</span>
+          {/if}
+        </div>
       </div>
-      <div class="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
-        {#if bankEntitiesLoading}
-          <span class="text-sm text-gray-400">...</span>
-        {:else if currentBank.bankId}
-          {bankEntities.length}
-        {:else}
-          <span class="text-sm text-gray-400">-</span>
-        {/if}
-      </div>
-    </div>
+    {/if}
     <div class="flex gap-2">
       <a
         href={apiExplorerDynamicEntityUrl}
@@ -377,7 +399,7 @@
     </div>
   {/if}
 
-  {#if bankEntitiesError}
+  {#if showBank && bankEntitiesError}
     <div
       class="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20"
     >
@@ -388,13 +410,13 @@
   {/if}
 
   <!-- Role Checks -->
-  {#if !hasSystemReadRole}
+  {#if showSystem && !hasSystemReadRole}
     <MissingRoleAlert
       roles={["CanGetSystemLevelDynamicEntities"]}
       message="You need this role to list system-level dynamic entities"
     />
   {/if}
-  {#if currentBank.bankId && !hasBankReadRole}
+  {#if showBank && currentBank.bankId && !hasBankReadRole}
     <MissingRoleAlert
       roles={["CanGetBankLevelDynamicEntities"]}
       bankId={currentBank.bankId}
@@ -484,11 +506,13 @@
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead class="bg-gray-50 dark:bg-gray-900">
             <tr>
-              <th
-                class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
-              >
-                Level
-              </th>
+              {#if level === "both"}
+                <th
+                  class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                >
+                  Level
+                </th>
+              {/if}
               <th
                 class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
               >
@@ -527,13 +551,15 @@
             {#each filteredEntities as entity}
               {@const schema = getSchema(entity)}
               <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                <td class="whitespace-nowrap px-3 py-3 text-sm">
-                  {#if entity._level === "System"}
-                    <span class="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">System</span>
-                  {:else}
-                    <span class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">Bank</span>
-                  {/if}
-                </td>
+                {#if level === "both"}
+                  <td class="whitespace-nowrap px-3 py-3 text-sm">
+                    {#if entity._level === "System"}
+                      <span class="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">System</span>
+                    {:else}
+                      <span class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">Bank</span>
+                    {/if}
+                  </td>
+                {/if}
                 <td class="whitespace-nowrap px-3 py-3 text-sm font-medium">
                   <a
                     href="/dynamic-entities/system/{entity.dynamic_entity_id}"

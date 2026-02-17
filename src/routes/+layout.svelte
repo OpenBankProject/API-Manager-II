@@ -455,13 +455,14 @@
                 <Navigation.Menu class="mt-1 ml-4 flex flex-col gap-1 px-2">
                   {#each section.items as subItem}
                     {@const SubIcon = subItem.iconComponent}
+                    {@const currentUrl = page.url.pathname + page.url.search}
                     <a
                       href={subItem.href}
                       class="btn w-full justify-start gap-3 px-2 pl-6 text-sm hover:preset-tonal"
-                      class:preset-filled-secondary-50-950={page.url.pathname ===
+                      class:preset-filled-secondary-50-950={currentUrl ===
                         subItem.href}
-                      class:border-l-2={page.url.pathname === subItem.href}
-                      class:border-primary-500={page.url.pathname ===
+                      class:border-l-2={currentUrl === subItem.href}
+                      class:border-primary-500={currentUrl ===
                         subItem.href}
                       title={subItem.label}
                       aria-label={subItem.label}
