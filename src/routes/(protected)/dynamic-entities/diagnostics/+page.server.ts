@@ -35,6 +35,26 @@ export const load: PageServerLoad = async ({ locals }) => {
     throw error(401, "No API access token available");
   }
 
+  // Get user entitlements from session for role checking
+  const userEntitlements =
+    (session.data.user as any)?.entitlements?.list || [];
+
+  // Check if user has system-level read role
+  const hasSystemRole = userEntitlements.some(
+    (ent: any) => ent.role_name === "CanGetSystemLevelDynamicEntities"
+  );
+
+  if (!hasSystemRole) {
+    logger.info("User lacks CanGetSystemLevelDynamicEntities role, skipping system entities fetch");
+    return {
+      diagnostics: [],
+      totalEntities: 0,
+      totalRecords: 0,
+      orphanedEntities: [],
+      userEntitlements,
+    };
+  }
+
   logger.info("Access token present, fetching dynamic entities");
 
   try {
@@ -128,6 +148,7 @@ export const load: PageServerLoad = async ({ locals }) => {
       totalEntities: diagnostics.length,
       totalRecords: diagnostics.reduce((sum, d) => sum + d.recordCount, 0),
       orphanedEntities,
+      userEntitlements,
     };
   } catch (err: any) {
     logger.error("Error in diagnostics:", err);

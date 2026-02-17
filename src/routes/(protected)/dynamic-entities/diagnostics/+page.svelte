@@ -1,11 +1,97 @@
 <script lang="ts">
   import type { PageData } from "./$types";
+  import { currentBank } from "$lib/stores/currentBank.svelte";
+  import { trackedFetch } from "$lib/utils/trackedFetch";
+  import MissingRoleAlert from "$lib/components/MissingRoleAlert.svelte";
 
   let { data } = $props();
-  const diagnostics = data.diagnostics || [];
-  const totalEntities = data.totalEntities || 0;
-  const totalRecords = data.totalRecords || 0;
-  const orphanedEntities = data.orphanedEntities || [];
+
+  let userEntitlements = $derived(data.userEntitlements || []);
+
+  let hasSystemReadRole = $derived(
+    userEntitlements.some((ent: any) => ent.role_name === "CanGetSystemLevelDynamicEntities")
+  );
+  let hasBankReadRole = $derived(
+    userEntitlements.some((ent: any) =>
+      ent.role_name === "CanGetBankLevelDynamicEntities" && ent.bank_id === currentBank.bankId
+    )
+  );
+
+  // Level selector - default based on which role the user has
+  let diagnosticLevel = $state<"system" | "bank">("system");
+  let initialLevelSet = false;
+  $effect(() => {
+    if (!initialLevelSet && userEntitlements.length > 0) {
+      if (hasSystemReadRole) diagnosticLevel = "system";
+      else if (hasBankReadRole) diagnosticLevel = "bank";
+      initialLevelSet = true;
+    }
+  });
+
+  // System diagnostics from server (already filtered by role on server)
+  const systemDiagnostics = $derived(
+    diagnosticLevel === "system"
+      ? (data.diagnostics || []).map((d: any) => ({ ...d, _level: "System" }))
+      : []
+  );
+
+  const orphanedEntities = $derived(diagnosticLevel === "system" ? (data.orphanedEntities || []) : []);
+
+  // Bank-level dynamic entities (fetched client-side based on current bank)
+  let bankDiagnostics = $state<any[]>([]);
+  let bankLoading = $state(false);
+  let bankError = $state<string | null>(null);
+
+  $effect(() => {
+    const bankId = currentBank.bankId;
+    if (diagnosticLevel === "bank" && bankId && hasBankReadRole) {
+      fetchBankEntities(bankId);
+    } else {
+      bankDiagnostics = [];
+      bankError = null;
+    }
+  });
+
+  async function fetchBankEntities(bankId: string) {
+    bankLoading = true;
+    bankError = null;
+    try {
+      const response = await trackedFetch(`/api/dynamic-entities/bank/${bankId}/list`);
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to fetch bank-level dynamic entities");
+      }
+      const entities = (result.dynamic_entities || []).sort((a: any, b: any) => {
+        const nameA = (a.entity_name || "").toLowerCase();
+        const nameB = (b.entity_name || "").toLowerCase();
+        return nameA.localeCompare(nameB);
+      });
+      // Transform bank entities into diagnostics format
+      bankDiagnostics = entities.map((entity: any) => ({
+        dynamic_entity_id: entity.dynamic_entity_id,
+        entityName: entity.entity_name || "Unknown",
+        recordCount: entity.record_count ?? 0,
+        schema: entity.schema || null,
+        responseKeys: [],
+        triedKeys: [],
+        rawResponse: undefined,
+        _level: "Bank",
+      }));
+    } catch (err) {
+      bankError = err instanceof Error ? err.message : "Failed to fetch bank entities";
+      bankDiagnostics = [];
+    } finally {
+      bankLoading = false;
+    }
+  }
+
+  // Diagnostics for selected level
+  const activeDiagnostics = $derived(
+    diagnosticLevel === "system" ? systemDiagnostics : bankDiagnostics
+  );
+
+  const totalEntities = $derived(activeDiagnostics.length);
+  const totalRecords = $derived(activeDiagnostics.reduce((sum: number, d: any) => sum + d.recordCount, 0));
 
   let searchQuery = $state("");
   let copiedId = $state<string | null>(null);
@@ -41,7 +127,7 @@
   }
 
   const filteredDiagnostics = $derived(
-    diagnostics.filter((diag: any) => {
+    activeDiagnostics.filter((diag: any) => {
       if (searchQuery === "") return true;
 
       const query = searchQuery.toLowerCase();
@@ -79,11 +165,12 @@
   async function copyDiagnostic(diag: any) {
     const diagnosticText = `
 Entity: ${diag.entityName}
+Level: ${diagnosticLevel === "system" ? "System" : "Bank"}
 ID: ${diag.dynamic_entity_id}
 Record Count: ${diag.error ? "Unknown" : diag.recordCount}
 ${diag.error ? `Error: ${diag.error}` : ""}
-${diag.responseKeys ? `Response Keys: ${diag.responseKeys.join(", ")}` : ""}
-${diag.triedKeys ? `Tried Keys: ${diag.triedKeys.join(", ")}` : ""}
+${diag.responseKeys?.length ? `Response Keys: ${diag.responseKeys.join(", ")}` : ""}
+${diag.triedKeys?.length ? `Tried Keys: ${diag.triedKeys.join(", ")}` : ""}
 `.trim();
 
     try {
@@ -98,7 +185,71 @@ ${diag.triedKeys ? `Tried Keys: ${diag.triedKeys.join(", ")}` : ""}
   }
 </script>
 
-<h1 class="text-gray-900 dark:text-gray-100">Dynamic Entity Diagnostics</h1>
+<svelte:head>
+  <title>Dynamic Entity Diagnostics - API Manager</title>
+</svelte:head>
+
+<div class="container mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
+      Dynamic Entity Diagnostics
+    </h1>
+    <p class="mt-1 text-gray-600 dark:text-gray-400">
+      {#if diagnosticLevel === "system"}
+        Diagnostics for system-wide dynamic entities
+      {:else}
+        Diagnostics for bank-level dynamic entities{#if currentBank.bank} at {currentBank.bank.full_name || currentBank.bankId}{/if}
+      {/if}
+    </p>
+  </div>
+
+<!-- Level Selector -->
+<div class="mb-6">
+  <fieldset>
+    <legend class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Level</legend>
+    <div class="flex items-center gap-6">
+      <label class="flex items-center gap-2 cursor-pointer">
+        <input
+          type="radio"
+          name="diagnosticLevel"
+          value="system"
+          bind:group={diagnosticLevel}
+          class="h-4 w-4 text-blue-600 focus:ring-blue-500"
+        />
+        <span class="text-sm text-gray-900 dark:text-gray-100">System</span>
+      </label>
+      <label class="flex items-center gap-2 {currentBank.bankId ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}">
+        <input
+          type="radio"
+          name="diagnosticLevel"
+          value="bank"
+          bind:group={diagnosticLevel}
+          disabled={!currentBank.bankId}
+          class="h-4 w-4 text-blue-600 focus:ring-blue-500"
+        />
+        <span class="text-sm text-gray-900 dark:text-gray-100">
+          Bank{#if currentBank.bank} ({currentBank.bank.full_name || currentBank.bank.short_name || currentBank.bankId}){/if}
+        </span>
+      </label>
+    </div>
+  </fieldset>
+</div>
+
+<!-- Role Check -->
+{#if diagnosticLevel === "system" && !hasSystemReadRole}
+  <MissingRoleAlert
+    roles={["CanGetSystemLevelDynamicEntities"]}
+    message="You need this role to view system-level dynamic entity diagnostics"
+  />
+{/if}
+{#if diagnosticLevel === "bank" && currentBank.bankId && !hasBankReadRole}
+  <MissingRoleAlert
+    roles={["CanGetBankLevelDynamicEntities"]}
+    bankId={currentBank.bankId}
+    message="You need this role to view bank-level dynamic entity diagnostics for {currentBank.bank?.full_name || currentBank.bankId}"
+  />
+{/if}
 
 <!-- Summary Cards -->
 <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -112,7 +263,11 @@ ${diag.triedKeys ? `Tried Keys: ${diag.triedKeys.join(", ")}` : ""}
           Total Entities
         </p>
         <p class="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">
-          {totalEntities}
+          {#if diagnosticLevel === "bank" && bankLoading}
+            <span class="text-sm text-gray-400">...</span>
+          {:else}
+            {totalEntities}
+          {/if}
         </p>
       </div>
       <svg
@@ -141,7 +296,11 @@ ${diag.triedKeys ? `Tried Keys: ${diag.triedKeys.join(", ")}` : ""}
           Total Records
         </p>
         <p class="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">
-          {totalRecords}
+          {#if diagnosticLevel === "bank" && bankLoading}
+            <span class="text-sm text-gray-400">...</span>
+          {:else}
+            {totalRecords}
+          {/if}
         </p>
       </div>
       <svg
@@ -170,7 +329,11 @@ ${diag.triedKeys ? `Tried Keys: ${diag.triedKeys.join(", ")}` : ""}
           With Data
         </p>
         <p class="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">
-          {diagnostics.filter((d: any) => d.recordCount > 0 && !d.error).length}
+          {#if diagnosticLevel === "bank" && bankLoading}
+            <span class="text-sm text-gray-400">...</span>
+          {:else}
+            {activeDiagnostics.filter((d: any) => d.recordCount > 0 && !d.error).length}
+          {/if}
         </p>
       </div>
       <svg
@@ -189,6 +352,15 @@ ${diag.triedKeys ? `Tried Keys: ${diag.triedKeys.join(", ")}` : ""}
     </div>
   </div>
 </div>
+
+<!-- Bank loading indicator -->
+{#if diagnosticLevel === "bank" && bankLoading}
+  <div class="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
+    <p class="text-sm text-blue-700 dark:text-blue-400">
+      Loading bank-level entities for {currentBank.bank?.full_name || currentBank.bankId}...
+    </p>
+  </div>
+{/if}
 
 <!-- Orphaned Entities -->
 {#if orphanedEntities.length > 0}
@@ -344,7 +516,7 @@ ${diag.triedKeys ? `Tried Keys: ${diag.triedKeys.join(", ")}` : ""}
   <input
     type="text"
     bind:value={searchQuery}
-    placeholder="Search by entity name or ID..."
+    placeholder="Search by entity name, ID, or level..."
     class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:focus:border-blue-400"
   />
 </div>
@@ -352,7 +524,7 @@ ${diag.triedKeys ? `Tried Keys: ${diag.triedKeys.join(", ")}` : ""}
 <!-- Entity List -->
 {#if filteredDiagnostics && filteredDiagnostics.length > 0}
   <div class="space-y-4">
-    {#each filteredDiagnostics as diag (diag.dynamic_entity_id)}
+    {#each filteredDiagnostics as diag (diag._level + '-' + diag.dynamic_entity_id)}
       <div
         class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800"
       >
@@ -568,7 +740,7 @@ ${diag.triedKeys ? `Tried Keys: ${diag.triedKeys.join(", ")}` : ""}
       No dynamic entities found
     </p>
     <p class="text-gray-600 dark:text-gray-400">
-      There are no system dynamic entities configured.
+      No dynamic entities available. Check that you have the required roles.
     </p>
   </div>
 {/if}
@@ -591,13 +763,14 @@ ${diag.triedKeys ? `Tried Keys: ${diag.triedKeys.join(", ")}` : ""}
         class="whitespace-pre-wrap break-words rounded-lg bg-gray-50 p-4 text-xs dark:bg-gray-900"><code
           class="text-gray-900 dark:text-gray-100"
           >{JSON.stringify(
-            { diagnostics, totalEntities, totalRecords, orphanedEntities },
+            { level: diagnosticLevel, diagnostics: activeDiagnostics, totalEntities, totalRecords, orphanedEntities },
             null,
             2,
           )}</code
         ></pre>
     </div>
   </div>
+</div>
 </div>
 
 <style>
