@@ -4,9 +4,10 @@
   import { page } from "$app/state";
   import { navSections as allNavSections, type NavigationSection } from "$lib/config/navigation";
 
-  // Separate My Account from other sections so it renders right after API Explorer
+  // Separate My Account and Banks from other sections so they render in specific positions
   const myAccountSection = allNavSections.find(s => s.id === "my-account");
-  const navSections = allNavSections.filter(s => s.id !== "my-account");
+  const banksSection = allNavSections.find(s => s.id === "banks");
+  const navSections = allNavSections.filter(s => s.id !== "my-account" && s.id !== "banks");
   import Toast from "$lib/components/Toast.svelte";
   import ApiActivityIndicator from "$lib/components/ApiActivityIndicator.svelte";
   import { createLogger } from "$lib/utils/logger";
@@ -359,6 +360,50 @@
           </Navigation.Group>
         {/if}
 
+        <!-- Banks section: rendered above Users/Consumers -->
+        {#if isAuthenticated && banksSection}
+          <Navigation.Group>
+            {@const SectionIcon = banksSection.iconComponent}
+            {@const active = isSectionActive(banksSection)}
+            <button
+              type="button"
+              class="btn w-full justify-start gap-3 px-2 hover:preset-tonal"
+              class:preset-filled-primary-50-950={active}
+              class:border={active}
+              class:border-solid-secondary-500={active}
+              onclick={() => toggleSection(banksSection.id)}
+            >
+              <SectionIcon class="size-5" />
+              <span>{banksSection.label}</span>
+              {#if expandedSections[banksSection.id]}
+                <ChevronDown class="h-4 w-4" />
+              {:else}
+                <ChevronRight class="h-4 w-4" />
+              {/if}
+            </button>
+
+            {#if expandedSections[banksSection.id]}
+              <Navigation.Menu class="flex flex-col gap-2 px-2 pl-6">
+                {#each banksSection.items as item}
+                  {@const ItemIcon = item.iconComponent}
+                  <a
+                    href={item.href}
+                    class="btn w-full justify-start gap-3 px-2 hover:preset-tonal"
+                    class:preset-filled-primary-50-950={page.url.pathname === item.href}
+                    class:border={page.url.pathname === item.href}
+                    class:border-solid-secondary-500={page.url.pathname === item.href}
+                    title={item.label}
+                    aria-label={item.label}
+                  >
+                    <ItemIcon class="size-5" />
+                    <span>{item.label}</span>
+                  </a>
+                {/each}
+              </Navigation.Menu>
+            {/if}
+          </Navigation.Group>
+        {/if}
+
         <!-- Other top-level items: Users, Consumers, etc. -->
         <Navigation.Group>
           <Navigation.Menu class="flex flex-col gap-2 px-2">
@@ -517,7 +562,7 @@
                 >&times;</button>
               </div>
             {:else if currentBank.bank}
-              <span class="text-sm">{currentBank.bank.full_name}: {currentBank.bank.bank_id} ({currentBank.bank.bank_code}) <button type="button" class="hover:text-tertiary-400" onclick={openBankSelector} title="Change current bank">&#9998;</button></span>
+              <span class="text-sm" class:bank-changed={currentBank.justChanged}>{currentBank.bank.full_name}: {currentBank.bank.bank_id} ({currentBank.bank.bank_code}) <button type="button" class="hover:text-tertiary-400" onclick={openBankSelector} title="Change current bank">&#9998;</button></span>
             {:else}
               <button type="button" class="text-sm opacity-70 hover:text-tertiary-400 hover:opacity-100" onclick={openBankSelector}>Select Bank &#9998;</button>
             {/if}
@@ -578,3 +623,18 @@
 
 <!-- Global API Activity Indicator -->
 <ApiActivityIndicator />
+
+<style>
+  @keyframes bank-highlight {
+    0%   { color: #22c55e; }  /* green */
+    25%  { color: #3b82f6; }  /* blue */
+    50%  { color: #a855f7; }  /* purple */
+    75%  { color: #f59e0b; }  /* amber */
+    100% { color: inherit; }
+  }
+
+  :global(.bank-changed) {
+    animation: bank-highlight 1.5s ease-in-out;
+    font-weight: 700;
+  }
+</style>

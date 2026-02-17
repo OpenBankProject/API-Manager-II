@@ -79,9 +79,15 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     }
 
     // Public records: only if has_public_access
+    // Note: public endpoints don't require auth, but we still proxy through
+    // our server for consistency. Sending a token is harmless.
     if (entity.has_public_access) {
       fetchPromises.public = obp_requests
         .get(`/obp/dynamic-entity/public/${entityName}`, accessToken)
+        .then((res) => {
+          logger.info(`Public response keys for ${entityName}: ${JSON.stringify(Object.keys(res))}`);
+          return res;
+        })
         .catch((err) => {
           logger.warn("Could not fetch public records:", err);
           return { _error: err instanceof Error ? err.message : "Failed to fetch public records" };

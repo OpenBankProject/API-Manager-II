@@ -1,40 +1,33 @@
 <script lang="ts">
   import type { PageData } from "./$types";
+  import { currentBank } from "$lib/stores/currentBank.svelte";
 
   let { data }: { data: PageData } = $props();
 
   let searchQuery = $state("");
 
-  // Helper function to get schema object
-  function getSchema(entity: any): any {
-    return entity.schema || null;
-  }
-
-  function getPropertyCount(entity: any): number {
-    const schema = getSchema(entity);
-    return schema?.properties ? Object.keys(schema.properties).length : 0;
-  }
-
-  const filteredEntities = $derived(
-    (data.entities || []).filter((entity: any) => {
+  const filteredBanks = $derived(
+    (data.banks || []).filter((bank: any) => {
       if (searchQuery === "") return true;
 
       const query = searchQuery.toLowerCase();
-      const entityName = (entity.entity_name || "").toLowerCase();
-      const description = (getSchema(entity)?.description || "").toLowerCase();
-      const bankId = (entity.bank_id || "").toLowerCase();
+      const bankId = (bank.bank_id || "").toLowerCase();
+      const fullName = (bank.full_name || "").toLowerCase();
+      const bankCode = (bank.bank_code || "").toLowerCase();
+      const website = (bank.website || "").toLowerCase();
 
       return (
-        entityName.includes(query) ||
-        description.includes(query) ||
-        bankId.includes(query)
+        bankId.includes(query) ||
+        fullName.includes(query) ||
+        bankCode.includes(query) ||
+        website.includes(query)
       );
     }),
   );
 </script>
 
 <svelte:head>
-  <title>Personal Dynamic Entities - API Manager</title>
+  <title>Banks - API Manager</title>
 </svelte:head>
 
 <div class="container mx-auto px-4 py-8">
@@ -42,10 +35,10 @@
   <div class="mb-6">
     <div>
       <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-        Personal Dynamic Entities
+        Banks
       </h1>
       <p class="mt-1 text-gray-600 dark:text-gray-400">
-        Discover entities with personal data scopes. Manage your own records, view community records, and browse public data.
+        Browse all banks registered in the Open Bank Project API.
       </p>
     </div>
   </div>
@@ -55,9 +48,9 @@
     <div
       class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
     >
-      <div class="text-sm text-gray-600 dark:text-gray-400">Available Entities</div>
+      <div class="text-sm text-gray-600 dark:text-gray-400">Total Banks</div>
       <div class="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
-        {data.entities?.length || 0}
+        {data.banks?.length || 0}
       </div>
     </div>
   </div>
@@ -81,7 +74,7 @@
         </svg>
         <div>
           <h3 class="font-semibold text-red-800 dark:text-red-300">
-            Error Loading Entities
+            Error Loading Banks
           </h3>
           <p class="mt-1 text-sm text-red-700 dark:text-red-400">
             {data.error}
@@ -98,7 +91,7 @@
         <input
           type="text"
           bind:value={searchQuery}
-          placeholder="Search by entity name, description, or bank ID..."
+          placeholder="Search by bank ID, name, code, or website..."
           class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 pl-10 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
         />
         <svg
@@ -118,11 +111,11 @@
     </div>
   </div>
 
-  <!-- Entities List -->
+  <!-- Banks List -->
   <div>
-    {#if filteredEntities.length === 0}
+    {#if filteredBanks.length === 0}
       <div class="flex flex-col items-center justify-center py-12 text-center">
-        {#if !data.entities || data.entities.length === 0}
+        {#if !data.banks || data.banks.length === 0}
           <svg
             class="mb-4 h-16 w-16 text-gray-400"
             fill="none"
@@ -133,16 +126,16 @@
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2"
-              d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
             />
           </svg>
           <h3
             class="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100"
           >
-            No Personal Dynamic Entities Found
+            No Banks Found
           </h3>
           <p class="text-gray-600 dark:text-gray-400">
-            There are currently no dynamic entities with personal data scopes available to you.
+            There are currently no banks available.
           </p>
         {:else}
           <svg
@@ -161,10 +154,10 @@
           <h3
             class="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100"
           >
-            No Matching Entities
+            No Matching Banks
           </h3>
           <p class="text-gray-600 dark:text-gray-400">
-            No entities match your search criteria. Try adjusting your filters.
+            No banks match your search criteria. Try adjusting your filters.
           </p>
         {/if}
       </div>
@@ -176,100 +169,128 @@
               <th
                 class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
               >
-                Entity Name
+                Logo
               </th>
               <th
                 class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
               >
-                Description
-              </th>
-              <th
-                class="px-3 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
-              >
-                Scopes
-              </th>
-              <th
-                class="px-3 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
-              >
-                System / Bank
+                Bank ID
               </th>
               <th
                 class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
               >
-                Dynamic Entity ID
+                Full Name
+              </th>
+              <th
+                class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+              >
+                Bank Code
+              </th>
+              <th
+                class="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+              >
+                Website
               </th>
               <th
                 class="px-3 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
               >
-                Props
+                Routings
               </th>
             </tr>
           </thead>
           <tbody
             class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
           >
-            {#each filteredEntities as entity}
-              {@const schema = getSchema(entity)}
+            {#each filteredBanks as bank}
               <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <td class="whitespace-nowrap px-3 py-3 text-sm">
+                  <button
+                    type="button"
+                    class="cursor-pointer rounded p-0.5 hover:ring-2 hover:ring-blue-400"
+                    title="Set {bank.full_name || bank.bank_id} as current bank"
+                    onclick={() => currentBank.select(bank)}
+                  >
+                    {#if bank.logo}
+                      <img
+                        src={bank.logo}
+                        alt="{bank.full_name} logo"
+                        class="h-8 w-8 rounded object-contain"
+                        onerror={(e) => {
+                          const target = e.currentTarget as HTMLImageElement;
+                          target.style.display = 'none';
+                          target.nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                      <svg
+                        class="hidden h-8 w-8 text-gray-300 dark:text-gray-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                        />
+                      </svg>
+                    {:else}
+                      <svg
+                        class="h-8 w-8 text-gray-300 dark:text-gray-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                        />
+                      </svg>
+                    {/if}
+                  </button>
+                </td>
                 <td class="whitespace-nowrap px-3 py-3 text-sm font-medium">
                   <a
-                    href="/dynamic-entities/personal/{entity.entity_name}"
+                    href="/banks/{bank.bank_id}"
                     class="text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
+                    onclick={() => currentBank.select(bank)}
                   >
-                    {entity.entity_name || "Unknown"}
+                    {bank.bank_id || "Unknown"}
                   </a>
                 </td>
                 <td
                   class="max-w-xs truncate px-3 py-3 text-sm text-gray-700 dark:text-gray-300"
-                  title={schema?.description || ""}
+                  title={bank.full_name || ""}
                 >
-                  {schema?.description || "No description"}
-                </td>
-                <td class="whitespace-nowrap px-3 py-3 text-center text-sm">
-                  <div class="flex justify-center gap-1">
-                    <span
-                      class="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200"
-                    >
-                      My
-                    </span>
-                    {#if entity.has_community_access}
-                      <span
-                        class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                      >
-                        Community
-                      </span>
-                    {/if}
-                    {#if entity.has_public_access}
-                      <span
-                        class="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-200"
-                      >
-                        Public
-                      </span>
-                    {/if}
-                  </div>
+                  {bank.full_name || "-"}
                 </td>
                 <td
-                  class="whitespace-nowrap px-3 py-3 text-center text-sm text-gray-700 dark:text-gray-300"
+                  class="whitespace-nowrap px-3 py-3 text-sm text-gray-700 dark:text-gray-300"
                 >
-                  {#if entity.bank_id}
-                    <span
-                      class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+                  {bank.bank_code || "-"}
+                </td>
+                <td
+                  class="max-w-xs truncate px-3 py-3 text-sm"
+                >
+                  {#if bank.website}
+                    <a
+                      href={bank.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
                     >
-                      {entity.bank_id}
-                    </span>
+                      {bank.website}
+                    </a>
                   {:else}
-                    <span class="text-gray-400">System</span>
+                    <span class="text-gray-400">-</span>
                   {/if}
                 </td>
                 <td
-                  class="whitespace-nowrap px-3 py-3 text-left text-sm text-gray-500 dark:text-gray-400 font-mono text-xs"
-                >
-                  {entity.dynamic_entity_id || ""}
-                </td>
-                <td
                   class="whitespace-nowrap px-3 py-3 text-center text-sm text-gray-700 dark:text-gray-300"
                 >
-                  {getPropertyCount(entity)}
+                  {bank.bank_routings?.length || 0}
                 </td>
               </tr>
             {/each}
@@ -282,10 +303,10 @@
         class="mt-4 flex items-center justify-between border-t border-gray-200 px-4 py-3 dark:border-gray-700"
       >
         <div class="text-sm text-gray-700 dark:text-gray-300">
-          Showing <span class="font-medium">{filteredEntities.length}</span>
+          Showing <span class="font-medium">{filteredBanks.length}</span>
           of
-          <span class="font-medium">{data.entities?.length || 0}</span>
-          entities
+          <span class="font-medium">{data.banks?.length || 0}</span>
+          banks
         </div>
       </div>
     {/if}

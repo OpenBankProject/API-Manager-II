@@ -42,8 +42,6 @@ export const load: PageServerLoad = async ({ locals }) => {
       return nameA.localeCompare(nameB);
     });
 
-    logger.info("Entities sorted alphabetically");
-
     return {
       entities,
     };

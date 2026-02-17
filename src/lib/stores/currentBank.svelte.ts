@@ -21,6 +21,8 @@ class CurrentBankStore {
   bank = $state<Bank | null>(null);
   banks = $state<Bank[]>([]);
   loading = $state(false);
+  justChanged = $state(false);
+  private changeTimer: ReturnType<typeof setTimeout> | null = null;
 
   get bankId(): string {
     return this.bank?.bank_id ?? "";
@@ -50,6 +52,15 @@ class CurrentBankStore {
       }
     }
     logger.info(`Selected bank: ${bank?.bank_id ?? "none"}`);
+
+    // Trigger the highlight animation
+    if (bank && browser) {
+      if (this.changeTimer) clearTimeout(this.changeTimer);
+      this.justChanged = true;
+      this.changeTimer = setTimeout(() => {
+        this.justChanged = false;
+      }, 1500);
+    }
   }
 
   selectById(bankId: string): void {

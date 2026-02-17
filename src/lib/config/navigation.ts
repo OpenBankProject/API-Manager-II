@@ -314,6 +314,29 @@ export function getActiveAccountAccessMenuItem(pathname: string) {
   return found || accountAccessItems[0]; // fallback to first item
 }
 
+// Banks navigation items
+function buildBanksItems(): NavigationItem[] {
+  const items: NavigationItem[] = [
+    { href: "/banks", label: "Banks", iconComponent: Building2 },
+    { href: "/banks/create", label: "Create Bank", iconComponent: Plus },
+  ];
+
+  return items;
+}
+
+export const banksItems = buildBanksItems();
+
+export function getActiveBanksMenuItem(pathname: string) {
+  const found = banksItems.find((item) => {
+    if (item.external) {
+      return false;
+    }
+    return pathname.startsWith(item.href);
+  });
+
+  return found || banksItems[0];
+}
+
 // Dynamic Entities navigation items
 function buildDynamicEntitiesItems(): NavigationItem[] {
   const items: NavigationItem[] = [
@@ -466,6 +489,7 @@ export const navSections: NavigationSection[] = [
   { id: "products", label: "API Products", iconComponent: Package, items: productsItems, basePaths: ["/products"] },
   { id: "financial-products", label: "Financial Products", iconComponent: Banknote, items: financialProductsItems, basePaths: ["/products/financial", "/products/collections"] },
   { id: "rbac", label: "RBAC", iconComponent: Shield, items: rbacItems, basePaths: ["/rbac"] },
+  { id: "banks", label: "Banks", iconComponent: Building2, items: banksItems, basePaths: ["/banks"] },
   { id: "account-access", label: "Account Access", iconComponent: Landmark, items: accountAccessItems, basePaths: ["/account-access"] },
   { id: "dynamic-entities", label: "Dynamic Entities", iconComponent: Box, items: dynamicEntitiesItems, basePaths: ["/dynamic-entities"] },
   { id: "dynamic-endpoints", label: "Dynamic Endpoints", iconComponent: Plug, items: dynamicEndpointsItems, basePaths: ["/dynamic-endpoints"] },
