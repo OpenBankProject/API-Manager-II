@@ -57,7 +57,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       throw error(404, `Personal dynamic entity "${entityName}" not found`);
     }
 
-    // Fetch records for all applicable scopes in parallel
+    logger.info(`Entity fields for ${entityName}: ${JSON.stringify(Object.keys(entity))}`);
+    logger.info(`has_public_access: ${entity.has_public_access}, has_community_access: ${entity.has_community_access}, hasPublicAccess: ${entity.hasPublicAccess}, hasCommunityAccess: ${entity.hasCommunityAccess}`);
+
+    // Fetch records for all scopes in parallel
+    // Always attempt all scopes - the API will return errors for unsupported ones
     const fetchPromises: Record<string, Promise<any>> = {};
 
     // My records: always fetch
@@ -68,31 +72,25 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         return { _error: err instanceof Error ? err.message : "Failed to fetch my records" };
       });
 
-    // Community records: only if has_community_access
-    if (entity.has_community_access) {
-      fetchPromises.community = obp_requests
-        .get(`/obp/dynamic-entity/community/${entityName}`, accessToken)
-        .catch((err) => {
-          logger.warn("Could not fetch community records:", err);
-          return { _error: err instanceof Error ? err.message : "Failed to fetch community records" };
-        });
-    }
+    // Community records: always attempt
+    fetchPromises.community = obp_requests
+      .get(`/obp/dynamic-entity/community/${entityName}`, accessToken)
+      .catch((err) => {
+        logger.warn("Could not fetch community records:", err);
+        return { _error: err instanceof Error ? err.message : "Failed to fetch community records" };
+      });
 
-    // Public records: only if has_public_access
-    // Note: public endpoints don't require auth, but we still proxy through
-    // our server for consistency. Sending a token is harmless.
-    if (entity.has_public_access) {
-      fetchPromises.public = obp_requests
-        .get(`/obp/dynamic-entity/public/${entityName}`, accessToken)
-        .then((res) => {
-          logger.info(`Public response keys for ${entityName}: ${JSON.stringify(Object.keys(res))}`);
-          return res;
-        })
-        .catch((err) => {
-          logger.warn("Could not fetch public records:", err);
-          return { _error: err instanceof Error ? err.message : "Failed to fetch public records" };
-        });
-    }
+    // Public records: always attempt
+    fetchPromises.public = obp_requests
+      .get(`/obp/dynamic-entity/public/${entityName}`, accessToken)
+      .then((res) => {
+        logger.info(`Public response keys for ${entityName}: ${JSON.stringify(Object.keys(res))}`);
+        return res;
+      })
+      .catch((err) => {
+        logger.warn("Could not fetch public records:", err);
+        return { _error: err instanceof Error ? err.message : "Failed to fetch public records" };
+      });
 
     // Await all in parallel
     const results: Record<string, any> = {};
@@ -109,7 +107,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
     let communityRecords: any[] = [];
     let communityError: string | null = null;
-    if (entity.has_community_access && results.community) {
+    if (results.community) {
       if (results.community._error) {
         communityError = results.community._error;
       } else {
@@ -119,7 +117,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
     let publicRecords: any[] = [];
     let publicError: string | null = null;
-    if (entity.has_public_access && results.public) {
+    if (results.public) {
       if (results.public._error) {
         publicError = results.public._error;
       } else {

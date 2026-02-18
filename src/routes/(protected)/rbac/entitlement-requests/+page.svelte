@@ -7,6 +7,7 @@
     Clock,
     User,
     Calendar,
+    ArrowUpDown,
   } from "@lucide/svelte";
   import { toast } from "$lib/utils/toastService";
   import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
@@ -35,19 +36,40 @@
   // Search state
   let searchQuery = $state("");
 
+  // Sort state
+  let sortOption = $state("newest");
+
   // Filter requests based on search query
   let filteredRequests = $derived.by(() => {
-    if (!searchQuery.trim()) {
-      return entitlementRequests;
+    let results = entitlementRequests;
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().replace(/\s+/g, "");
+      results = results.filter(
+        (request: EntitlementRequest) =>
+          request.role_name.toLowerCase().includes(query) ||
+          request.user.username.toLowerCase().includes(query) ||
+          request.user.email.toLowerCase().includes(query) ||
+          (request.bank_id && request.bank_id.toLowerCase().includes(query)),
+      );
     }
-    const query = searchQuery.toLowerCase().replace(/\s+/g, "");
-    return entitlementRequests.filter(
-      (request: EntitlementRequest) =>
-        request.role_name.toLowerCase().includes(query) ||
-        request.user.username.toLowerCase().includes(query) ||
-        request.user.email.toLowerCase().includes(query) ||
-        (request.bank_id && request.bank_id.toLowerCase().includes(query)),
-    );
+
+    // Sort
+    const sorted = [...results];
+    switch (sortOption) {
+      case "newest":
+        sorted.sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
+        break;
+      case "oldest":
+        sorted.sort((a, b) => new Date(a.created).getTime() - new Date(b.created).getTime());
+        break;
+      case "role_asc":
+        sorted.sort((a, b) => a.role_name.localeCompare(b.role_name));
+        break;
+      case "username":
+        sorted.sort((a, b) => a.user.username.localeCompare(b.user.username));
+        break;
+    }
+    return sorted;
   });
 
   // Helper function to format date
@@ -270,25 +292,36 @@
         </div>
       </div>
 
-      <!-- Search Box -->
+      <!-- Search and Sort -->
       <div class="search-container">
-        <div class="search-input-wrapper">
-          <Search class="search-icon" size={20} />
-          <input
-            type="text"
-            bind:value={searchQuery}
-            placeholder="Search by role, user, or bank..."
-            class="search-input"
-          />
-          {#if searchQuery}
-            <button
-              class="clear-button"
-              onclick={() => (searchQuery = "")}
-              aria-label="Clear search"
-            >
-              ×
-            </button>
-          {/if}
+        <div class="search-sort-row">
+          <div class="search-input-wrapper">
+            <Search class="search-icon" size={20} />
+            <input
+              type="text"
+              bind:value={searchQuery}
+              placeholder="Search by role, user, or bank..."
+              class="search-input"
+            />
+            {#if searchQuery}
+              <button
+                class="clear-button"
+                onclick={() => (searchQuery = "")}
+                aria-label="Clear search"
+              >
+                ×
+              </button>
+            {/if}
+          </div>
+          <div class="sort-wrapper">
+            <ArrowUpDown size={16} class="sort-icon" />
+            <select bind:value={sortOption} class="sort-select">
+              <option value="newest">Most Recent First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="role_asc">Role Name (A–Z)</option>
+              <option value="username">Username (A–Z)</option>
+            </select>
+          </div>
         </div>
         {#if searchQuery}
           <div class="search-results-info">
@@ -520,11 +553,65 @@
     border-bottom-color: rgb(var(--color-surface-700));
   }
 
+  .search-sort-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
   .search-input-wrapper {
     position: relative;
     display: flex;
     align-items: center;
     max-width: 33.333%;
+    flex: 1;
+  }
+
+  .sort-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .sort-wrapper :global(.sort-icon) {
+    position: absolute;
+    left: 0.75rem;
+    color: #6b7280;
+    pointer-events: none;
+  }
+
+  :global([data-mode="dark"]) .sort-wrapper :global(.sort-icon) {
+    color: var(--color-surface-400);
+  }
+
+  .sort-select {
+    padding: 0.75rem 1rem 0.75rem 2.25rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    background: white;
+    color: #111827;
+    cursor: pointer;
+    transition: all 0.2s;
+    appearance: auto;
+  }
+
+  .sort-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  :global([data-mode="dark"]) .sort-select {
+    background: rgb(var(--color-surface-700));
+    border-color: rgb(var(--color-surface-600));
+    color: var(--color-surface-100);
+  }
+
+  :global([data-mode="dark"]) .sort-select:focus {
+    border-color: rgb(var(--color-primary-500));
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
   }
 
   .search-input-wrapper :global(.search-icon) {
@@ -888,8 +975,17 @@
       width: 100%;
     }
 
+    .search-sort-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
     .search-input-wrapper {
       max-width: 100%;
+    }
+
+    .sort-select {
+      width: 100%;
     }
 
     .request-body {

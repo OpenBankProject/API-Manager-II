@@ -536,43 +536,39 @@
         </span>
       </button>
 
-      {#if entity.has_community_access}
-        <button
-          type="button"
-          onclick={() => (activeTab = "community")}
-          class="flex items-center gap-2 border-b-2 px-1 py-3 text-sm font-medium transition-colors {activeTab === 'community'
-            ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}"
+      <button
+        type="button"
+        onclick={() => (activeTab = "community")}
+        class="flex items-center gap-2 border-b-2 px-1 py-3 text-sm font-medium transition-colors {activeTab === 'community'
+          ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+          : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}"
+      >
+        Community Records
+        <span
+          class="rounded-full px-2 py-0.5 text-xs font-medium {activeTab === 'community'
+            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+            : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}"
         >
-          Community Records
-          <span
-            class="rounded-full px-2 py-0.5 text-xs font-medium {activeTab === 'community'
-              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-              : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}"
-          >
-            {communityRecords.length}
-          </span>
-        </button>
-      {/if}
+          {communityRecords.length}
+        </span>
+      </button>
 
-      {#if entity.has_public_access}
-        <button
-          type="button"
-          onclick={() => (activeTab = "public")}
-          class="flex items-center gap-2 border-b-2 px-1 py-3 text-sm font-medium transition-colors {activeTab === 'public'
-            ? 'border-purple-500 text-purple-600 dark:text-purple-400'
-            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}"
+      <button
+        type="button"
+        onclick={() => (activeTab = "public")}
+        class="flex items-center gap-2 border-b-2 px-1 py-3 text-sm font-medium transition-colors {activeTab === 'public'
+          ? 'border-purple-500 text-purple-600 dark:text-purple-400'
+          : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}"
+      >
+        Public Records
+        <span
+          class="rounded-full px-2 py-0.5 text-xs font-medium {activeTab === 'public'
+            ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+            : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}"
         >
-          Public Records
-          <span
-            class="rounded-full px-2 py-0.5 text-xs font-medium {activeTab === 'public'
-              ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-              : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}"
-          >
-            {publicRecords.length}
-          </span>
-        </button>
-      {/if}
+          {publicRecords.length}
+        </span>
+      </button>
     </nav>
   </div>
 
