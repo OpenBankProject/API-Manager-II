@@ -1,6 +1,5 @@
 import type { PageServerLoad } from "./$types";
 import { error } from "@sveltejs/kit";
-import { getUpdateAbacRuleRoles } from "$lib/utils/roleChecker";
 import { SessionOAuthHelper } from "$lib/oauth/sessionHelper";
 import { obp_requests } from "$lib/obp/requests";
 import { createLogger } from "$lib/utils/logger";
@@ -26,12 +25,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     });
   }
 
-  // Get user entitlements from session for role checking
-  const userEntitlements = (session.data.user as any)?.entitlements?.list || [];
-
-  // Get role requirements for viewing ABAC rules
-  const requiredRoles = getUpdateAbacRuleRoles();
-
   // Fetch the specific ABAC rule
   let rule = null;
   let fetchError = null;
@@ -55,7 +48,5 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   return {
     rule,
     ruleId,
-    userEntitlements,
-    requiredRoles,
   };
 };

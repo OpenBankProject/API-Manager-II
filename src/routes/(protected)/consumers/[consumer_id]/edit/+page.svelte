@@ -1,7 +1,6 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
   import { invalidateAll } from "$app/navigation";
-  import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
   import MissingRoleAlert from "$lib/components/MissingRoleAlert.svelte";
   import { currentBank } from "$lib/stores/currentBank.svelte";
 
@@ -12,7 +11,6 @@
   let availableRoles = $derived(data.availableRoles || []);
   let banks = $derived(data.banks || []);
   const userEntitlements = data.userEntitlements || [];
-  const requiredRoles = data.requiredRoles || [];
   const actionRoles = data.actionRoles || {};
   const isCurrentConsumer = data.isCurrentConsumer || false;
   const rateLimitingInfo = data.rateLimitingInfo;
@@ -108,7 +106,6 @@
   <title>{consumer.app_name} - Detail</title>
 </svelte:head>
 
-<PageRoleCheck {userEntitlements} {requiredRoles}>
 <div class="mb-6">
   <a
     href="/consumers"
@@ -822,4 +819,3 @@
     View Metrics
   </a>
 </div>
-</PageRoleCheck>

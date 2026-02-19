@@ -6,35 +6,54 @@
 
   interface Props {
     userEntitlements: any[];
-    requiredRoles: RoleRequirement[];
+    required: RoleRequirement[];
+    optional?: RoleRequirement[];
     children?: Snippet;
   }
 
-  let { userEntitlements, requiredRoles, children }: Props = $props();
+  let { userEntitlements, required, optional, children }: Props = $props();
 
-  // Check which roles are missing
-  let roleCheck = $derived.by(() => {
-    return checkRoles(userEntitlements || [], requiredRoles);
+  // Check required roles (OR logic — need at least one)
+  let requiredCheck = $derived.by(() => {
+    return checkRoles(userEntitlements || [], required || []);
   });
 
-  // Get just the first missing role (so request entitlement button can request a single role)
-  let firstMissingRole = $derived(roleCheck.missingRoles[0] || null);
+  let firstMissingRequired = $derived(requiredCheck.missingRoles[0] || null);
+  let showContent = $derived(requiredCheck.hasAllRoles);
 
-  // Determine if we should show content or only alerts
-  let showContent = $derived(roleCheck.hasAllRoles);
+  // Check optional roles (informational — content still renders)
+  let optionalCheck = $derived.by(() => {
+    if (!optional || optional.length === 0) return null;
+    return checkRoles(userEntitlements || [], optional);
+  });
+
+  let missingOptionalRoles = $derived(
+    optionalCheck && !optionalCheck.hasAllRoles
+      ? optionalCheck.missingRoles
+      : [],
+  );
 </script>
 
-{#if firstMissingRole}
+{#if firstMissingRequired}
   <div class="role-alerts">
     <MissingRoleAlert
-      roles={[firstMissingRole.role]}
-      bankId={firstMissingRole.bankId || undefined}
-      message={`You need the following role to ${firstMissingRole.action || "access this page"}: ${firstMissingRole.role}`}
+      roles={[firstMissingRequired.role]}
+      bankId={firstMissingRequired.bankId || undefined}
+      message={`You need the following role to access this page: ${firstMissingRequired.role}`}
     />
   </div>
 {/if}
 
 {#if showContent && children}
+  {#if missingOptionalRoles.length > 0}
+    <div class="optional-role-note">
+      <span class="note-icon">&#x2139;&#xFE0F;</span>
+      <span>
+        Some actions on this page require additional roles:
+        {missingOptionalRoles.map((r) => r.role).join(", ")}
+      </span>
+    </div>
+  {/if}
   {@render children()}
 {/if}
 
@@ -44,5 +63,30 @@
     flex-direction: column;
     gap: 1rem;
     margin-bottom: 1.5rem;
+  }
+
+  .optional-role-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 0.5rem;
+    color: #1e40af;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  :global([data-mode="dark"]) .optional-role-note {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.3);
+    color: #93c5fd;
+  }
+
+  .note-icon {
+    flex-shrink: 0;
+    font-size: 1rem;
   }
 </style>

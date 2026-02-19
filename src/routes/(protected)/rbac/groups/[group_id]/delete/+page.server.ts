@@ -32,24 +32,10 @@ export const load: PageServerLoad = async ({ locals, params }) => {
   const sessionOAuth = SessionOAuthHelper.getSessionOAuth(session);
   const accessToken = sessionOAuth?.accessToken;
 
-  // Get user entitlements from session for role checking
-  const userEntitlements = (session.data.user as any)?.entitlements?.list || [];
-
-  // Define required roles for deleting groups
-  const requiredRoles = [
-    {
-      role: "CanDeleteGroupAtAllBanks",
-      description: "Delete groups at all banks",
-      action: "delete groups",
-    },
-  ];
-
   if (!accessToken) {
     logger.warn("No access token available for delete group page");
     return {
       group: null,
-      userEntitlements,
-      requiredRoles,
       hasApiAccess: false,
       error: "No API access token available",
     };
@@ -67,8 +53,6 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 
     return {
       group: response,
-      userEntitlements,
-      requiredRoles,
       hasApiAccess: true,
     };
   } catch (err) {
@@ -76,8 +60,6 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 
     return {
       group: null,
-      userEntitlements,
-      requiredRoles,
       hasApiAccess: false,
       error: err instanceof Error ? err.message : "Failed to load group",
     };

@@ -10,13 +10,10 @@
   } from "@lucide/svelte";
   import { toast } from "$lib/utils/toastService";
   import { trackedFetch } from "$lib/utils/trackedFetch";
-  import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
   import UserSearchPickerWidget from "$lib/components/UserSearchPickerWidget.svelte";
 
   let { data } = $props<{ data: PageData }>();
 
-  let userEntitlements = $derived(data.userEntitlements || []);
-  let requiredRoles = $derived(data.requiredRoles || []);
   let groups = $derived(data.groups || []);
   let hasApiAccess = $derived(data.hasApiAccess);
   let error = $derived(data.error);
@@ -133,9 +130,6 @@
 </svelte:head>
 
 <div class="container mx-auto px-4 py-8">
-  <!-- Role Check -->
-  <PageRoleCheck {userEntitlements} {requiredRoles} />
-
   <div class="panel">
     <div class="panel-header">
       <div class="header-content">

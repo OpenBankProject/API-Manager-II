@@ -1,13 +1,5 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
-  import type { PageData } from "./$types";
-  import type { RoleRequirement } from "$lib/utils/roleChecker";
-
-  interface DatabasePoolPageData extends PageData {
-    userEntitlements: any[];
-    requiredRoles: RoleRequirement[];
-  }
 
   interface DatabasePoolInfo {
     pool_name: string;
@@ -23,7 +15,7 @@
     keepalive_time_ms: number;
   }
 
-  let { data }: { data: DatabasePoolPageData } = $props();
+  let { data } = $props();
 
   let poolInfo = $state<DatabasePoolInfo | null>(null);
   let isLoading = $state(false);
@@ -130,11 +122,7 @@ Timeouts:
   <title>Database Pool - API Manager II</title>
 </svelte:head>
 
-<PageRoleCheck
-  userEntitlements={data.userEntitlements}
-  requiredRoles={data.requiredRoles}
->
-  <div class="container mx-auto px-4 py-8">
+<div class="container mx-auto px-4 py-8">
     <div class="mb-6">
       <div class="mb-4 flex items-center justify-between">
         <div>
@@ -421,4 +409,3 @@ Timeouts:
       </div>
     {/if}
   </div>
-</PageRoleCheck>

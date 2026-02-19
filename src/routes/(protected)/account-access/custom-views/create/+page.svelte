@@ -3,7 +3,6 @@
   import { Eye, ArrowLeft, Shield, AlertCircle, Save } from "@lucide/svelte";
   import { goto } from "$app/navigation";
   import MissingRoleAlert from "$lib/components/MissingRoleAlert.svelte";
-  import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
 
   let { data } = $props<{ data: PageData }>();
 
@@ -221,11 +220,6 @@
 </svelte:head>
 
 <div class="container mx-auto px-4 py-8">
-  <PageRoleCheck
-    userEntitlements={data.userEntitlements}
-    requiredRoles={data.requiredRoles}
-  />
-
   <!-- Breadcrumb -->
   <nav class="breadcrumb mb-6">
     <a href="/account-access/custom-views" class="breadcrumb-link"

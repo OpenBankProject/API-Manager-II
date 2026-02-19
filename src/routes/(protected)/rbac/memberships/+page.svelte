@@ -9,15 +9,12 @@
     AlertCircle,
     Plus,
   } from "@lucide/svelte";
-  import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
 
   let { data } = $props<{ data: PageData }>();
 
   let groupsWithEntitlements = $state(data.groupsWithEntitlements || []);
   let hasApiAccess = $derived(data.hasApiAccess);
   let error = $derived(data.error);
-  let userEntitlements = $derived(data.userEntitlements || []);
-  let requiredRoles = $derived(data.requiredRoles || []);
 
   // Debug logging
   $effect(() => {
@@ -68,9 +65,6 @@
 </svelte:head>
 
 <div class="container mx-auto px-4 py-8">
-  <!-- Role Check -->
-  <PageRoleCheck {userEntitlements} {requiredRoles} />
-
   <div class="panel">
     <div class="panel-header">
       <div class="header-content">

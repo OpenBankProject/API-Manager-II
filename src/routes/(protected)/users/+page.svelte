@@ -1,12 +1,8 @@
 <script lang="ts">
   import { Mail } from "@lucide/svelte";
-  import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
   import type { PageData } from "./$types";
 
   let { data } = $props<{ data: PageData }>();
-
-  const userEntitlements = data.userEntitlements || [];
-  const requiredRoles = data.requiredRoles || [];
 
   let users = $derived(data.users || []);
   let hasApiAccess = $derived(data.hasApiAccess);
@@ -129,7 +125,6 @@
   <title>Users - API Manager II</title>
 </svelte:head>
 
-<PageRoleCheck {userEntitlements} {requiredRoles}>
 <div class="container mx-auto px-4 py-8">
   <!-- Error Alert -->
   {#if error && !hasApiAccess}
@@ -318,7 +313,6 @@
     </div>
   </div>
 </div>
-</PageRoleCheck>
 
 <style>
   .container {

@@ -22,16 +22,10 @@ export async function load(event: RequestEvent) {
     logger.warn("No access token available for consumers API calls");
     return {
       consumers: [],
-      userEntitlements: [],
-      requiredRoles: [{ role: "CanGetConsumers" }],
       hasApiAccess: false,
       error: "No API access token available",
     };
   }
-
-  // Get user entitlements from session for role checking
-  const userEntitlements = (session.data.user as any)?.entitlements?.list || [];
-  const requiredRoles = [{ role: "CanGetConsumers" }];
 
   let consumers: OBPConsumer[] = [];
   let errorMessage: string | null = null;
@@ -60,8 +54,6 @@ export async function load(event: RequestEvent) {
 
   return {
     consumers,
-    userEntitlements,
-    requiredRoles,
     hasApiAccess: true,
     error: errorMessage,
   };

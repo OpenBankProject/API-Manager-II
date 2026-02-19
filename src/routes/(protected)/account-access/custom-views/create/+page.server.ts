@@ -17,23 +17,9 @@ export const load: PageServerLoad = async ({ locals }) => {
   const sessionOAuth = SessionOAuthHelper.getSessionOAuth(session);
   const accessToken = sessionOAuth?.accessToken;
 
-  // Get user entitlements from session for role checking
-  const userEntitlements = (session.data.user as any)?.entitlements?.list || [];
-
-  // Define required roles for creating custom views
-  const requiredRoles = [
-    {
-      role: "CanCreateCustomView",
-      description: "Create custom views",
-      action: "create custom views",
-    },
-  ];
-
   if (!accessToken) {
     logger.warn("No access token available for create custom view page");
     return {
-      userEntitlements,
-      requiredRoles,
       hasApiAccess: false,
       banks: [],
       error: "No API access token available",
@@ -53,8 +39,6 @@ export const load: PageServerLoad = async ({ locals }) => {
   }
 
   return {
-    userEntitlements,
-    requiredRoles,
     hasApiAccess: true,
     banks,
   };

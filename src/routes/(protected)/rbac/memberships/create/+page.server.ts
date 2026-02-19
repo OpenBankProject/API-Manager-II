@@ -45,30 +45,10 @@ export const load: PageServerLoad = async ({ locals }) => {
     return {
       users: [],
       groups: [],
-      userEntitlements: [],
-      requiredRoles: [
-        {
-          role: "CanCreateUserAuthContext",
-          description: "Create user authentication contexts (group memberships)",
-          action: "create memberships",
-        },
-      ],
       hasApiAccess: false,
       error: "No API access token available",
     };
   }
-
-  // Get user entitlements from session for role checking
-  const userEntitlements = (session.data.user as any)?.entitlements?.list || [];
-
-  // Define required roles for creating memberships
-  const requiredRoles = [
-    {
-      role: "CanCreateUserAuthContext",
-      description: "Create user authentication contexts (group memberships)",
-      action: "create memberships",
-    },
-  ];
 
   try {
     logger.info("=== FETCHING USERS AND GROUPS FOR CREATE MEMBERSHIP PAGE ===");
@@ -96,8 +76,6 @@ export const load: PageServerLoad = async ({ locals }) => {
     return {
       users: usersResponse.users || [],
       groups: groupsResponse.groups || [],
-      userEntitlements,
-      requiredRoles,
       hasApiAccess: true,
     };
   } catch (err) {
@@ -106,8 +84,6 @@ export const load: PageServerLoad = async ({ locals }) => {
     return {
       users: [],
       groups: [],
-      userEntitlements,
-      requiredRoles,
       hasApiAccess: false,
       error: err instanceof Error ? err.message : "Failed to load data",
     };

@@ -1,7 +1,6 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import type { PageData } from "./$types";
-  import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
   import { Lock, Shield, Search, Edit, Eye } from "@lucide/svelte";
 
   let { data } = $props<{ data: PageData }>();
@@ -44,10 +43,6 @@
   <title>ABAC Rules - API Manager II</title>
 </svelte:head>
 
-<PageRoleCheck
-  userEntitlements={data.userEntitlements}
-  requiredRoles={data.requiredRoles}
->
   <div class="container mx-auto px-4 py-8">
     <div class="panel">
       <div class="panel-header">
@@ -216,7 +211,6 @@
       </div>
     </div>
   </div>
-</PageRoleCheck>
 
 <style>
   .container {

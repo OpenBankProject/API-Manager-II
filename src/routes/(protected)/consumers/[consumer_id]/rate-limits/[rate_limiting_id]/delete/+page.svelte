@@ -1,12 +1,9 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
-  import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
 
   let { data, form } = $props();
   const consumer = data.consumer;
   const rateLimit = data.rateLimit;
-  const userEntitlements = data.userEntitlements || [];
-  const requiredRoles = data.requiredRoles || [];
 
   let isSubmitting = $state(false);
 
@@ -36,7 +33,6 @@
   <title>Delete Rate Limit - {consumer.app_name}</title>
 </svelte:head>
 
-<PageRoleCheck {userEntitlements} {requiredRoles}>
   <div class="mb-6">
     <a
       href="/consumers/{consumer.consumer_id}/rate-limits"
@@ -263,4 +259,3 @@
       </a>
     </div>
   </form>
-</PageRoleCheck>

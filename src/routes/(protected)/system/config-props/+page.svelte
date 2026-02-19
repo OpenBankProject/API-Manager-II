@@ -2,8 +2,6 @@
   import { page } from "$app/stores";
   import { configHelpers } from "$lib/config";
   import { trackedFetch } from "$lib/utils/trackedFetch";
-  import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
-  import { checkRoles } from "$lib/utils/roleChecker";
 
   interface ConfigProp {
     name: string;
@@ -11,12 +9,6 @@
   }
 
   let { data } = $props();
-
-  let userEntitlements = $derived(data.userEntitlements || []);
-  let requiredRoles = $derived(data.requiredRoles || []);
-
-  let roleCheck = $derived(checkRoles(userEntitlements, requiredRoles));
-  let hasRequiredRoles = $derived(roleCheck.hasAllRoles);
 
   const apiExplorerUrl =
     $page.data.externalLinks?.API_EXPLORER_URL ||
@@ -83,11 +75,7 @@
   let initialized = $state(false);
 
   $effect(() => {
-    const roles = data.requiredRoles || [];
-    const entitlements = data.userEntitlements || [];
-    const check = checkRoles(entitlements, roles);
-
-    if (typeof window !== "undefined" && !initialized && check.hasAllRoles) {
+    if (typeof window !== "undefined" && !initialized) {
       initialized = true;
       loadConfigProps();
     }
@@ -98,7 +86,6 @@
   <title>Config Props - API Manager II</title>
 </svelte:head>
 
-<PageRoleCheck {userEntitlements} {requiredRoles}>
 <div class="container mx-auto px-4 py-8">
   <!-- Header -->
   <div class="mb-6 flex items-center justify-between">
@@ -291,4 +278,3 @@
     </div>
   </div>
 </div>
-</PageRoleCheck>

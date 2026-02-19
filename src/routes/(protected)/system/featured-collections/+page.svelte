@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { PageData } from "./$types";
   import { Star, Plus, Search, Edit, Trash2, ArrowUpDown } from "@lucide/svelte";
-  import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
 
   let { data } = $props<{ data: PageData }>();
 
@@ -9,9 +8,6 @@
   let collectionsMap = $derived(data.collectionsMap || {});
   let hasApiAccess = $derived(data.hasApiAccess);
   let error = $derived(data.error);
-  let userEntitlements = $derived(data.userEntitlements || []);
-  let requiredRoles = $derived(data.requiredRoles || []);
-
   // Search functionality
   let searchQuery = $state("");
 
@@ -52,9 +48,6 @@
 </svelte:head>
 
 <div class="container mx-auto px-4 py-8">
-  <!-- Role Check -->
-  <PageRoleCheck {userEntitlements} {requiredRoles} />
-
   <div class="panel">
     <div class="panel-header">
       <div class="header-content">

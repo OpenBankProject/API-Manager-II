@@ -3,7 +3,6 @@ import { error } from "@sveltejs/kit";
 import { obp_requests } from "$lib/obp/requests";
 import { SessionOAuthHelper } from "$lib/oauth/sessionHelper";
 import { createLogger } from "$lib/utils/logger";
-import { checkRoles } from "$lib/utils/roleChecker";
 
 const logger = createLogger("EntitlementDeletePage");
 
@@ -20,19 +19,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     throw error(400, "Entitlement ID is required");
   }
 
-  // Get user entitlements for role checking
-  const userEntitlements = (session.data.user as any)?.entitlements?.list || [];
-  const requiredRoles = [
-    {
-      role: "CanDeleteEntitlementAtAnyBank",
-      description: "Delete entitlements from users",
-      action: "delete entitlements",
-    },
-  ];
-
-  // Check if user has required role
-  const roleCheck = checkRoles(userEntitlements, requiredRoles);
-
   // Get the OAuth session data
   const sessionOAuth = SessionOAuthHelper.getSessionOAuth(session);
   const accessToken = sessionOAuth?.accessToken;
@@ -45,8 +31,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       user: null,
       bank: null,
       hasApiAccess: false,
-      userEntitlements,
-      requiredRoles,
       error: "No API access token available",
     };
   }
@@ -107,8 +91,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       user,
       bank,
       hasApiAccess: true,
-      userEntitlements,
-      requiredRoles,
       error: null,
     };
   } catch (err) {
@@ -123,8 +105,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       user: null,
       bank: null,
       hasApiAccess: true,
-      userEntitlements,
-      requiredRoles,
       error: errorMessage,
     };
   }

@@ -75,14 +75,6 @@ export async function load(event: RequestEvent) {
     throw error(400, "Consumer ID is required.");
   }
 
-  // Get user entitlements from session for role checking
-  const userEntitlements = (session.data.user as any)?.entitlements?.list || [];
-
-  // Required role to view this page
-  const requiredRoles = [
-    { role: "CanGetConsumers", action: "view consumer details" },
-  ];
-
   // Action-specific roles (checked when user attempts the action)
   const actionRoles = {
     enableDisable: { role: "CanEnableConsumers", action: "enable or disable consumers" },
@@ -191,8 +183,6 @@ export async function load(event: RequestEvent) {
     scopes,
     availableRoles,
     banks,
-    userEntitlements,
-    requiredRoles,
     actionRoles,
     isCurrentConsumer,
     rateLimitingInfo,

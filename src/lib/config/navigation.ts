@@ -30,6 +30,7 @@ import {
   Rocket,
   Banknote,
   Hash,
+  Map,
 } from "@lucide/svelte";
 import { env } from "$env/dynamic/public";
 
@@ -63,6 +64,7 @@ function buildMyAccountItems(): NavigationItem[] {
       label: "My Collections",
       iconComponent: FolderOpen,
     },
+    { href: "/user/site-map", label: "Site Map", iconComponent: Map },
   ];
 
   // Only add Subscriptions link if PUBLIC_SUBSCRIPTIONS_URL is set

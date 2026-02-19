@@ -10,14 +10,11 @@
   } from "@lucide/svelte";
   import { toast } from "$lib/utils/toastService";
   import { trackedFetch } from "$lib/utils/trackedFetch";
-  import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
   import RoleSearchWidget from "$lib/components/RoleSearchWidget.svelte";
   import { currentBank } from "$lib/stores/currentBank.svelte";
 
   let { data } = $props<{ data: PageData }>();
 
-  let userEntitlements = $derived(data.userEntitlements || []);
-  let requiredRoles = $derived(data.requiredRoles || []);
   let roles = $derived(data.roles || []);
   let hasApiAccess = $derived(data.hasApiAccess);
   let error = $derived(data.error);
@@ -122,9 +119,6 @@
 </svelte:head>
 
 <div class="container mx-auto px-4 py-8">
-  <!-- Role Check -->
-  <PageRoleCheck {userEntitlements} {requiredRoles} />
-
   <!-- Breadcrumb Navigation -->
   <nav class="breadcrumb mb-6">
     <a href="/rbac/groups" class="breadcrumb-link">Groups</a>

@@ -1,6 +1,5 @@
 import type { PageServerLoad } from "./$types";
 import { error } from "@sveltejs/kit";
-import { getUpdateWebUIPropsRoles } from "$lib/utils/roleChecker";
 import { obp_requests } from "$lib/obp/requests";
 import { SessionOAuthHelper } from "$lib/oauth/sessionHelper";
 import { createLogger } from "$lib/utils/logger";
@@ -25,12 +24,6 @@ export const load: PageServerLoad = async ({ locals, params }) => {
       message: "WebUI Prop name is required",
     });
   }
-
-  // Get user entitlements from session for role checking
-  const userEntitlements = (session.data.user as any)?.entitlements?.list || [];
-
-  // Get role requirements for updating webui props
-  const requiredRoles = getUpdateWebUIPropsRoles();
 
   // Fetch the specific prop to edit
   let prop = null;
@@ -64,7 +57,5 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 
   return {
     prop,
-    userEntitlements,
-    requiredRoles,
   };
 };

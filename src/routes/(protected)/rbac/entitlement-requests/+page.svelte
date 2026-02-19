@@ -10,7 +10,6 @@
     ArrowUpDown,
   } from "@lucide/svelte";
   import { toast } from "$lib/utils/toastService";
-  import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
   import { trackedFetch } from "$lib/utils/trackedFetch";
 
   interface EntitlementRequest {
@@ -30,9 +29,6 @@
   let entitlementRequests = $derived(data.entitlementRequests || []);
   let hasApiAccess = $derived(data.hasApiAccess);
   let error = $derived(data.error);
-  let userEntitlements = $derived(data.userEntitlements || []);
-  let requiredRoles = $derived(data.requiredRoles || []);
-
   // Search state
   let searchQuery = $state("");
 
@@ -267,9 +263,6 @@
 </svelte:head>
 
 <div class="container mx-auto px-4 py-8">
-  <!-- Role Check - Display missing roles upfront -->
-  <PageRoleCheck {userEntitlements} {requiredRoles} />
-
   {#if error}
     <div class="alert alert-error mb-6">
       <strong>Error:</strong>

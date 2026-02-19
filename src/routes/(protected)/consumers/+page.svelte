@@ -1,11 +1,7 @@
 <script lang="ts">
-  import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
-
   let { data } = $props();
   const consumers = data.consumers;
   const errorMessage = data.error;
-  const userEntitlements = data.userEntitlements || [];
-  const requiredRoles = data.requiredRoles || [];
 
   let searchQuery = $state("");
 
@@ -47,7 +43,6 @@
   });
 </script>
 
-<PageRoleCheck {userEntitlements} {requiredRoles}>
   <div class="flex items-center justify-between mb-4">
     <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
       API Consumers
@@ -332,4 +327,3 @@
       </a>
     </div>
   {/if}
-</PageRoleCheck>

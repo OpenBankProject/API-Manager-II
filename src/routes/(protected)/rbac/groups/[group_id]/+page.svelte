@@ -11,7 +11,6 @@
     XCircle,
     AlertCircle,
   } from "@lucide/svelte";
-  import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
 
   let { data } = $props<{ data: PageData }>();
 
@@ -19,8 +18,6 @@
   let entitlements = $derived(data.entitlements || []);
   let hasApiAccess = $derived(data.hasApiAccess);
   let error = $derived(data.error);
-  let userEntitlements = $derived(data.userEntitlements || []);
-  let requiredRoles = $derived(data.requiredRoles || []);
 </script>
 
 <svelte:head>
@@ -28,9 +25,6 @@
 </svelte:head>
 
 <div class="container mx-auto px-4 py-8">
-  <!-- Role Check -->
-  <PageRoleCheck {userEntitlements} {requiredRoles} />
-
   <!-- Breadcrumb Navigation -->
   <nav class="breadcrumb mb-6">
     <a href="/rbac/groups" class="breadcrumb-link">Groups</a>

@@ -30,30 +30,10 @@ export const load: PageServerLoad = async ({ locals }) => {
     logger.warn("No access token available for create group page");
     return {
       roles: [],
-      userEntitlements: [],
-      requiredRoles: [
-        {
-          role: "CanCreateGroupAtAllBanks",
-          description: "Create groups at all banks",
-          action: "create groups",
-        },
-      ],
       hasApiAccess: false,
       error: "No API access token available",
     };
   }
-
-  // Get user entitlements from session for role checking
-  const userEntitlements = (session.data.user as any)?.entitlements?.list || [];
-
-  // Define required roles for creating groups
-  const requiredRoles = [
-    {
-      role: "CanCreateGroupAtAllBanks",
-      description: "Create groups at all banks",
-      action: "create groups",
-    },
-  ];
 
   try {
     logger.info("=== FETCHING ROLES FOR CREATE GROUP PAGE ===");
@@ -69,8 +49,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 
     return {
       roles: response.roles || [],
-      userEntitlements,
-      requiredRoles,
       hasApiAccess: true,
     };
   } catch (err) {
@@ -78,8 +56,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 
     return {
       roles: [],
-      userEntitlements,
-      requiredRoles,
       hasApiAccess: false,
       error: err instanceof Error ? err.message : "Failed to load roles",
     };

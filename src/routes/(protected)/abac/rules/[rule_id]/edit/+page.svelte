@@ -1,7 +1,6 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import type { PageData } from "./$types";
-  import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
   import {
     extractErrorFromResponse,
     formatErrorForDisplay,
@@ -468,10 +467,6 @@
   <title>Edit ABAC Rule - API Manager II</title>
 </svelte:head>
 
-<PageRoleCheck
-  userEntitlements={data.userEntitlements}
-  requiredRoles={data.requiredRoles}
->
   <div class="container mx-auto px-4 py-8">
     <div class="mb-6">
       <button
@@ -1112,4 +1107,3 @@
       </div>
     </div>
   </div>
-</PageRoleCheck>

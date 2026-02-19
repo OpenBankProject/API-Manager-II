@@ -1,14 +1,5 @@
 <script lang="ts">
-  import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
-  import type { PageData } from "./$types";
-  import type { RoleRequirement } from "$lib/utils/roleChecker";
-
-  interface MigrationsPageData extends PageData {
-    userEntitlements: any[];
-    requiredRoles: RoleRequirement[];
-  }
-
-  let { data }: { data: MigrationsPageData } = $props();
+  let { data } = $props();
 
   let migrations = $state<any[]>([]);
   let isLoading = $state(false);
@@ -203,11 +194,7 @@
   <title>Migrations - API Manager II</title>
 </svelte:head>
 
-<PageRoleCheck
-  userEntitlements={data.userEntitlements}
-  requiredRoles={data.requiredRoles}
->
-  <div class="container mx-auto px-4 py-8">
+<div class="container mx-auto px-4 py-8">
     <div class="panel">
       <div class="panel-header">
         <div class="header-content">
@@ -329,7 +316,6 @@
       </div>
     </div>
   </div>
-</PageRoleCheck>
 
 <style>
   .container {

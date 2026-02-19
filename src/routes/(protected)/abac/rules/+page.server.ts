@@ -1,6 +1,5 @@
 import type { PageServerLoad } from "./$types";
 import { error } from "@sveltejs/kit";
-import { getAbacRulesRoles } from "$lib/utils/roleChecker";
 import { SessionOAuthHelper } from "$lib/oauth/sessionHelper";
 import { obp_requests } from "$lib/obp/requests";
 import { createLogger } from "$lib/utils/logger";
@@ -17,12 +16,6 @@ export const load: PageServerLoad = async ({ locals }) => {
       message: "Unauthorized: No access token found in session.",
     });
   }
-
-  // Get user entitlements from session for role checking
-  const userEntitlements = (session.data.user as any)?.entitlements?.list || [];
-
-  // Get role requirements for viewing ABAC rules
-  const requiredRoles = getAbacRulesRoles();
 
   // Fetch ABAC rules from OBP API
   let abacRules: any[] = [];
@@ -100,8 +93,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 
   return {
     abacRules,
-    userEntitlements,
-    requiredRoles,
     hasApiAccess,
     error: errorMessage,
   };

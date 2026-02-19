@@ -2,8 +2,7 @@
   import { page } from "$app/stores";
   import { configHelpers } from "$lib/config";
   import { trackedFetch } from "$lib/utils/trackedFetch";
-  import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
-  import { checkRoles } from "$lib/utils/roleChecker";
+
 
   interface ConnectorMetric {
     connector_name: string;
@@ -14,14 +13,6 @@
   }
 
   let { data } = $props();
-
-  // Make these reactive so PageRoleCheck updates properly
-  let userEntitlements = $derived(data.userEntitlements || []);
-  let requiredRoles = $derived(data.requiredRoles || []);
-
-  // Check if user has required roles (for PageRoleCheck component)
-  let roleCheck = $derived(checkRoles(userEntitlements, requiredRoles));
-  let hasRequiredRoles = $derived(roleCheck.hasAllRoles);
 
   const apiExplorerUrl =
     $page.data.externalLinks?.API_EXPLORER_URL ||
@@ -234,13 +225,7 @@
   let initialized = $state(false);
 
   $effect(() => {
-    // Check roles directly in effect to avoid timing issues
-    const roles = data.requiredRoles || [];
-    const entitlements = data.userEntitlements || [];
-    const check = checkRoles(entitlements, roles);
-
-    // Only fetch data if user has required roles
-    if (typeof window !== "undefined" && !initialized && check.hasAllRoles) {
+    if (typeof window !== "undefined" && !initialized) {
       initialized = true;
 
       // Set default from_date to current time
@@ -274,7 +259,6 @@
   <title>Connector Metrics - API Manager II</title>
 </svelte:head>
 
-<PageRoleCheck {userEntitlements} {requiredRoles}>
 <div class="container mx-auto px-4 py-8">
   <!-- Header -->
   <div class="mb-6 flex items-center justify-between">
@@ -604,7 +588,6 @@
     </div>
   </div>
 </div>
-</PageRoleCheck>
 
 <style>
   .timestamp-color-0 {

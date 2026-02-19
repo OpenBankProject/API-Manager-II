@@ -3,7 +3,7 @@ import { obp_requests } from "$lib/obp/requests";
 import { error, fail, redirect } from "@sveltejs/kit";
 import type { RequestEvent } from "@sveltejs/kit";
 import { SessionOAuthHelper } from "$lib/oauth/sessionHelper";
-import { getUpdateRateLimitRoles } from "$lib/utils/roleChecker";
+
 
 const logger = createLogger("EditConsumerRateLimitServer");
 
@@ -40,10 +40,6 @@ export async function load(event: RequestEvent) {
   if (!session?.data?.user) {
     throw error(401, "Unauthorized");
   }
-
-  // Get user entitlements from session for role checking
-  const userEntitlements = (session.data.user as any)?.entitlements?.list || [];
-  const requiredRoles = getUpdateRateLimitRoles();
 
   // Get the OAuth session data
   const sessionOAuth = SessionOAuthHelper.getSessionOAuth(session);
@@ -126,8 +122,6 @@ export async function load(event: RequestEvent) {
   return {
     consumer,
     rateLimit,
-    userEntitlements,
-    requiredRoles,
   };
 }
 

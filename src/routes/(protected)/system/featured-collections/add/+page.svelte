@@ -4,7 +4,6 @@
   import { Star, ArrowLeft, Search } from "@lucide/svelte";
   import { toast } from "$lib/utils/toastService";
   import { trackedFetch } from "$lib/utils/trackedFetch";
-  import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
 
   let { data } = $props<{ data: PageData }>();
 
@@ -12,9 +11,6 @@
   let featuredIds = $derived(data.featuredIds || []);
   let hasApiAccess = $derived(data.hasApiAccess);
   let error = $derived(data.error);
-  let userEntitlements = $derived(data.userEntitlements || []);
-  let requiredRoles = $derived(data.requiredRoles || []);
-
   // Filter out already featured collections
   let availableCollections = $derived(
     collections.filter((c: any) => !featuredIds.includes(c.api_collection_id)),
@@ -106,9 +102,6 @@
 </svelte:head>
 
 <div class="container mx-auto px-4 py-8">
-  <!-- Role Check -->
-  <PageRoleCheck {userEntitlements} {requiredRoles} />
-
   <!-- Breadcrumb Navigation -->
   <nav class="breadcrumb mb-6">
     <a href="/system/featured-collections" class="breadcrumb-link"

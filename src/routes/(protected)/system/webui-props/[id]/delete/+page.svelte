@@ -1,7 +1,6 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import type { PageData } from "./$types";
-  import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
   import {
     extractErrorFromResponse,
     formatErrorForDisplay,
@@ -51,11 +50,7 @@
   }
 </script>
 
-<PageRoleCheck
-  userEntitlements={data.userEntitlements}
-  requiredRoles={data.requiredRoles}
->
-  <div class="container mx-auto px-4 py-8">
+<div class="container mx-auto px-4 py-8">
     <div class="mb-6">
       <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
         Delete WebUI Prop
@@ -168,4 +163,3 @@
       </div>
     </div>
   </div>
-</PageRoleCheck>

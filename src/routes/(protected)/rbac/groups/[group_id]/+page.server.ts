@@ -40,25 +40,11 @@ export const load: PageServerLoad = async ({ locals, params }) => {
   const sessionOAuth = SessionOAuthHelper.getSessionOAuth(session);
   const accessToken = sessionOAuth?.accessToken;
 
-  // Get user entitlements from session for role checking
-  const userEntitlements = (session.data.user as any)?.entitlements?.list || [];
-
-  // Define required roles for viewing group details
-  const requiredRoles = [
-    {
-      role: "CanGetEntitlementsForAnyBank",
-      description: "View entitlements for any bank",
-      action: "view entitlements",
-    },
-  ];
-
   if (!accessToken) {
     logger.warn("No access token available for group detail page");
     return {
       group: null,
       entitlements: [],
-      userEntitlements,
-      requiredRoles,
       hasApiAccess: false,
       error: "No API access token available",
     };
@@ -95,8 +81,6 @@ export const load: PageServerLoad = async ({ locals, params }) => {
     return {
       group: response,
       entitlements,
-      userEntitlements,
-      requiredRoles,
       hasApiAccess: true,
     };
   } catch (err) {
@@ -105,8 +89,6 @@ export const load: PageServerLoad = async ({ locals, params }) => {
     return {
       group: null,
       entitlements: [],
-      userEntitlements,
-      requiredRoles,
       hasApiAccess: false,
       error: err instanceof Error ? err.message : "Failed to load group",
     };

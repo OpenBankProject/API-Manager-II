@@ -1,15 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
-  import type { PageData } from "./$types";
-  import type { RoleRequirement } from "$lib/utils/roleChecker";
-
-  interface CachePageData extends PageData {
-    userEntitlements: any[];
-    requiredRoles: RoleRequirement[];
-  }
-
-  let { data }: { data: CachePageData } = $props();
+  let { data } = $props();
 
   let cacheConfig = $state<any>(null);
   let cacheInfo = $state<any>(null);
@@ -218,11 +209,7 @@ In-Memory Status:
   <title>Cache - API Manager II</title>
 </svelte:head>
 
-<PageRoleCheck
-  userEntitlements={data.userEntitlements}
-  requiredRoles={data.requiredRoles}
->
-  <div class="container mx-auto px-4 py-8">
+<div class="container mx-auto px-4 py-8">
     <div class="mb-6">
       <div class="mb-4 flex items-center justify-between">
         <div>
@@ -852,4 +839,3 @@ In-Memory Status:
       {/if}
     </div>
   </div>
-</PageRoleCheck>

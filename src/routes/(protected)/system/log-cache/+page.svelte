@@ -1,14 +1,5 @@
 <script lang="ts">
-  import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
-  import type { PageData } from "./$types";
-  import type { RoleRequirement } from "$lib/utils/roleChecker";
-
-  interface LogCachePageData extends PageData {
-    userEntitlements: any[];
-    requiredRoles: RoleRequirement[];
-  }
-
-  let { data }: { data: LogCachePageData } = $props();
+  let { data } = $props();
 
   let logs = $state<any[]>([]);
   let logLevel = $state<string>("");
@@ -196,11 +187,7 @@
   <title>Log Cache - API Manager II</title>
 </svelte:head>
 
-<PageRoleCheck
-  userEntitlements={data.userEntitlements}
-  requiredRoles={data.requiredRoles}
->
-  <div class="container mx-auto px-4 py-8">
+<div class="container mx-auto px-4 py-8">
     <div class="panel">
       <div class="panel-header">
         <div class="header-content">
@@ -344,7 +331,6 @@
       </div>
     </div>
   </div>
-</PageRoleCheck>
 
 <style>
   .container {

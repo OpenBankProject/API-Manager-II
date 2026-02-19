@@ -1,6 +1,5 @@
 import type { PageServerLoad } from "./$types";
 import { error } from "@sveltejs/kit";
-import { getUpdateSystemViewPageRoles } from "$lib/utils/roleChecker";
 import { SessionOAuthHelper } from "$lib/oauth/sessionHelper";
 import { obp_requests } from "$lib/obp/requests";
 import { createLogger } from "$lib/utils/logger";
@@ -25,12 +24,6 @@ export const load: PageServerLoad = async ({ locals, params }) => {
       message: "View ID is required",
     });
   }
-
-  // Get user entitlements from session for role checking
-  const userEntitlements = (session.data.user as any)?.entitlements?.list || [];
-
-  // Get role requirements for updating system views (includes CanUpdateSystemView and CanGetViewPermissionsAtAllBanks)
-  const requiredRoles = getUpdateSystemViewPageRoles();
 
   // Fetch the current system view
   let view = null;
@@ -87,8 +80,6 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 
   return {
     view,
-    userEntitlements,
-    requiredRoles,
     viewPermissions,
   };
 };

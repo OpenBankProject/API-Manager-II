@@ -4,7 +4,6 @@ import type { PageServerLoad } from "./$types";
 import { obp_requests } from "$lib/obp/requests";
 import { SessionOAuthHelper } from "$lib/oauth/sessionHelper";
 import { error } from "@sveltejs/kit";
-import { getEntitlementsPageRoles } from "$lib/utils/roleChecker";
 
 interface Entitlement {
   entitlement_id: string;
@@ -33,16 +32,10 @@ export const load: PageServerLoad = async ({ locals }) => {
     logger.warn("No access token available for entitlements API calls");
     return {
       entitlements: [],
-      userEntitlements: [],
-      requiredRoles: getEntitlementsPageRoles(),
       hasApiAccess: false,
       error: "No API access token available",
     };
   }
-
-  // Get user entitlements from session for role checking
-  const userEntitlements = (session.data.user as any)?.entitlements?.list || [];
-  const requiredRoles = getEntitlementsPageRoles();
 
   try {
     logger.info("=== ENTITLEMENTS API CALL ===");
@@ -69,8 +62,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 
     return {
       entitlements,
-      userEntitlements,
-      requiredRoles,
       hasApiAccess: true,
     };
   } catch (err) {
@@ -78,8 +69,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 
     return {
       entitlements: [],
-      userEntitlements,
-      requiredRoles,
       hasApiAccess: false,
       error: err instanceof Error ? err.message : "Failed to load entitlements",
     };

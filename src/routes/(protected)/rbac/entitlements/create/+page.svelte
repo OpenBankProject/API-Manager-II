@@ -4,7 +4,6 @@
   import { User, KeyRound, Building2, Globe } from "@lucide/svelte";
   import { toast } from "$lib/utils/toastService";
   import { trackedFetch } from "$lib/utils/trackedFetch";
-  import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
   import UserSearchPickerWidget from "$lib/components/UserSearchPickerWidget.svelte";
   import RoleSearchWidget from "$lib/components/RoleSearchWidget.svelte";
   import { currentBank } from "$lib/stores/currentBank.svelte";
@@ -17,8 +16,6 @@
 
   let { data } = $props<{ data: PageData }>();
 
-  let userEntitlements = $derived(data.userEntitlements || []);
-  let requiredRoles = $derived(data.requiredRoles || []);
   let roles = $derived(data.roles || []);
 
   // Read URL parameters
@@ -118,9 +115,6 @@
 </svelte:head>
 
 <div class="container mx-auto px-4 py-8">
-  <!-- Role Check - Display missing roles upfront -->
-  <PageRoleCheck {userEntitlements} {requiredRoles} />
-
   <!-- Breadcrumb -->
   <nav class="breadcrumb mb-6">
     <a href="/rbac/entitlements" class="breadcrumb-link">Entitlements</a>

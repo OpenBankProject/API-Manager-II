@@ -44,25 +44,11 @@ export const load: PageServerLoad = async ({ locals, params }) => {
   const sessionOAuth = SessionOAuthHelper.getSessionOAuth(session);
   const accessToken = sessionOAuth?.accessToken;
 
-  // Get user entitlements from session for role checking
-  const userEntitlements = (session.data.user as any)?.entitlements?.list || [];
-
-  // Define required roles for managing featured collections
-  const requiredRoles = [
-    {
-      role: "CanManageFeaturedApiCollections",
-      description: "Manage featured API collections",
-      action: "manage featured collections",
-    },
-  ];
-
   if (!accessToken) {
     logger.warn("No access token available for edit featured collection page");
     return {
       featured: null,
       collection: null,
-      userEntitlements,
-      requiredRoles,
       hasApiAccess: false,
       error: "No API access token available",
     };
@@ -87,8 +73,6 @@ export const load: PageServerLoad = async ({ locals, params }) => {
       return {
         featured: null,
         collection: null,
-        userEntitlements,
-        requiredRoles,
         hasApiAccess: true,
         error: "Featured collection not found",
       };
@@ -118,8 +102,6 @@ export const load: PageServerLoad = async ({ locals, params }) => {
     return {
       featured,
       collection,
-      userEntitlements,
-      requiredRoles,
       hasApiAccess: true,
     };
   } catch (err) {
@@ -128,8 +110,6 @@ export const load: PageServerLoad = async ({ locals, params }) => {
     return {
       featured: null,
       collection: null,
-      userEntitlements,
-      requiredRoles,
       hasApiAccess: false,
       error:
         err instanceof Error
