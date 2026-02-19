@@ -267,6 +267,9 @@
 
   let darkLogoUrl = $state(env.PUBLIC_DARK_LOGO_URL || defaultDarkLogoUrl);
 
+  // Logo width, can be overridden by PUBLIC_LOGO_WIDTH in .env (e.g. "150px", "10rem", "100%")
+  const logoWidth = env.PUBLIC_LOGO_WIDTH || "100%";
+
   let logoUrl = $derived.by(() => {
     return displayMode === "dark" ? darkLogoUrl : lightLogoUrl;
   });
@@ -282,7 +285,7 @@
     >
       <Navigation.Header class="p-4">
         <a href="/" class="flex w-full items-center">
-          <img class="block w-full" src={logoUrl} alt="Logo" />
+          <img class="block" style="width: {logoWidth};" src={logoUrl} alt="Logo" />
         </a>
       </Navigation.Header>
 

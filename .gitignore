@@ -24,3 +24,4 @@ vite.config.ts.timestamp-*
 
 # Local docs
 untracked_docs/
+untracked_files/
