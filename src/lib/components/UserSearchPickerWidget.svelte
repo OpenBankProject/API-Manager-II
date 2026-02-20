@@ -39,6 +39,31 @@
   let searchType = $state<"email" | "userid" | "username">("username");
   let debounceTimer: number | null = null;
 
+  // Provider dropdown state
+  let providers = $state<string[]>([]);
+  let selectedProvider = $state("");
+  let isLoadingProviders = $state(false);
+
+  // Fetch providers on mount
+  $effect(() => {
+    fetchProviders();
+  });
+
+  async function fetchProviders() {
+    isLoadingProviders = true;
+    try {
+      const response = await trackedFetch("/api/users/providers");
+      if (response.ok) {
+        const data = await response.json();
+        providers = data.providers || [];
+      }
+    } catch (error) {
+      console.error("Failed to fetch providers:", error);
+    } finally {
+      isLoadingProviders = false;
+    }
+  }
+
   // Detect search type based on input
   function detectSearchType(input: string): "email" | "userid" | "username" {
     if (input.includes("@") && input.includes(".")) {
@@ -80,10 +105,15 @@
 
     try {
       let url: string;
+      let usesProviderEndpoint = false;
       if (type === "email") {
         url = `/api/users/search-by-email?email=${encodeURIComponent(trimmed)}`;
       } else if (type === "userid") {
         url = `/api/users/search-by-userid?user_id=${encodeURIComponent(trimmed)}`;
+      } else if (selectedProvider) {
+        // Use provider+username endpoint when a provider is selected
+        url = `/api/users/search-by-provider-username?provider=${encodeURIComponent(selectedProvider)}&username=${encodeURIComponent(trimmed)}`;
+        usesProviderEndpoint = true;
       } else {
         url = `/api/users/search?q=${encodeURIComponent(trimmed)}`;
       }
@@ -103,9 +133,9 @@
 
       const data = await response.json();
 
-      // Normalize response: userid endpoint returns {user: {...}}, others return {users: [...]}
+      // Normalize response: provider and userid endpoints return {user: {...}}, others return {users: [...]}
       let users: UserResult[];
-      if (type === "userid") {
+      if (type === "userid" || usesProviderEndpoint) {
         users = data.user ? [data.user] : [];
       } else {
         users = data.users || [];
@@ -176,6 +206,7 @@
     searchResults = [];
     showResults = false;
     searchError = "";
+    selectedProvider = "";
   }
 
   function handleBlur() {
@@ -188,6 +219,30 @@
 
 <div class="user-search-widget">
   <div class="search-container">
+    <div class="provider-row">
+      <label class="provider-label" for="provider-select">Provider</label>
+      <select
+        id="provider-select"
+        class="provider-select"
+        bind:value={selectedProvider}
+        {disabled}
+        onchange={() => {
+          // Re-trigger search if there's already a query
+          if (searchQuery.trim()) {
+            searchUsers(searchQuery);
+          }
+        }}
+      >
+        <option value="">Any provider</option>
+        {#each providers as provider}
+          <option value={provider}>{provider}</option>
+        {/each}
+      </select>
+      {#if isLoadingProviders}
+        <span class="provider-loading">Loading...</span>
+      {/if}
+    </div>
+
     <div class="search-input-wrapper">
       <Search class="search-icon" size={18} />
       <input
@@ -219,7 +274,11 @@
 
     {#if searchQuery.trim() && !selectedUserId}
       <div class="search-type-indicator">
-        {searchTypeLabels[searchType]}
+        {#if selectedProvider && searchType === "username"}
+          Searching by provider ({selectedProvider}) + username
+        {:else}
+          {searchTypeLabels[searchType]}
+        {/if}
       </div>
     {/if}
 
@@ -278,6 +337,69 @@
     position: relative;
     display: flex;
     flex-direction: column;
+  }
+
+  .provider-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .provider-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    white-space: nowrap;
+  }
+
+  :global([data-mode="dark"]) .provider-label {
+    color: var(--color-surface-400);
+  }
+
+  .provider-select {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    background: white;
+    color: #374151;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+
+  .provider-select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+
+  .provider-select:disabled {
+    background: #f9fafb;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  :global([data-mode="dark"]) .provider-select {
+    background: rgb(var(--color-surface-700));
+    border-color: rgb(var(--color-surface-600));
+    color: var(--color-surface-100);
+  }
+
+  :global([data-mode="dark"]) .provider-select:focus {
+    border-color: rgb(var(--color-primary-500));
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+  }
+
+  :global([data-mode="dark"]) .provider-select:disabled {
+    background: rgb(var(--color-surface-800));
+  }
+
+  .provider-loading {
+    font-size: 0.7rem;
+    color: #9ca3af;
+    font-style: italic;
   }
 
   .search-input-wrapper {
