@@ -122,6 +122,12 @@ class CurrentBankStore {
         }
       }
 
+      // Auto-select first bank if none is set
+      if (!this.bank && this.banks.length > 0) {
+        logger.info(`No bank selected, defaulting to first: ${this.banks[0].bank_id}`);
+        this.select(this.banks[0]);
+      }
+
       return this.banks;
     } catch (error) {
       logger.error("Error fetching banks:", error);

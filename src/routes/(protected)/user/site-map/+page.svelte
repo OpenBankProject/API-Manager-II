@@ -2,6 +2,7 @@
   import { PAGE_ROLES, checkRoles } from "$lib/utils/roleChecker";
   import type { UserEntitlement, RoleRequirement } from "$lib/utils/roleChecker";
   import { Check, X, Search } from "@lucide/svelte";
+  import MissingRoleAlert from "$lib/components/MissingRoleAlert.svelte";
 
   const { data } = $props();
 
@@ -86,6 +87,18 @@
     return found ? found.label : "Other";
   }
 
+  // Collect missing role names for a page entry (both required and optional)
+  function getMissingRoles(entry: PageEntry): string[] {
+    const missing: string[] = [];
+    for (const r of entry.required) {
+      if (!hasRole(r)) missing.push(r.role);
+    }
+    for (const r of entry.optional) {
+      if (!hasRole(r)) missing.push(r.role);
+    }
+    return missing;
+  }
+
   // Summary counts
   let totalPages = $derived(filteredPages.length);
   let accessiblePages = $derived(filteredPages.filter((p) => p.accessible).length);
@@ -155,6 +168,9 @@
               </span>
             {/each}
           </div>
+          {#if getMissingRoles(entry).length > 0}
+            <MissingRoleAlert roles={getMissingRoles(entry)} />
+          {/if}
         </div>
       {/each}
     </div>

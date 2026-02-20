@@ -219,38 +219,21 @@
           {/if}
 
           <!-- Credentials Section -->
-          {#if consumer.key && consumer.secret}
+          {#if consumer.key}
             <div
-              class="space-y-2 rounded-lg bg-gray-50 p-2 dark:bg-gray-900/50 mb-2"
+              class="rounded-lg bg-gray-50 p-2 dark:bg-gray-900/50 mb-2"
             >
-              <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                <!-- Key -->
-                <div>
-                  <div
-                    class="mb-0.5 block text-xs font-medium text-gray-600 dark:text-gray-400"
-                  >
-                    Key
-                  </div>
-                  <code
-                    class="block rounded bg-white px-2 py-1 text-xs text-gray-900 dark:bg-gray-800 dark:text-gray-100"
-                  >
-                    {consumer.key}
-                  </code>
+              <div>
+                <div
+                  class="mb-0.5 block text-xs font-medium text-gray-600 dark:text-gray-400"
+                >
+                  Key
                 </div>
-
-                <!-- Secret -->
-                <div>
-                  <div
-                    class="mb-0.5 block text-xs font-medium text-gray-600 dark:text-gray-400"
-                  >
-                    Secret
-                  </div>
-                  <code
-                    class="block rounded bg-white px-2 py-1 text-xs text-gray-900 dark:bg-gray-800 dark:text-gray-100"
-                  >
-                    {consumer.secret}
-                  </code>
-                </div>
+                <code
+                  class="block rounded bg-white px-2 py-1 text-xs text-gray-900 dark:bg-gray-800 dark:text-gray-100"
+                >
+                  {consumer.key}
+                </code>
               </div>
             </div>
           {/if}
@@ -284,16 +267,12 @@
                 >{consumer.developer_email}</span
               >
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-1">
-              <span class="font-medium text-gray-600 dark:text-gray-400"
-                >Redirect URL:</span
-              >
-              <span
-                class="sm:col-span-2 text-gray-900 dark:text-gray-100 break-all"
-              >
-                {consumer.redirect_url || "Not specified"}
-              </span>
-            </div>
+          </div>
+          <div class="mt-1 text-xs">
+            <span class="font-medium text-gray-600 dark:text-gray-400">Redirect URL:</span>
+            <span class="ml-1 text-gray-900 dark:text-gray-100 break-all"
+              >{consumer.redirect_url || "Not specified"}</span
+            >
           </div>
         </div>
       {/each}
