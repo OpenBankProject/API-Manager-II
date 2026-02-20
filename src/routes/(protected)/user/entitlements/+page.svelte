@@ -31,18 +31,18 @@
     }
   }
 
-  // Check if user can create entitlements (include SuperAdmin)
+  // Check if user can create entitlements
   let canCreateEntitlements = $derived(
     userEntitlements.some((entitlement: any) =>
-      ["SuperAdmin", "CanCreateEntitlementAtAnyBank", "CanCreateEntitlementAtOneBank"].includes(
+      ["CanCreateEntitlementAtAnyBank", "CanCreateEntitlementAtOneBank"].includes(
         entitlement.role_name,
       ),
     ),
   );
 
   // Roles needed to create entitlements — different for system vs bank
-  const systemRequiredRoles = ["SuperAdmin", "CanCreateEntitlementAtAnyBank"];
-  const bankRequiredRoles = ["SuperAdmin", "CanCreateEntitlementAtAnyBank", "CanCreateEntitlementAtOneBank"];
+  const systemRequiredRoles = ["CanCreateEntitlementAtAnyBank"];
+  const bankRequiredRoles = ["CanCreateEntitlementAtAnyBank", "CanCreateEntitlementAtOneBank"];
   let userRoleNames = $derived(new Set(userEntitlements.map((e: any) => e.role_name)));
 
   // Pre-filtered role lists for each widget

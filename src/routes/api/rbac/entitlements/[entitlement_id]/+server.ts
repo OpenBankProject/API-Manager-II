@@ -33,7 +33,6 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
   const userEntitlements = (session.data.user as any)?.entitlements?.list || [];
   const hasPermission = userEntitlements.some(
     (ent: any) =>
-      ent.role_name === "SuperAdmin" ||
       ent.role_name === "CanDeleteEntitlementAtAnyBank" ||
       ent.role_name === "CanDeleteEntitlementAtOneBank",
   );
@@ -43,7 +42,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
     return json(
       {
         error:
-          "Insufficient permissions. Required: SuperAdmin, CanDeleteEntitlementAtAnyBank, or CanDeleteEntitlementAtOneBank",
+          "Insufficient permissions. Required: CanDeleteEntitlementAtAnyBank or CanDeleteEntitlementAtOneBank",
       },
       { status: 403 },
     );

@@ -27,7 +27,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   const userEntitlements = (session.data.user as any)?.entitlements?.list || [];
   const hasPermission = userEntitlements.some(
     (ent: any) =>
-      ent.role_name === "SuperAdmin" ||
       ent.role_name === "CanCreateEntitlementAtAnyBank" ||
       ent.role_name === "CanCreateEntitlementAtOneBank",
   );
@@ -37,7 +36,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     return json(
       {
         error:
-          "Insufficient permissions. Required: SuperAdmin, CanCreateEntitlementAtAnyBank, or CanCreateEntitlementAtOneBank",
+          "Insufficient permissions. Required: CanCreateEntitlementAtAnyBank or CanCreateEntitlementAtOneBank",
       },
       { status: 403 },
     );

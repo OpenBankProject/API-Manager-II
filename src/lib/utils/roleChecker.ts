@@ -50,21 +50,18 @@ export const PAGE_ROLES: Record<string, PageRoleConfig> = {
   },
   "/rbac/entitlements/create": {
     required: [
-      { role: "SuperAdmin" },
       { role: "CanCreateEntitlementAtAnyBank" },
       { role: "CanCreateEntitlementAtOneBank" },
     ],
   },
   "/rbac/entitlements/[entitlement_id]/delete": {
     required: [
-      { role: "SuperAdmin" },
       { role: "CanDeleteEntitlementAtAnyBank" },
     ],
   },
   "/rbac/entitlement-requests": {
     required: [{ role: "CanGetEntitlementRequestsAtAnyBank" }],
     optional: [
-      { role: "SuperAdmin" },
       { role: "CanCreateEntitlementAtAnyBank" },
       { role: "CanDeleteEntitlementRequestsAtAnyBank" },
     ],
@@ -212,8 +209,8 @@ export function getPageRoles(routeId: string): PageRoleConfig | undefined {
  * Check if a user has at least one of the required roles (OR logic).
  *
  * The requiredRoles list represents alternative roles — the user needs ANY ONE
- * of them to gain access. For example, createEntitlement lists SuperAdmin,
- * CanCreateEntitlementAtAnyBank, and CanCreateEntitlementAtOneBank as alternatives.
+ * of them to gain access. For example, createEntitlement lists
+ * CanCreateEntitlementAtAnyBank and CanCreateEntitlementAtOneBank as alternatives.
  *
  * @param userEntitlements - List of entitlements the user has
  * @param requiredRoles - List of alternative roles (user needs at least one)
