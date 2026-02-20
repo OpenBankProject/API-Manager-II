@@ -40,7 +40,7 @@ export interface UserEntitlement {
  * - `required`: user needs at least one (OR logic) to view the page
  * - `optional`: additional roles that enable extra actions (e.g. create/delete buttons)
  */
-export const PAGE_ROLES: Record<string, PageRoleConfig> = {
+export const SITE_MAP: Record<string, PageRoleConfig> = {
   // ── RBAC ──────────────────────────────────────────────
   "/rbac/roles": {
     required: [{ role: "CanGetRolesWithEntitlementCountsAtAllBanks" }],
@@ -202,7 +202,7 @@ export const PAGE_ROLES: Record<string, PageRoleConfig> = {
  */
 export function getPageRoles(routeId: string): PageRoleConfig | undefined {
   const key = routeId.replace("/(protected)", "");
-  return PAGE_ROLES[key];
+  return SITE_MAP[key];
 }
 
 /**

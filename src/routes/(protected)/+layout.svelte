@@ -1,12 +1,12 @@
 <script lang="ts">
   import { page } from "$app/state";
   import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
-  import { PAGE_ROLES } from "$lib/utils/roleChecker";
+  import { SITE_MAP } from "$lib/utils/roleChecker";
 
   let { data, children } = $props();
 
   let routeKey = $derived(page.route.id?.replace("/(protected)", "") || "");
-  let pageRoles = $derived(PAGE_ROLES[routeKey]);
+  let pageRoles = $derived(SITE_MAP[routeKey]);
 </script>
 
 {#if pageRoles}

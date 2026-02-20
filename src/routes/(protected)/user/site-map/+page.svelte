@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { PAGE_ROLES, checkRoles } from "$lib/utils/roleChecker";
+  import { SITE_MAP, checkRoles } from "$lib/utils/roleChecker";
   import type { UserEntitlement, RoleRequirement } from "$lib/utils/roleChecker";
   import { Check, X, Search } from "@lucide/svelte";
   import MissingRoleAlert from "$lib/components/MissingRoleAlert.svelte";
@@ -44,7 +44,7 @@
   }
 
   let allPages: PageEntry[] = $derived(
-    Object.entries(PAGE_ROLES).map(([route, config]) => {
+    Object.entries(SITE_MAP).map(([route, config]) => {
       const result = checkRoles(userEntitlements, config.required);
       return {
         route,
