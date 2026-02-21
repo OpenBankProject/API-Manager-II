@@ -190,6 +190,10 @@ export const SITE_MAP: Record<string, PageRoleConfig> = {
   "/account-access/account-directory": {
     required: [{ role: "CanGetAccountDirectoryAtOneBank", bankScoped: true }],
   },
+  "/account-access/accounts/[bank_id]/[account_id]/[view_id]": {
+    required: [],
+    optional: [{ role: "CanExecuteAbacRule" }],
+  },
 
   // ── Users ─────────────────────────────────────────────
   "/users": {

@@ -160,7 +160,11 @@
               <tbody>
                 {#each filteredAccounts as account}
                   <tr>
-                    <td class="cell-mono cell-id">{account.account_id}</td>
+                    <td class="cell-mono cell-id">
+                      <a href="/account-access/accounts/{encodeURIComponent(account.bank_id)}/{encodeURIComponent(account.account_id)}/owner" class="account-link">
+                        {account.account_id}
+                      </a>
+                    </td>
                     <td>
                       {#if account.account_type}
                         <span class="badge">{account.account_type}</span>
@@ -428,15 +432,23 @@
   }
 
   .cell-id {
-    color: #9ca3af;
     max-width: 180px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  :global([data-mode="dark"]) .cell-id {
-    color: var(--color-surface-500);
+  .account-link {
+    color: #3b82f6;
+    text-decoration: none;
+  }
+
+  .account-link:hover {
+    text-decoration: underline;
+  }
+
+  :global([data-mode="dark"]) .account-link {
+    color: rgb(var(--color-primary-400));
   }
 
   .badge {

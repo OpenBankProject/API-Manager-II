@@ -85,11 +85,15 @@
         {#if accounts.length > 0}
           <ul class="account-list">
             {#each accounts as account}
+              {@const acctId = account.id || account.account_id}
+              {@const firstView = account.views_available?.[0]?.id || "owner"}
               <li class="account-item">
-                <span class="account-id">{account.id || account.account_id}</span>
-                {#if account.label}
-                  <span class="account-label">{account.label}</span>
-                {/if}
+                <a href="/account-access/accounts/{encodeURIComponent(currentBank.bankId)}/{encodeURIComponent(acctId)}/{encodeURIComponent(firstView)}" class="account-link">
+                  <span class="account-id">{acctId}</span>
+                  {#if account.label}
+                    <span class="account-label">{account.label}</span>
+                  {/if}
+                </a>
                 {#if account.views_available?.length}
                   <span class="account-views">{account.views_available.length} view{account.views_available.length !== 1 ? "s" : ""}</span>
                 {/if}
@@ -254,11 +258,28 @@
     border-bottom-color: rgb(var(--color-surface-700));
   }
 
+  .account-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    flex: 1;
+  }
+
+  .account-link:hover .account-id {
+    color: #3b82f6;
+  }
+
+  :global([data-mode="dark"]) .account-link:hover .account-id {
+    color: rgb(var(--color-primary-400));
+  }
+
   .account-id {
     font-size: 0.8rem;
     font-family: monospace;
     color: #111827;
     font-weight: 500;
+    transition: color 0.2s;
   }
 
   :global([data-mode="dark"]) .account-id {
