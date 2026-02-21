@@ -36,6 +36,15 @@
   let deleteError = $state<string | null>(null);
   let deleteSuccess = $state<string | null>(null);
 
+  // Publish state
+  let showPublishForm = $state(false);
+  let publishChannel = $state("task-requests");
+  let publishPayload = $state('{"message": "Please report what time it is where you are"}');
+  let publishMessageType = $state("");
+  let isPublishing = $state(false);
+  let publishError = $state<string | null>(null);
+  let publishSuccess = $state<string | null>(null);
+
   let filteredChannels = $derived.by(() => {
     if (!channels.length) return [];
     if (!searchQuery.trim()) return channels;
@@ -205,6 +214,51 @@
     }
   }
 
+  async function publishMessage() {
+    if (!publishChannel.trim()) return;
+
+    let parsedPayload: any;
+    try {
+      parsedPayload = JSON.parse(publishPayload);
+    } catch {
+      publishError = "Invalid JSON payload";
+      return;
+    }
+
+    try {
+      isPublishing = true;
+      publishError = null;
+      publishSuccess = null;
+
+      const body: any = { payload: parsedPayload };
+      if (publishMessageType.trim()) {
+        body.message_type = publishMessageType.trim();
+      }
+
+      const response = await fetch(
+        `/api/signal/channels/${encodeURIComponent(publishChannel.trim())}/messages`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        },
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed (${response.status})`);
+      }
+
+      publishSuccess = `Message published to "${publishChannel.trim()}"`;
+      await fetchChannels();
+    } catch (err) {
+      publishError =
+        err instanceof Error ? err.message : "Failed to publish message";
+    } finally {
+      isPublishing = false;
+    }
+  }
+
   onMount(() => {
     fetchChannels();
   });
@@ -225,29 +279,37 @@
           </div>
         </div>
         <div class="header-controls">
-          <button
-            class="refresh-button"
-            onclick={fetchChannels}
-            disabled={isLoading}
-            aria-label="Refresh signal channels"
-          >
-            <svg
-              class="refresh-icon"
-              class:spinning={isLoading}
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+          <div class="header-buttons">
+            <button
+              class="publish-button"
+              onclick={() => { showPublishForm = !showPublishForm; publishError = null; publishSuccess = null; }}
             >
-              <path
-                d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"
-              />
-            </svg>
-            {isLoading ? "Refreshing..." : "Refresh"}
-          </button>
+              {showPublishForm ? "Cancel" : "Publish Message"}
+            </button>
+            <button
+              class="refresh-button"
+              onclick={fetchChannels}
+              disabled={isLoading}
+              aria-label="Refresh signal channels"
+            >
+              <svg
+                class="refresh-icon"
+                class:spinning={isLoading}
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"
+                />
+              </svg>
+              {isLoading ? "Refreshing..." : "Refresh"}
+            </button>
+          </div>
           {#if lastUpdated}
             <div class="last-updated">
               Last updated: <span class="timestamp">{lastUpdated}</span>
@@ -256,6 +318,57 @@
         </div>
       </div>
     </div>
+    {#if showPublishForm}
+      <div class="publish-form">
+        <div class="publish-row">
+          <div class="publish-field">
+            <label class="publish-label" for="pub-channel">Channel</label>
+            <input
+              id="pub-channel"
+              type="text"
+              class="publish-input"
+              bind:value={publishChannel}
+              disabled={isPublishing}
+            />
+          </div>
+          <div class="publish-field">
+            <label class="publish-label" for="pub-type">Type <span class="optional">(optional)</span></label>
+            <input
+              id="pub-type"
+              type="text"
+              class="publish-input"
+              placeholder="e.g. task-request"
+              bind:value={publishMessageType}
+              disabled={isPublishing}
+            />
+          </div>
+        </div>
+        <div class="publish-field">
+          <label class="publish-label" for="pub-payload">Payload (JSON)</label>
+          <textarea
+            id="pub-payload"
+            class="publish-textarea"
+            bind:value={publishPayload}
+            disabled={isPublishing}
+            rows="4"
+          ></textarea>
+        </div>
+        {#if publishError}
+          <div class="alert alert-error">{publishError}</div>
+        {/if}
+        {#if publishSuccess}
+          <div class="alert alert-success">{publishSuccess}</div>
+        {/if}
+        <button
+          class="btn-publish"
+          onclick={publishMessage}
+          disabled={isPublishing || !publishChannel.trim()}
+        >
+          {isPublishing ? "Publishing..." : "Publish"}
+        </button>
+      </div>
+    {/if}
+
     <div class="panel-content">
       <!-- Status Messages -->
       {#if deleteSuccess}
@@ -539,6 +652,142 @@
 
   :global([data-mode="dark"]) .timestamp {
     color: var(--color-surface-300);
+  }
+
+  .header-buttons {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .publish-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #51b265;
+    color: white;
+    border: none;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .publish-button:hover {
+    background: #3d9e52;
+  }
+
+  :global([data-mode="dark"]) .publish-button {
+    background: #51b265;
+  }
+
+  :global([data-mode="dark"]) .publish-button:hover {
+    background: #3d9e52;
+  }
+
+  .publish-form {
+    padding: 1rem 1.5rem;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  :global([data-mode="dark"]) .publish-form {
+    background: rgb(var(--color-surface-900));
+    border-bottom-color: rgb(var(--color-surface-700));
+  }
+
+  .publish-row {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .publish-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+  }
+
+  .publish-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #374151;
+  }
+
+  :global([data-mode="dark"]) .publish-label {
+    color: var(--color-surface-300);
+  }
+
+  .publish-label .optional {
+    font-weight: 400;
+    color: #9ca3af;
+  }
+
+  .publish-input {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-family: monospace;
+  }
+
+  .publish-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+
+  :global([data-mode="dark"]) .publish-input {
+    background: rgb(var(--color-surface-700));
+    border-color: rgb(var(--color-surface-600));
+    color: var(--color-surface-100);
+  }
+
+  .publish-textarea {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.8125rem;
+    font-family: monospace;
+    resize: vertical;
+  }
+
+  .publish-textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+
+  :global([data-mode="dark"]) .publish-textarea {
+    background: rgb(var(--color-surface-700));
+    border-color: rgb(var(--color-surface-600));
+    color: var(--color-surface-100);
+  }
+
+  .btn-publish {
+    align-self: flex-start;
+    padding: 0.5rem 1.5rem;
+    background: #51b265;
+    color: white;
+    border: none;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .btn-publish:hover:not(:disabled) {
+    background: #3d9e52;
+  }
+
+  .btn-publish:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 
   .panel-content {

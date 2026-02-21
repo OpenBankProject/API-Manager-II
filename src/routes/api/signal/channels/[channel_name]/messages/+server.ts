@@ -3,8 +3,46 @@ import type { RequestHandler } from "./$types";
 import { obp_requests } from "$lib/obp/requests";
 import { checkAPIAuth } from "$lib/utils/apiAuth";
 import { createLogger } from "$lib/utils/logger";
+import { extractErrorDetails } from "$lib/obp/errors";
 
 const logger = createLogger("SignalMessagesAPI");
+
+export const POST: RequestHandler = async ({ request, locals, params }) => {
+  const auth = checkAPIAuth(locals);
+  if (!auth.authenticated) {
+    return auth.error!;
+  }
+
+  const accessToken = auth.accessToken!;
+  const channelName = params.channel_name;
+
+  try {
+    const body = await request.json();
+    logger.info(`=== PUBLISH SIGNAL MESSAGE: ${channelName} ===`);
+    const endpoint = `/obp/v6.0.0/signal/channels/${encodeURIComponent(channelName)}/messages`;
+
+    const response = await obp_requests.post(endpoint, body, accessToken);
+
+    logger.info(`Message published to channel: ${channelName}`);
+
+    return json(response, { status: 201 });
+  } catch (err) {
+    logger.error(`ERROR PUBLISHING SIGNAL MESSAGE to ${channelName}:`);
+    logger.error(
+      `  Error message: ${err instanceof Error ? err.message : String(err)}`,
+    );
+
+    const { message, obpErrorCode } = extractErrorDetails(err);
+
+    return json(
+      {
+        error: message,
+        obpErrorCode,
+      },
+      { status: 400 },
+    );
+  }
+};
 
 export const GET: RequestHandler = async ({ locals, params, url }) => {
   const auth = checkAPIAuth(locals);
