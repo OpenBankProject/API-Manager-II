@@ -2,6 +2,7 @@
   import { page } from "$app/state";
   import PageRoleCheck from "$lib/components/PageRoleCheck.svelte";
   import { SITE_MAP } from "$lib/utils/roleChecker";
+  import { currentBank } from "$lib/stores/currentBank.svelte";
 
   let { data, children } = $props();
 
@@ -14,6 +15,7 @@
     userEntitlements={data.userEntitlements}
     required={pageRoles.required}
     optional={pageRoles.optional}
+    currentBankId={currentBank.bankId}
   >
     {@render children()}
   </PageRoleCheck>

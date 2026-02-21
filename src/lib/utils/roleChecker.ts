@@ -7,6 +7,8 @@ const logger = createLogger("RoleChecker");
 export interface RoleRequirement {
   role: string;
   bankId?: string;
+  /** When true, the user must hold this role for the current bank (bank-level role) */
+  bankScoped?: boolean;
 }
 
 /**
@@ -111,6 +113,12 @@ export const SITE_MAP: Record<string, PageRoleConfig> = {
   "/system/webui-props/[id]/delete": {
     required: [{ role: "CanDeleteWebUiProps" }],
   },
+  "/system/signal-channels": {
+    required: [],
+  },
+  "/system/signal-channels-stats": {
+    required: [{ role: "CanGetSignalStats" }],
+  },
   "/system/featured-collections": {
     required: [{ role: "CanManageFeaturedApiCollections" }],
   },
@@ -179,6 +187,9 @@ export const SITE_MAP: Record<string, PageRoleConfig> = {
   "/account-access/custom-views/create": {
     required: [{ role: "CanCreateCustomView" }],
   },
+  "/account-access/account-directory": {
+    required: [{ role: "CanGetAccountDirectoryAtOneBank", bankScoped: true }],
+  },
 
   // ── Users ─────────────────────────────────────────────
   "/users": {
@@ -214,11 +225,13 @@ export function getPageRoles(routeId: string): PageRoleConfig | undefined {
  *
  * @param userEntitlements - List of entitlements the user has
  * @param requiredRoles - List of alternative roles (user needs at least one)
+ * @param currentBankId - The currently selected bank ID (for bankScoped role checks)
  * @returns RoleCheckResult with missing and present roles
  */
 export function checkRoles(
   userEntitlements: UserEntitlement[],
   requiredRoles: RoleRequirement[],
+  currentBankId?: string,
 ): RoleCheckResult {
   const missingRoles: RoleRequirement[] = [];
   const hasRoles: RoleRequirement[] = [];
@@ -228,6 +241,11 @@ export function checkRoles(
       const roleMatches = entitlement.role_name === requirement.role;
 
       if (!roleMatches) return false;
+
+      // Bank-scoped roles must match the current bank
+      if (requirement.bankScoped) {
+        return currentBankId ? entitlement.bank_id === currentBankId : false;
+      }
 
       if (requirement.bankId) {
         return entitlement.bank_id === requirement.bankId;

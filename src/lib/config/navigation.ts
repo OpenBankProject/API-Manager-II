@@ -31,6 +31,7 @@ import {
   Banknote,
   Hash,
   Map,
+  Radio,
 } from "@lucide/svelte";
 import { env } from "$env/dynamic/public";
 
@@ -121,6 +122,16 @@ function buildSystemItems(): NavigationItem[] {
       href: "/system/migrations",
       label: "Migrations",
       iconComponent: GitBranch,
+    },
+    {
+      href: "/system/signal-channels",
+      label: "Signal Channels",
+      iconComponent: Radio,
+    },
+    {
+      href: "/system/signal-channels-stats",
+      label: "Signal Stats",
+      iconComponent: Radio,
     },
     {
       href: "/system/webui-props",
@@ -296,6 +307,11 @@ function buildAccountAccessItems(): NavigationItem[] {
       href: "/account-access/accounts",
       label: "Accounts",
       iconComponent: Landmark,
+    },
+    {
+      href: "/account-access/account-directory",
+      label: "Account Directory",
+      iconComponent: FolderOpen,
     },
   ];
 

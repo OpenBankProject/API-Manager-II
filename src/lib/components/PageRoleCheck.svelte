@@ -8,14 +8,16 @@
     userEntitlements: any[];
     required: RoleRequirement[];
     optional?: RoleRequirement[];
+    currentBankId?: string;
     children?: Snippet;
   }
 
-  let { userEntitlements, required, optional, children }: Props = $props();
+  let { userEntitlements, required, optional, currentBankId, children }: Props =
+    $props();
 
   // Check required roles (OR logic — need at least one)
   let requiredCheck = $derived.by(() => {
-    return checkRoles(userEntitlements || [], required || []);
+    return checkRoles(userEntitlements || [], required || [], currentBankId);
   });
 
   let firstMissingRequired = $derived(requiredCheck.missingRoles[0] || null);
@@ -24,7 +26,7 @@
   // Check optional roles (informational — content still renders)
   let optionalCheck = $derived.by(() => {
     if (!optional || optional.length === 0) return null;
-    return checkRoles(userEntitlements || [], optional);
+    return checkRoles(userEntitlements || [], optional, currentBankId);
   });
 
   let missingOptionalRoles = $derived(
