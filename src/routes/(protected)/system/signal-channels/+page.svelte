@@ -17,6 +17,12 @@
     to_user_id?: string;
   }
 
+  interface MessageNode {
+    message: SignalMessage;
+    children: MessageNode[];
+    depth: number;
+  }
+
   let channels = $state<Channel[]>([]);
   let isLoading = $state(false);
   let error = $state<string | null>(null);
@@ -35,15 +41,6 @@
   let deletingChannel = $state<string | null>(null);
   let deleteError = $state<string | null>(null);
   let deleteSuccess = $state<string | null>(null);
-
-  // Publish state
-  let showPublishForm = $state(false);
-  let publishChannel = $state("task-requests");
-  let publishPayload = $state('{"message": "Please report what time it is where you are"}');
-  let publishMessageType = $state("");
-  let isPublishing = $state(false);
-  let publishError = $state<string | null>(null);
-  let publishSuccess = $state<string | null>(null);
 
   let filteredChannels = $derived.by(() => {
     if (!channels.length) return [];
@@ -214,50 +211,71 @@
     }
   }
 
-  async function publishMessage() {
-    if (!publishChannel.trim()) return;
+  // Build a tree from flat messages using payload.reply_to for threading
+  function buildMessageTree(messages: SignalMessage[]): MessageNode[] {
+    const byId = new Map<string, MessageNode>();
+    const roots: MessageNode[] = [];
 
-    let parsedPayload: any;
-    try {
-      parsedPayload = JSON.parse(publishPayload);
-    } catch {
-      publishError = "Invalid JSON payload";
-      return;
+    // Create nodes for all messages
+    for (const msg of messages) {
+      byId.set(msg.message_id, { message: msg, children: [], depth: 0 });
     }
 
-    try {
-      isPublishing = true;
-      publishError = null;
-      publishSuccess = null;
+    // Link children to parents
+    for (const msg of messages) {
+      const replyTo = msg.payload?.in_reply_to;
+      const node = byId.get(msg.message_id)!;
 
-      const body: any = { payload: parsedPayload };
-      if (publishMessageType.trim()) {
-        body.message_type = publishMessageType.trim();
+      if (replyTo && byId.has(replyTo)) {
+        const parent = byId.get(replyTo)!;
+        node.depth = parent.depth + 1;
+        parent.children.push(node);
+      } else {
+        roots.push(node);
       }
+    }
 
-      const response = await fetch(
-        `/api/signal/channels/${encodeURIComponent(publishChannel.trim())}/messages`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        },
+    // Sort roots: most recent first
+    roots.sort((a, b) =>
+      new Date(b.message.timestamp).getTime() - new Date(a.message.timestamp).getTime()
+    );
+
+    // Sort children within each node: oldest first (chronological thread order)
+    function sortChildren(node: MessageNode) {
+      node.children.sort((a, b) =>
+        new Date(a.message.timestamp).getTime() - new Date(b.message.timestamp).getTime()
       );
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Failed (${response.status})`);
+      for (const child of node.children) {
+        sortChildren(child);
       }
-
-      publishSuccess = `Message published to "${publishChannel.trim()}"`;
-      await fetchChannels();
-    } catch (err) {
-      publishError =
-        err instanceof Error ? err.message : "Failed to publish message";
-    } finally {
-      isPublishing = false;
     }
+
+    for (const root of roots) {
+      sortChildren(root);
+    }
+
+    return roots;
   }
+
+  // Flatten tree into an ordered list for rendering
+  function flattenTree(nodes: MessageNode[]): MessageNode[] {
+    const result: MessageNode[] = [];
+    function walk(node: MessageNode) {
+      result.push(node);
+      for (const child of node.children) {
+        walk(child);
+      }
+    }
+    for (const root of nodes) {
+      walk(root);
+    }
+    return result;
+  }
+
+  let messageTree = $derived.by(() => {
+    if (!channelMessages.length) return [];
+    return flattenTree(buildMessageTree(channelMessages));
+  });
 
   onMount(() => {
     fetchChannels();
@@ -279,37 +297,29 @@
           </div>
         </div>
         <div class="header-controls">
-          <div class="header-buttons">
-            <button
-              class="publish-button"
-              onclick={() => { showPublishForm = !showPublishForm; publishError = null; publishSuccess = null; }}
+          <button
+            class="refresh-button"
+            onclick={fetchChannels}
+            disabled={isLoading}
+            aria-label="Refresh signal channels"
+          >
+            <svg
+              class="refresh-icon"
+              class:spinning={isLoading}
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
             >
-              {showPublishForm ? "Cancel" : "Publish Message"}
-            </button>
-            <button
-              class="refresh-button"
-              onclick={fetchChannels}
-              disabled={isLoading}
-              aria-label="Refresh signal channels"
-            >
-              <svg
-                class="refresh-icon"
-                class:spinning={isLoading}
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path
-                  d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"
-                />
-              </svg>
-              {isLoading ? "Refreshing..." : "Refresh"}
-            </button>
-          </div>
+              <path
+                d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"
+              />
+            </svg>
+            {isLoading ? "Refreshing..." : "Refresh"}
+          </button>
           {#if lastUpdated}
             <div class="last-updated">
               Last updated: <span class="timestamp">{lastUpdated}</span>
@@ -318,57 +328,6 @@
         </div>
       </div>
     </div>
-    {#if showPublishForm}
-      <div class="publish-form">
-        <div class="publish-row">
-          <div class="publish-field">
-            <label class="publish-label" for="pub-channel">Channel</label>
-            <input
-              id="pub-channel"
-              type="text"
-              class="publish-input"
-              bind:value={publishChannel}
-              disabled={isPublishing}
-            />
-          </div>
-          <div class="publish-field">
-            <label class="publish-label" for="pub-type">Type <span class="optional">(optional)</span></label>
-            <input
-              id="pub-type"
-              type="text"
-              class="publish-input"
-              placeholder="e.g. task-request"
-              bind:value={publishMessageType}
-              disabled={isPublishing}
-            />
-          </div>
-        </div>
-        <div class="publish-field">
-          <label class="publish-label" for="pub-payload">Payload (JSON)</label>
-          <textarea
-            id="pub-payload"
-            class="publish-textarea"
-            bind:value={publishPayload}
-            disabled={isPublishing}
-            rows="4"
-          ></textarea>
-        </div>
-        {#if publishError}
-          <div class="alert alert-error">{publishError}</div>
-        {/if}
-        {#if publishSuccess}
-          <div class="alert alert-success">{publishSuccess}</div>
-        {/if}
-        <button
-          class="btn-publish"
-          onclick={publishMessage}
-          disabled={isPublishing || !publishChannel.trim()}
-        >
-          {isPublishing ? "Publishing..." : "Publish"}
-        </button>
-      </div>
-    {/if}
-
     <div class="panel-content">
       <!-- Status Messages -->
       {#if deleteSuccess}
@@ -470,38 +429,51 @@
                       <div class="alert alert-error">
                         {messagesError}
                       </div>
-                    {:else if channelMessages.length > 0}
+                    {:else if messageTree.length > 0}
                       <div class="messages-list">
-                        {#each channelMessages as msg}
-                          <div class="message-card">
+                        {#each messageTree as node}
+                          <div
+                            class="message-card"
+                            class:is-reply={node.depth > 0}
+                            style="margin-left: {node.depth * 1.5}rem;"
+                          >
+                            {#if node.depth > 0}
+                              <div class="reply-indicator">
+                                <span class="reply-line"></span>
+                                <span class="reply-label">reply to {node.message.payload?.in_reply_to}</span>
+                              </div>
+                            {/if}
                             <div class="message-meta">
-                              <span class="message-id" title={msg.message_id}>
-                                {msg.message_id?.substring(0, 8)}...
+                              <span class="message-id" title={node.message.message_id}>
+                                {node.message.message_id}
                               </span>
-                              {#if msg.message_type}
+                              {#if node.message.message_type}
                                 <span class="message-type-badge">
-                                  {msg.message_type}
+                                  {node.message.message_type}
                                 </span>
                               {/if}
-                              {#if msg.to_user_id}
+                              {#if node.message.to_user_id}
                                 <span class="private-badge">Private</span>
                               {/if}
+                              {#if node.children.length > 0}
+                                <span class="replies-count">{node.children.length} {node.children.length === 1 ? "reply" : "replies"}</span>
+                              {/if}
                               <span class="message-timestamp">
-                                {formatTimestamp(msg.timestamp)}
+                                {formatTimestamp(node.message.timestamp)}
                               </span>
                             </div>
                             <div class="message-sender">
                               User: <span class="mono"
-                                >{msg.sender_user_id || "N/A"}</span
+                                >{node.message.sender_user_id || "N/A"}</span
                               >
-                              {#if msg.sender_consumer_id}
+                              {#if node.message.sender_consumer_id}
                                 | Consumer: <span class="mono"
-                                  >{msg.sender_consumer_id}</span
+                                  >{node.message.sender_consumer_id}</span
                                 >
                               {/if}
                             </div>
                             <div class="message-payload">
-                              <pre>{formatPayload(msg.payload)}</pre>
+                              <pre>{formatPayload(node.message.payload)}</pre>
                             </div>
                           </div>
                         {/each}
@@ -652,142 +624,6 @@
 
   :global([data-mode="dark"]) .timestamp {
     color: var(--color-surface-300);
-  }
-
-  .header-buttons {
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  .publish-button {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: #51b265;
-    color: white;
-    border: none;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-
-  .publish-button:hover {
-    background: #3d9e52;
-  }
-
-  :global([data-mode="dark"]) .publish-button {
-    background: #51b265;
-  }
-
-  :global([data-mode="dark"]) .publish-button:hover {
-    background: #3d9e52;
-  }
-
-  .publish-form {
-    padding: 1rem 1.5rem;
-    background: #f9fafb;
-    border-bottom: 1px solid #e5e7eb;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  :global([data-mode="dark"]) .publish-form {
-    background: rgb(var(--color-surface-900));
-    border-bottom-color: rgb(var(--color-surface-700));
-  }
-
-  .publish-row {
-    display: flex;
-    gap: 0.75rem;
-  }
-
-  .publish-field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    flex: 1;
-  }
-
-  .publish-label {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #374151;
-  }
-
-  :global([data-mode="dark"]) .publish-label {
-    color: var(--color-surface-300);
-  }
-
-  .publish-label .optional {
-    font-weight: 400;
-    color: #9ca3af;
-  }
-
-  .publish-input {
-    padding: 0.5rem 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    font-family: monospace;
-  }
-
-  .publish-input:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-  }
-
-  :global([data-mode="dark"]) .publish-input {
-    background: rgb(var(--color-surface-700));
-    border-color: rgb(var(--color-surface-600));
-    color: var(--color-surface-100);
-  }
-
-  .publish-textarea {
-    padding: 0.5rem 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 0.375rem;
-    font-size: 0.8125rem;
-    font-family: monospace;
-    resize: vertical;
-  }
-
-  .publish-textarea:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-  }
-
-  :global([data-mode="dark"]) .publish-textarea {
-    background: rgb(var(--color-surface-700));
-    border-color: rgb(var(--color-surface-600));
-    color: var(--color-surface-100);
-  }
-
-  .btn-publish {
-    align-self: flex-start;
-    padding: 0.5rem 1.5rem;
-    background: #51b265;
-    color: white;
-    border: none;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-
-  .btn-publish:hover:not(:disabled) {
-    background: #3d9e52;
-  }
-
-  .btn-publish:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
   }
 
   .panel-content {
@@ -1025,11 +861,60 @@
     background: white;
     border: 1px solid #e5e7eb;
     border-radius: 0.375rem;
+    transition: margin-left 0.2s;
+  }
+
+  .message-card.is-reply {
+    border-left: 3px solid #93c5fd;
+    background: #f8fafc;
   }
 
   :global([data-mode="dark"]) .message-card {
     background: rgb(var(--color-surface-800));
     border-color: rgb(var(--color-surface-700));
+  }
+
+  :global([data-mode="dark"]) .message-card.is-reply {
+    border-left-color: rgb(var(--color-primary-700));
+    background: rgb(var(--color-surface-850, var(--color-surface-800)));
+  }
+
+  .reply-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-bottom: 0.375rem;
+  }
+
+  .reply-line {
+    width: 12px;
+    height: 1px;
+    background: #93c5fd;
+    flex-shrink: 0;
+  }
+
+  :global([data-mode="dark"]) .reply-line {
+    background: rgb(var(--color-primary-700));
+  }
+
+  .reply-label {
+    font-size: 0.6875rem;
+    color: #93c5fd;
+    font-family: monospace;
+  }
+
+  :global([data-mode="dark"]) .reply-label {
+    color: rgb(var(--color-primary-500));
+  }
+
+  .replies-count {
+    font-size: 0.6875rem;
+    color: #6b7280;
+    font-style: italic;
+  }
+
+  :global([data-mode="dark"]) .replies-count {
+    color: var(--color-surface-400);
   }
 
   .message-meta {

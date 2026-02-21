@@ -139,6 +139,11 @@ export const systemItems = buildSystemItems();
 function buildSignalsItems(): NavigationItem[] {
   const items: NavigationItem[] = [
     {
+      href: "/system/signal-publish",
+      label: "Publish",
+      iconComponent: Plus,
+    },
+    {
       href: "/system/signal-channels",
       label: "Signal Channels",
       iconComponent: Radio,
@@ -532,7 +537,7 @@ export function getActiveAbacMenuItem(pathname: string) {
 export const navSections: NavigationSection[] = [
   { id: "my-account", label: "My Account", iconComponent: User, items: myAccountItems, basePaths: ["/user"] },
   { id: "system", label: "System", iconComponent: Server, items: systemItems, basePaths: ["/system"] },
-  { id: "signals", label: "Signals", iconComponent: Radio, items: signalsItems, basePaths: ["/system/signal-channels", "/system/signal-channels-stats"] },
+  { id: "signals", label: "Signals", iconComponent: Radio, items: signalsItems, basePaths: ["/system/signal-publish", "/system/signal-channels", "/system/signal-channels-stats"] },
   { id: "integration", label: "Integration", iconComponent: Plug, items: integrationItems, basePaths: ["/integration"] },
   { id: "metrics", label: "Metrics", iconComponent: BarChart3, items: metricsItems, basePaths: ["/metrics", "/aggregate-metrics", "/connector-metrics", "/connector-traces", "/connector-counts"] },
   { id: "abac", label: "ABAC", iconComponent: Lock, items: abacItems, basePaths: ["/abac"] },
