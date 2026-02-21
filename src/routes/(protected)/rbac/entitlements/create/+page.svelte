@@ -1,7 +1,6 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
-  import { User, KeyRound } from "@lucide/svelte";
   import { toast } from "$lib/utils/toastService";
   import { trackedFetch } from "$lib/utils/trackedFetch";
   import UserSearchPickerWidget from "$lib/components/UserSearchPickerWidget.svelte";
@@ -28,6 +27,7 @@
   let roleName = $state(urlRole);
   let roleScope = $state<"all" | "system" | "bank">("all");
   let bankId = $state(currentBank.bankId);
+  let roleSearchQuery = $state("");
   let isSubmitting = $state(false);
 
   // Determine if selected role requires bank_id
@@ -124,26 +124,12 @@
 
   <div class="panel">
     <div class="panel-header">
-      <div class="header-content">
-        <div class="header-icon">➕</div>
-        <div>
-          <h1 class="panel-title">Create Entitlement</h1>
-          <div class="panel-subtitle">
-            Grant a role to a user for system-wide or bank-specific access
-          </div>
-        </div>
-      </div>
+      <h1 class="panel-title">Create Entitlement</h1>
     </div>
 
     <div class="panel-content">
       <form onsubmit={handleSubmit} class="form">
-        <!-- User Search Field -->
-        <div class="form-group">
-          <label class="form-label">
-            <User size={18} />
-            User
-            <span class="required">*</span>
-          </label>
+        <div class="search-row">
           <UserSearchPickerWidget
             onSelect={handleUserSelect}
             bind:selectedUserId={userId}
@@ -151,31 +137,27 @@
             disabled={isSubmitting}
             initialUsername={urlUsername}
           />
-          <div class="form-hint">
-            Search for a user by username or email to grant the entitlement to
+          <div class="role-search-input">
+            <input
+              type="text"
+              class="search-input"
+              placeholder="Search roles..."
+              bind:value={roleSearchQuery}
+              disabled={isSubmitting}
+            />
           </div>
         </div>
 
-        <!-- Role Selection Field -->
-        <div class="form-group">
-          <label class="form-label">
-            <KeyRound size={18} />
-            Role
-            <span class="required">*</span>
-          </label>
-          <div class="form-hint">
-            Search and select a role to grant
-          </div>
-          <RoleSearchWidget
-            {roles}
-            bind:selectedRole={roleName}
-            bind:roleScope
-            {bankId}
-            disabled={isSubmitting}
-          />
-        </div>
+        <RoleSearchWidget
+          {roles}
+          bind:selectedRole={roleName}
+          bind:roleScope
+          bind:searchQuery={roleSearchQuery}
+          {bankId}
+          hideSearch
+          disabled={isSubmitting}
+        />
 
-        <!-- Form Actions -->
         <div class="form-actions">
           <button
             type="button"
@@ -250,7 +232,7 @@
   }
 
   .panel-header {
-    padding: 2rem;
+    padding: 1rem 1.25rem;
     border-bottom: 1px solid #e5e7eb;
   }
 
@@ -258,18 +240,8 @@
     border-bottom-color: rgb(var(--color-surface-700));
   }
 
-  .header-content {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-  }
-
-  .header-icon {
-    font-size: 2.5rem;
-  }
-
   .panel-title {
-    font-size: 1.875rem;
+    font-size: 1.125rem;
     font-weight: 600;
     color: #111827;
     margin: 0;
@@ -279,68 +251,63 @@
     color: var(--color-surface-100);
   }
 
-  .panel-subtitle {
-    font-size: 0.875rem;
-    color: #6b7280;
-    margin-top: 0.5rem;
-  }
-
-  :global([data-mode="dark"]) .panel-subtitle {
-    color: var(--color-surface-400);
-  }
-
   .panel-content {
-    padding: 2rem;
+    padding: 1.25rem;
   }
 
   .form {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 0.75rem;
   }
 
-  .form-group {
+  .search-row {
     display: flex;
-    flex-direction: column;
     gap: 0.5rem;
+    align-items: flex-start;
   }
 
-  .form-label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+  .role-search-input {
+    flex: 0 0 480px;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
     font-size: 0.875rem;
-    font-weight: 600;
-    color: #374151;
+    transition: all 0.2s;
   }
 
-  :global([data-mode="dark"]) .form-label {
-    color: var(--color-surface-200);
+  .search-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
   }
 
-  .required {
-    color: #ef4444;
+  .search-input:disabled {
+    background: #f9fafb;
+    cursor: not-allowed;
+    opacity: 0.6;
   }
 
-  .optional {
-    color: #9ca3af;
-    font-weight: 400;
+  :global([data-mode="dark"]) .search-input {
+    background: rgb(var(--color-surface-700));
+    border-color: rgb(var(--color-surface-600));
+    color: var(--color-surface-100);
   }
 
-  .form-hint {
-    font-size: 0.75rem;
-    color: #6b7280;
-  }
-
-  :global([data-mode="dark"]) .form-hint {
-    color: var(--color-surface-400);
+  :global([data-mode="dark"]) .search-input:focus {
+    border-color: rgb(var(--color-primary-500));
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
   }
 
   .form-actions {
     display: flex;
-    gap: 1rem;
+    gap: 0.75rem;
     justify-content: flex-end;
-    padding-top: 1rem;
+    padding-top: 0.75rem;
     border-top: 1px solid #e5e7eb;
   }
 
@@ -353,7 +320,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
+    padding: 0.5rem 1.25rem;
     border: none;
     border-radius: 6px;
     font-size: 0.875rem;
@@ -420,18 +387,8 @@
   }
 
   @media (max-width: 768px) {
-    .panel-header {
-      padding: 1.5rem;
-    }
-
-    .header-content {
+    .search-row {
       flex-direction: column;
-      align-items: flex-start;
-      gap: 1rem;
-    }
-
-    .panel-content {
-      padding: 1.5rem;
     }
 
     .form-actions {

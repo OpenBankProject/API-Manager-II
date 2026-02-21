@@ -12,6 +12,8 @@
     roleScope?: "all" | "system" | "bank";
     bankId?: string;
     disabled?: boolean;
+    searchQuery?: string;
+    hideSearch?: boolean;
   }
 
   let {
@@ -20,9 +22,9 @@
     roleScope = $bindable<"all" | "system" | "bank">("all"),
     bankId = "",
     disabled = false,
+    searchQuery = $bindable(""),
+    hideSearch = false,
   }: Props = $props();
-
-  let searchQuery = $state("");
 
   // Filter roles based on search query only
   let filteredRoles = $derived.by(() => {
@@ -53,17 +55,19 @@
 </script>
 
 <div class="role-search-widget">
-  <!-- Search Box -->
-  <div class="search-wrapper">
-    <Search class="search-icon" size={16} />
-    <input
-      type="text"
-      class="search-input"
-      placeholder="Search roles..."
-      bind:value={searchQuery}
-      {disabled}
-    />
-  </div>
+  {#if !hideSearch}
+    <!-- Search Box -->
+    <div class="search-wrapper">
+      <Search class="search-icon" size={16} />
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Search roles..."
+        bind:value={searchQuery}
+        {disabled}
+      />
+    </div>
+  {/if}
 
   <!-- Role Selection -->
   <div class="role-selector">
@@ -167,7 +171,7 @@
   }
 
   .role-selector {
-    max-height: 200px;
+    max-height: 400px;
     overflow-y: auto;
     border: 1px solid #e5e7eb;
     border-radius: 6px;
@@ -180,14 +184,14 @@
 
   .roles-grid {
     display: grid;
-    gap: 0.5rem;
+    gap: 0.25rem;
   }
 
   .role-option {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
     border: 1px solid #e5e7eb;
     border-radius: 6px;
     cursor: pointer;

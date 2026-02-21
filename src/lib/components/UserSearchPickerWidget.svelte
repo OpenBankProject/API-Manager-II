@@ -219,15 +219,13 @@
 
 <div class="user-search-widget">
   <div class="search-container">
-    <div class="provider-row">
-      <label class="provider-label" for="provider-select">Provider</label>
+    <div class="search-row">
       <select
         id="provider-select"
         class="provider-select"
         bind:value={selectedProvider}
         {disabled}
         onchange={() => {
-          // Re-trigger search if there's already a query
           if (searchQuery.trim()) {
             searchUsers(searchQuery);
           }
@@ -238,12 +236,8 @@
           <option value={provider}>{provider}</option>
         {/each}
       </select>
-      {#if isLoadingProviders}
-        <span class="provider-loading">Loading...</span>
-      {/if}
-    </div>
 
-    <div class="search-input-wrapper">
+      <div class="search-input-wrapper">
       <Search class="search-icon" size={18} />
       <input
         type="text"
@@ -270,6 +264,7 @@
       {#if isSearching}
         <div class="loading-spinner">⏳</div>
       {/if}
+    </div>
     </div>
 
     {#if searchQuery.trim() && !selectedUserId}
@@ -339,27 +334,16 @@
     flex-direction: column;
   }
 
-  .provider-row {
+  .search-row {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .provider-label {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #6b7280;
-    white-space: nowrap;
-  }
-
-  :global([data-mode="dark"]) .provider-label {
-    color: var(--color-surface-400);
   }
 
   .provider-select {
-    flex: 1;
-    padding: 0.5rem 0.75rem;
+    width: auto;
+    min-width: 0;
+    padding: 0.625rem 0.75rem;
     border: 1px solid #d1d5db;
     border-radius: 6px;
     font-size: 0.8rem;
@@ -396,16 +380,12 @@
     background: rgb(var(--color-surface-800));
   }
 
-  .provider-loading {
-    font-size: 0.7rem;
-    color: #9ca3af;
-    font-style: italic;
-  }
-
   .search-input-wrapper {
     position: relative;
     display: flex;
     align-items: center;
+    flex: 1;
+    min-width: 400px;
   }
 
   .search-input-wrapper :global(.search-icon) {
