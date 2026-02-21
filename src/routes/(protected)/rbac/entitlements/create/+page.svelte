@@ -1,7 +1,7 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
-  import { User, KeyRound, Building2, Globe } from "@lucide/svelte";
+  import { User, KeyRound } from "@lucide/svelte";
   import { toast } from "$lib/utils/toastService";
   import { trackedFetch } from "$lib/utils/trackedFetch";
   import UserSearchPickerWidget from "$lib/components/UserSearchPickerWidget.svelte";
@@ -164,42 +164,16 @@
             <span class="required">*</span>
           </label>
           <div class="form-hint">
-            Select whether the role is system-wide or bank-level, then choose a
-            role
+            Search and select a role to grant
           </div>
           <RoleSearchWidget
             {roles}
             bind:selectedRole={roleName}
             bind:roleScope
+            {bankId}
             disabled={isSubmitting}
           />
         </div>
-
-        <!-- Bank ID Field (shown for bank-level roles) -->
-        {#if selectedRoleRequiresBank}
-          <div class="form-group">
-            <label for="bank-id-input" class="form-label">
-              <Building2 size={18} />
-              Bank ID
-            </label>
-            <input
-              type="text"
-              id="bank-id-input"
-              class="form-input"
-              bind:value={bankId}
-              placeholder="Enter bank ID"
-              disabled={isSubmitting}
-            />
-            <div class="form-hint">
-              The bank to scope this entitlement to
-            </div>
-          </div>
-        {:else if roleName}
-          <div class="scope-info">
-            <Globe size={16} />
-            <span>This is a system-wide role — no bank ID required</span>
-          </div>
-        {/if}
 
         <!-- Form Actions -->
         <div class="form-actions">
@@ -360,56 +334,6 @@
 
   :global([data-mode="dark"]) .form-hint {
     color: var(--color-surface-400);
-  }
-
-  .form-input {
-    width: 100%;
-    padding: 0.625rem 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 0.875rem;
-    transition: all 0.2s;
-  }
-
-  .form-input:focus {
-    outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-  }
-
-  .form-input:disabled {
-    background: #f9fafb;
-    cursor: not-allowed;
-    opacity: 0.6;
-  }
-
-  :global([data-mode="dark"]) .form-input {
-    background: rgb(var(--color-surface-700));
-    border-color: rgb(var(--color-surface-600));
-    color: var(--color-surface-100);
-  }
-
-  :global([data-mode="dark"]) .form-input:focus {
-    border-color: rgb(var(--color-primary-500));
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-  }
-
-  .scope-info {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem;
-    background: #f0f9ff;
-    border: 1px solid #bae6fd;
-    border-radius: 6px;
-    font-size: 0.875rem;
-    color: #0369a1;
-  }
-
-  :global([data-mode="dark"]) .scope-info {
-    background: rgba(14, 165, 233, 0.1);
-    border-color: rgba(14, 165, 233, 0.3);
-    color: rgb(var(--color-primary-300));
   }
 
   .form-actions {

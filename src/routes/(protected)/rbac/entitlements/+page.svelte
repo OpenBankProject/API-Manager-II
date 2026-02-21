@@ -2,6 +2,7 @@
   import type { PageData } from "./$types";
   import { Search, User, Building2, Globe, Trash2 } from "@lucide/svelte";
   import MissingRoleAlert from "$lib/components/MissingRoleAlert.svelte";
+  import { currentBank } from "$lib/stores/currentBank.svelte";
 
   interface Entitlement {
     entitlement_id: string;
@@ -62,13 +63,21 @@
   // Search state
   let searchQuery = $state("");
 
-  // Filter entitlements based on search query
+  // Filter to only system-wide and current bank entitlements
+  let relevantEntitlements = $derived.by(() => {
+    return entitlements.filter(
+      (ent: Entitlement) =>
+        !ent.bank_id || ent.bank_id === currentBank.bankId,
+    );
+  });
+
+  // Apply search filter on top
   let filteredEntitlements = $derived.by(() => {
     if (!searchQuery.trim()) {
-      return entitlements;
+      return relevantEntitlements;
     }
     const query = searchQuery.toLowerCase();
-    return entitlements.filter(
+    return relevantEntitlements.filter(
       (ent: Entitlement) =>
         ent.role_name.toLowerCase().includes(query) ||
         ent.username.toLowerCase().includes(query) ||
@@ -77,23 +86,18 @@
     );
   });
 
-  // Group entitlements by bank_id
-  let groupedEntitlements = $derived.by(() => {
-    const grouped = new Map<string, Entitlement[]>();
-
-    filteredEntitlements.forEach((ent: Entitlement) => {
-      const key = ent.bank_id || "System-wide";
-      if (!grouped.has(key)) {
-        grouped.set(key, []);
-      }
-      grouped.get(key)!.push(ent);
-    });
-
-    return grouped;
-  });
+  // Split into system-wide and bank-level
+  let systemEntitlements = $derived(
+    filteredEntitlements.filter((ent: Entitlement) => !ent.bank_id),
+  );
+  let bankEntitlements = $derived(
+    filteredEntitlements.filter(
+      (ent: Entitlement) => ent.bank_id === currentBank.bankId,
+    ),
+  );
 
   // Count total entitlements
-  let totalCount = $derived(entitlements.length);
+  let totalCount = $derived(relevantEntitlements.length);
   let filteredCount = $derived(filteredEntitlements.length);
 </script>
 
@@ -198,76 +202,98 @@
           </p>
         </div>
       {:else}
-        <div class="entitlements-container">
-          {#each Array.from(groupedEntitlements.entries()) as [bankId, ents]}
+        <div class="two-column-layout">
+          <!-- System-wide entitlements (left) -->
+          <div class="column">
             <div class="bank-group">
               <div class="bank-header">
-                {#if bankId === "System-wide"}
-                  <Globe size={20} class="bank-icon" />
-                  <h3 class="bank-name">System-wide Entitlements</h3>
-                {:else}
-                  <Building2 size={20} class="bank-icon" />
-                  <h3 class="bank-name">Bank: {bankId}</h3>
-                {/if}
-                <span class="bank-count">{ents.length}</span>
+                <Globe size={20} class="bank-icon" />
+                <h3 class="bank-name">System Entitlements</h3>
+                <span class="bank-count">{systemEntitlements.length}</span>
               </div>
 
-              <div class="entitlements-list">
-                {#each ents as entitlement}
-                  <div class="entitlement-card">
-                    <div class="entitlement-header">
-                      <div class="entitlement-role">
-                        <h4 class="role-name">
-                          <a
-                            href="/rbac/roles/{entitlement.role_name}"
-                            class="role-link"
-                          >
-                            {entitlement.role_name}
-                          </a>
-                          <a
-                            href="/rbac/entitlements/{entitlement.entitlement_id}/delete"
-                            class="delete-button"
-                            title="Delete entitlement"
-                          >
-                            <Trash2 size={16} />
-                          </a>
-                        </h4>
-                      </div>
-                    </div>
-
-                    <div class="entitlement-body">
-                      <div class="entitlement-info">
-                        <User size={16} class="info-icon" />
-                        <div class="info-content">
-                          <span class="info-label">User:</span>
-                          <a
-                            href="/users/{entitlement.user_id}"
-                            class="user-link"
-                          >
-                            {entitlement.username}
-                          </a>
-                        </div>
-                      </div>
-
-                      {#if entitlement.bank_id}
-                        <div class="entitlement-info">
-                          <Building2 size={16} class="info-icon" />
-                          <div class="info-content">
-                            <span class="info-label">Bank ID:</span>
-                            <span class="info-value">{entitlement.bank_id}</span
-                            >
-                          </div>
-                        </div>
-                      {/if}
-                    </div>
-                  </div>
-                {/each}
-              </div>
+              {#if systemEntitlements.length > 0}
+                <div class="entitlements-list">
+                  {#each systemEntitlements as entitlement}
+                    {@render entitlementCard(entitlement)}
+                  {/each}
+                </div>
+              {:else}
+                <div class="column-empty">No system entitlements{searchQuery ? " matching search" : ""}</div>
+              {/if}
             </div>
-          {/each}
+          </div>
+
+          <!-- Bank-level entitlements (right) -->
+          <div class="column">
+            <div class="bank-group">
+              <div class="bank-header">
+                <Building2 size={20} class="bank-icon" />
+                <h3 class="bank-name">
+                  {#if currentBank.bankId}
+                    Bank: {currentBank.bankId}
+                  {:else}
+                    Bank Entitlements
+                  {/if}
+                </h3>
+                <span class="bank-count">{bankEntitlements.length}</span>
+              </div>
+
+              {#if !currentBank.bankId}
+                <div class="column-empty">Select a bank to view bank-level entitlements</div>
+              {:else if bankEntitlements.length > 0}
+                <div class="entitlements-list">
+                  {#each bankEntitlements as entitlement}
+                    {@render entitlementCard(entitlement)}
+                  {/each}
+                </div>
+              {:else}
+                <div class="column-empty">No entitlements for {currentBank.bankId}{searchQuery ? " matching search" : ""}</div>
+              {/if}
+            </div>
+          </div>
         </div>
       {/if}
     </div>
+
+    {#snippet entitlementCard(entitlement: Entitlement)}
+      <div class="entitlement-card">
+        <div class="entitlement-header">
+          <div class="entitlement-role">
+            <h4 class="role-name">
+              <a
+                href="/rbac/roles/{entitlement.role_name}"
+                class="role-link"
+              >
+                {entitlement.role_name}
+              </a>
+              <a
+                href="/rbac/entitlements/{entitlement.entitlement_id}/delete"
+                class="delete-button"
+                title="Delete entitlement"
+              >
+                <Trash2 size={16} />
+              </a>
+            </h4>
+          </div>
+        </div>
+
+        <div class="entitlement-body">
+          <div class="entitlement-info">
+            <User size={16} class="info-icon" />
+            <div class="info-content">
+              <span class="info-label">User:</span>
+              <a
+                href="/users/{entitlement.user_id}"
+                class="user-link"
+              >
+                {entitlement.username}
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    {/snippet}
   </div>
 </div>
 
@@ -545,10 +571,26 @@
     color: var(--color-surface-400);
   }
 
-  .entitlements-container {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
+  .two-column-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  .column {
+    min-width: 0;
+  }
+
+  .column-empty {
+    padding: 2rem;
+    text-align: center;
+    color: #6b7280;
+    font-size: 0.875rem;
+  }
+
+  :global([data-mode="dark"]) .column-empty {
+    color: var(--color-surface-400);
   }
 
   .bank-group {
@@ -610,10 +652,10 @@
   }
 
   .entitlements-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 1rem;
-    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
   }
 
   .entitlement-card {
@@ -819,9 +861,8 @@
       font-size: 0.875rem;
     }
 
-    .entitlements-list {
+    .two-column-layout {
       grid-template-columns: 1fr;
-      padding: 1rem;
     }
 
     .bank-header {

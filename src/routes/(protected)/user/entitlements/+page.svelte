@@ -158,8 +158,6 @@
               <RoleSearchWidget
                 roles={systemRoles}
                 bind:selectedRole={systemSelectedRole}
-                roleScope="system"
-                hideScopeToggle
               />
               {#if alreadyHasSystemRole}
                 <p class="already-has-role mt-3">You already have this entitlement.</p>
@@ -261,8 +259,7 @@
               <RoleSearchWidget
                 roles={bankRoles}
                 bind:selectedRole={bankSelectedRole}
-                roleScope="bank"
-                hideScopeToggle
+                bankId={currentBank.bankId}
               />
               <div class="scope-info mt-3">
                 <Building2 size={16} />

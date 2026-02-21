@@ -135,43 +135,24 @@
         {/each}
       </div>
 
-      <!-- Scope selector: System-wide vs Bank-scoped -->
-      {#if !bankId}
-        <div class="scope-selector">
-          <p class="scope-label"><strong>Role scope:</strong></p>
-          <label class="scope-option">
-            <input
-              type="radio"
-              name="scope-choice"
-              value="system"
-              bind:group={scopeChoice}
-            />
-            <span class="scope-option-text">
-              System-wide <span class="scope-hint">(no bank_id — for system roles)</span>
-            </span>
-          </label>
-          <label class="scope-option">
-            <input
-              type="radio"
-              name="scope-choice"
-              value="bank"
-              bind:group={scopeChoice}
-            />
-            <span class="scope-option-text">
-              Bank-scoped
-              {#if selectedBankId}
-                <code class="bank-code">{selectedBankId}</code>
-                <span class="scope-hint">(from current bank selection)</span>
-              {:else}
-                <span class="scope-hint">— <a href="/user" style="color: #3b82f6; text-decoration: underline;">select a bank</a> first</span>
-              {/if}
-            </span>
-          </label>
+      <!-- Role scope display (auto-determined from role metadata) -->
+      {#if bankId}
+        <div class="scope-display scope-bank">
+          <strong>Bank-level role</strong> — Bank: <code class="bank-code">{bankId}</code>
+        </div>
+      {:else if scopeChoice === "bank"}
+        <div class="scope-display scope-bank">
+          <strong>Bank-level role</strong>
+          {#if selectedBankId}
+            — Bank: <code class="bank-code">{selectedBankId}</code>
+          {:else}
+            — <a href="/user" class="bank-select-link">select a bank</a> first
+          {/if}
         </div>
       {:else}
-        <p class="bank-info">
-          <strong>Bank ID:</strong> <code class="bank-code">{bankId}</code>
-        </p>
+        <div class="scope-display scope-system">
+          <strong>System-wide role</strong> — no bank required
+        </div>
       {/if}
 
       {#if message}
@@ -335,20 +316,6 @@
     color: rgb(var(--color-warning-100));
   }
 
-  .bank-info {
-    margin: 1rem 0 0.5rem 0;
-    padding: 0.75rem;
-    background: rgba(59, 130, 246, 0.1);
-    border-left: 3px solid #3b82f6;
-    border-radius: 4px;
-    font-size: 0.875rem;
-  }
-
-  :global([data-mode="dark"]) .bank-info {
-    background: rgba(59, 130, 246, 0.15);
-    border-left-color: rgb(var(--color-primary-500));
-  }
-
   .bank-code {
     background: rgba(0, 0, 0, 0.1);
     padding: 0.125rem 0.5rem;
@@ -477,94 +444,54 @@
     border-left-color: rgb(var(--color-primary-500));
   }
 
-  .bank-selector {
-    margin: 1rem 0;
-    padding: 1rem;
+
+  .scope-display {
+    margin: 0.75rem 0;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+  }
+
+  .scope-display.scope-bank {
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    color: #92400e;
+  }
+
+  .scope-display.scope-system {
     background: rgba(59, 130, 246, 0.1);
     border: 1px solid rgba(59, 130, 246, 0.3);
-    border-radius: 6px;
-  }
-
-  :global([data-mode="dark"]) .bank-selector {
-    background: rgba(59, 130, 246, 0.15);
-    border-color: rgba(59, 130, 246, 0.4);
-  }
-
-  .bank-label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-size: 0.875rem;
     color: #1e40af;
   }
 
-  :global([data-mode="dark"]) .bank-label {
+  :global([data-mode="dark"]) .scope-display.scope-bank {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.4);
+    color: #fbbf24;
+  }
+
+  :global([data-mode="dark"]) .scope-display.scope-system {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.4);
     color: rgb(var(--color-primary-300));
   }
 
-  .bank-hint {
-    display: block;
-    font-weight: normal;
-    font-size: 0.75rem;
-    color: #6b7280;
-    margin-top: 0.25rem;
+  .bank-select-link {
+    color: #1e40af;
+    text-decoration: underline;
+    font-weight: 600;
   }
 
-  :global([data-mode="dark"]) .bank-hint {
-    color: rgb(var(--color-surface-400));
+  .bank-select-link:hover {
+    color: #1d4ed8;
   }
 
-  .required {
-    color: #dc2626;
-    margin-left: 0.25rem;
+  :global([data-mode="dark"]) .bank-select-link {
+    color: rgb(var(--color-primary-300));
   }
 
-  .scope-selector {
-    margin: 1rem 0;
-    padding: 0.75rem 1rem;
-    background: rgba(59, 130, 246, 0.1);
-    border: 1px solid rgba(59, 130, 246, 0.3);
-    border-radius: 6px;
-  }
-
-  :global([data-mode="dark"]) .scope-selector {
-    background: rgba(59, 130, 246, 0.15);
-    border-color: rgba(59, 130, 246, 0.4);
-  }
-
-  .scope-label {
-    margin: 0 0 0.5rem 0;
-    font-size: 0.875rem;
-  }
-
-  .scope-option {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.375rem 0;
-    font-size: 0.875rem;
-    cursor: pointer;
-  }
-
-  .scope-option input[type="radio"] {
-    margin: 0;
-    cursor: pointer;
-  }
-
-  .scope-option-text {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    flex-wrap: wrap;
-  }
-
-  .scope-hint {
-    font-size: 0.75rem;
-    color: #6b7280;
-    font-weight: normal;
-  }
-
-  :global([data-mode="dark"]) .scope-hint {
-    color: rgb(var(--color-surface-400));
+  :global([data-mode="dark"]) .bank-select-link:hover {
+    color: rgb(var(--color-primary-200));
   }
 
 </style>

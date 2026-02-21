@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Search, KeyRound, Globe, Building2 } from "@lucide/svelte";
+  import { Search, Globe, Building2 } from "@lucide/svelte";
 
   interface Role {
     role: string;
@@ -10,25 +10,24 @@
     roles: Role[];
     selectedRole?: string;
     roleScope?: "all" | "system" | "bank";
+    bankId?: string;
     disabled?: boolean;
-    hideScopeToggle?: boolean;
   }
 
   let {
     roles,
     selectedRole = $bindable(""),
     roleScope = $bindable<"all" | "system" | "bank">("all"),
+    bankId = "",
     disabled = false,
-    hideScopeToggle = false,
   }: Props = $props();
 
   let searchQuery = $state("");
 
-  // Filter roles based on search query and scope
+  // Filter roles based on search query only
   let filteredRoles = $derived.by(() => {
     let filtered = roles;
 
-    // Filter by search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter((role) =>
@@ -36,82 +35,34 @@
       );
     }
 
-    // Filter by scope using requires_bank_id flag
-    if (roleScope === "system") {
-      // System roles don't require bank_id
-      filtered = filtered.filter((role) => !role.requires_bank_id);
-    } else if (roleScope === "bank") {
-      // Bank roles require bank_id
-      filtered = filtered.filter((role) => role.requires_bank_id);
-    }
-    // If roleScope === "all", don't filter by scope
-
     return filtered;
   });
+
+  // Automatically set roleScope based on the selected role
+  $effect(() => {
+    if (selectedRole) {
+      const role = roles.find((r) => r.role === selectedRole);
+      if (role) {
+        roleScope = role.requires_bank_id ? "bank" : "system";
+      }
+    } else {
+      roleScope = "all";
+    }
+  });
+
 </script>
 
 <div class="role-search-widget">
-  <!-- Search and Scope Toggle Row -->
-  <div class="search-and-toggle-row">
-    <!-- Search Box -->
-    <div class="search-wrapper">
-      <Search class="search-icon" size={16} />
-      <input
-        type="text"
-        class="search-input"
-        placeholder="Search {roleScope === 'all'
-          ? 'all'
-          : roleScope === 'system'
-            ? 'system-wide'
-            : 'bank-level'} roles..."
-        bind:value={searchQuery}
-        {disabled}
-      />
-    </div>
-
-    <!-- Scope Toggle -->
-    {#if !hideScopeToggle}
-      <div class="scope-toggle">
-        <button
-          type="button"
-          class="scope-button"
-          class:active={roleScope === "all"}
-          onclick={() => {
-            roleScope = "all";
-            selectedRole = "";
-          }}
-          {disabled}
-        >
-          All
-        </button>
-        <button
-          type="button"
-          class="scope-button"
-          class:active={roleScope === "system"}
-          onclick={() => {
-            roleScope = "system";
-            selectedRole = "";
-          }}
-          {disabled}
-        >
-          <Globe size={14} />
-          System
-        </button>
-        <button
-          type="button"
-          class="scope-button"
-          class:active={roleScope === "bank"}
-          onclick={() => {
-            roleScope = "bank";
-            selectedRole = "";
-          }}
-          {disabled}
-        >
-          <Building2 size={14} />
-          Bank
-        </button>
-      </div>
-    {/if}
+  <!-- Search Box -->
+  <div class="search-wrapper">
+    <Search class="search-icon" size={16} />
+    <input
+      type="text"
+      class="search-input"
+      placeholder="Search roles..."
+      bind:value={searchQuery}
+      {disabled}
+    />
   </div>
 
   <!-- Role Selection -->
@@ -119,11 +70,7 @@
     {#if filteredRoles.length === 0}
       <div class="empty-roles">
         <p>
-          No {roleScope === "all"
-            ? ""
-            : roleScope === "system"
-              ? "system-wide "
-              : "bank-level "}roles found
+          No roles found
           {searchQuery ? `matching "${searchQuery}"` : ""}
         </p>
       </div>
@@ -140,8 +87,19 @@
             />
             <div class="role-option-content">
               <span class="role-option-name">{role.role}</span>
-              <span class="role-option-badge">
-                {role.requires_bank_id ? "Bank-level" : "System-wide"}
+              <span class="role-option-badge" class:badge-system={!role.requires_bank_id} class:badge-bank={role.requires_bank_id}>
+                {#if role.requires_bank_id}
+                  {#if selectedRole === role.role && bankId}
+                    <Building2 size={11} />
+                    <code class="bank-code">{bankId}</code>
+                  {:else}
+                    <Building2 size={11} />
+                    Bank-level
+                  {/if}
+                {:else}
+                  <Globe size={11} />
+                  System-wide
+                {/if}
               </span>
             </div>
           </label>
@@ -150,21 +108,6 @@
     {/if}
   </div>
 
-  {#if selectedRole}
-    <div class="selected-role">
-      <KeyRound size={14} />
-      <span class="selected-role-text">
-        Selected: <strong>{selectedRole}</strong>
-        <span class="role-scope-badge">
-          {roleScope === "all"
-            ? "All Roles"
-            : roleScope === "system"
-              ? "System-wide"
-              : "Bank-level"}
-        </span>
-      </span>
-    </div>
-  {/if}
 </div>
 
 <style>
@@ -172,77 +115,6 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
-  }
-
-  .search-and-toggle-row {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-  }
-
-  .search-wrapper {
-    flex: 1;
-  }
-
-  .scope-toggle {
-    display: flex;
-    gap: 0.25rem;
-    padding: 0.25rem;
-    background: #f3f4f6;
-    border-radius: 6px;
-    flex-shrink: 0;
-  }
-
-  :global([data-mode="dark"]) .scope-toggle {
-    background: rgb(var(--color-surface-700));
-  }
-
-  .scope-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.375rem;
-    padding: 0.5rem 0.75rem;
-    background: transparent;
-    border: none;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: #6b7280;
-    cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
-  }
-
-  .scope-button:hover:not(:disabled) {
-    color: #374151;
-    background: rgba(0, 0, 0, 0.05);
-  }
-
-  .scope-button.active {
-    background: white;
-    color: #667eea;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
-
-  .scope-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  :global([data-mode="dark"]) .scope-button {
-    color: var(--color-surface-400);
-  }
-
-  :global([data-mode="dark"]) .scope-button:hover:not(:disabled) {
-    color: var(--color-surface-200);
-    background: rgba(255, 255, 255, 0.05);
-  }
-
-  :global([data-mode="dark"]) .scope-button.active {
-    background: rgb(var(--color-surface-800));
-    color: rgb(var(--color-primary-400));
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   }
 
   .search-wrapper :global(.search-icon) {
@@ -368,17 +240,33 @@
   }
 
   .role-option-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
     font-size: 0.65rem;
     padding: 0.125rem 0.375rem;
-    background: #f3f4f6;
-    color: #6b7280;
     border-radius: 4px;
     font-weight: 500;
   }
 
-  :global([data-mode="dark"]) .role-option-badge {
-    background: rgb(var(--color-surface-700));
-    color: var(--color-surface-400);
+  .role-option-badge.badge-system {
+    background: #eff6ff;
+    color: #1e40af;
+  }
+
+  .role-option-badge.badge-bank {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  :global([data-mode="dark"]) .role-option-badge.badge-system {
+    background: rgba(59, 130, 246, 0.15);
+    color: rgb(var(--color-primary-300));
+  }
+
+  :global([data-mode="dark"]) .role-option-badge.badge-bank {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
   }
 
   .empty-roles {
@@ -392,46 +280,9 @@
     color: var(--color-surface-400);
   }
 
-  .selected-role {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem;
-    background: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    color: #166534;
-  }
-
-  :global([data-mode="dark"]) .selected-role {
-    background: rgba(34, 197, 94, 0.15);
-    border-color: rgba(34, 197, 94, 0.3);
-    color: rgb(var(--color-success-200));
-  }
-
-  .selected-role :global(svg) {
-    flex-shrink: 0;
-  }
-
-  .selected-role-text {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-  }
-
-  .role-scope-badge {
-    display: inline-flex;
-    padding: 0.125rem 0.375rem;
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 4px;
+  .bank-code {
+    font-family: monospace;
     font-size: 0.65rem;
     font-weight: 600;
-  }
-
-  :global([data-mode="dark"]) .role-scope-badge {
-    background: rgba(255, 255, 255, 0.1);
   }
 </style>

@@ -58,7 +58,7 @@ All API calls in the accept/decline flow now show the activity indicator.
 - `handleSubmit()` - Tracks entitlement creation
 
 #### Widget Components
-- **UserSearchWidget** (`src/lib/components/UserSearchWidget.svelte`)
+- **UserSearchPickerWidget** (`src/lib/components/UserSearchPickerWidget.svelte`)
   - User search API calls now tracked
 - **BankSelectWidget** (`src/lib/components/BankSelectWidget.svelte`)
   - Bank loading API calls now tracked
@@ -134,7 +134,7 @@ try {
 1. `src/routes/+layout.svelte` - Added ApiActivityIndicator import and component
 2. `src/routes/(protected)/rbac/entitlement-requests/+page.svelte` - Replaced fetch with trackedFetch
 3. `src/routes/(protected)/rbac/entitlements/create/+page.svelte` - Replaced fetch with trackedFetch
-4. `src/lib/components/UserSearchWidget.svelte` - Replaced fetch with trackedFetch
+4. `src/lib/components/UserSearchPickerWidget.svelte` - Replaced fetch with trackedFetch
 5. `src/lib/components/BankSelectWidget.svelte` - Replaced fetch with trackedFetch
 
 ## Files Already Existing (Not Created)
