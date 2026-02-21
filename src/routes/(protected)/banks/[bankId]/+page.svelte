@@ -300,6 +300,16 @@
           </svg>
           <span class="text-sm font-medium text-gray-900 group-hover:text-blue-700 dark:text-gray-100 dark:group-hover:text-blue-300">System Views</span>
         </a>
+
+        <a
+          href="/account-access/account-directory?bank_id={bank.bank_id}"
+          class="group flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2.5 transition-colors hover:border-blue-300 hover:bg-blue-50 dark:border-gray-700 dark:hover:border-blue-700 dark:hover:bg-blue-900/20"
+        >
+          <svg class="h-4 w-4 flex-shrink-0 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+          </svg>
+          <span class="text-sm font-medium text-gray-900 group-hover:text-blue-700 dark:text-gray-100 dark:group-hover:text-blue-300">Account Directory</span>
+        </a>
       </div>
     </div>
 

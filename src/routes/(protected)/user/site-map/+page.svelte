@@ -1,8 +1,9 @@
 <script lang="ts">
   import { SITE_MAP, checkRoles } from "$lib/utils/roleChecker";
   import type { UserEntitlement, RoleRequirement } from "$lib/utils/roleChecker";
-  import { Check, X, Search } from "@lucide/svelte";
+  import { Check, X, Search, ChevronRight } from "@lucide/svelte";
   import MissingRoleAlert from "$lib/components/MissingRoleAlert.svelte";
+  import { currentBank } from "$lib/stores/currentBank.svelte";
 
   const { data } = $props();
 
@@ -31,6 +32,7 @@
   function hasRole(role: RoleRequirement): boolean {
     return userEntitlements.some((e) => {
       if (e.role_name !== role.role) return false;
+      if (role.bankScoped) return currentBank.bankId ? e.bank_id === currentBank.bankId : false;
       if (role.bankId) return e.bank_id === role.bankId;
       return true;
     });
@@ -43,9 +45,17 @@
     accessible: boolean;
   }
 
+  // Tree node structure
+  interface TreeNode {
+    segment: string;
+    fullPath: string;
+    entry: PageEntry | null;
+    children: TreeNode[];
+  }
+
   let allPages: PageEntry[] = $derived(
     Object.entries(SITE_MAP).map(([route, config]) => {
-      const result = checkRoles(userEntitlements, config.required);
+      const result = checkRoles(userEntitlements, config.required, currentBank.bankId);
       return {
         route,
         required: config.required,
@@ -67,6 +77,53 @@
         })
   );
 
+  // Build a tree from routes within a section
+  function buildTree(pages: PageEntry[], sectionPrefix: string): TreeNode[] {
+    const root: TreeNode[] = [];
+
+    for (const page of pages) {
+      // Strip the section prefix to get the relative path
+      let relative = page.route;
+      for (const s of SECTION_ORDER) {
+        if (relative.startsWith(s.prefix)) {
+          relative = relative.slice(s.prefix.length);
+          break;
+        }
+      }
+      // For routes like /consumers or /connector-metrics that match at the prefix level
+      if (relative === page.route) {
+        // Use the full route minus leading slash
+        relative = page.route.replace(/^\//, "");
+      }
+
+      const segments = relative.split("/").filter(Boolean);
+      let currentLevel = root;
+
+      for (let i = 0; i < segments.length; i++) {
+        const segment = segments[i];
+        const isLast = i === segments.length - 1;
+        let existing = currentLevel.find((n) => n.segment === segment);
+
+        if (!existing) {
+          existing = {
+            segment,
+            fullPath: page.route,
+            entry: isLast ? page : null,
+            children: [],
+          };
+          currentLevel.push(existing);
+        } else if (isLast) {
+          existing.entry = page;
+          existing.fullPath = page.route;
+        }
+
+        currentLevel = existing.children;
+      }
+    }
+
+    return root;
+  }
+
   let groupedPages = $derived.by(() => {
     const groups: Record<string, PageEntry[]> = {};
     for (const p of filteredPages) {
@@ -77,7 +134,15 @@
     return groups;
   });
 
-  // Ordered section keys for display
+  let sectionTrees = $derived.by(() => {
+    const trees: Record<string, TreeNode[]> = {};
+    for (const [key, pages] of Object.entries(groupedPages)) {
+      const section = SECTION_ORDER.find((s) => s.key === key);
+      trees[key] = buildTree(pages, section?.prefix || "/");
+    }
+    return trees;
+  });
+
   let orderedSections = $derived(
     [...SECTION_ORDER.map((s) => s.key), "other"].filter((k) => groupedPages[k]?.length)
   );
@@ -87,7 +152,6 @@
     return found ? found.label : "Other";
   }
 
-  // Collect missing role names for a page entry (both required and optional)
   function getMissingRoles(entry: PageEntry): string[] {
     const missing: string[] = [];
     for (const r of entry.required) {
@@ -131,7 +195,7 @@
   />
 </div>
 
-<!-- Grouped pages -->
+<!-- Grouped pages as trees -->
 {#each orderedSections as sectionKey}
   <div class="section">
     <div class="section-header">
@@ -139,39 +203,61 @@
       <span class="section-count">{groupedPages[sectionKey].length}</span>
     </div>
 
-    <div class="page-list">
-      {#each groupedPages[sectionKey] as entry}
-        <div class="page-entry" class:blocked={!entry.accessible}>
-          <a href={entry.route} class="route-link">
-            {entry.route}
-          </a>
-          <div class="roles-list">
-            {#each entry.required as role}
-              <span class="role-badge" class:has={hasRole(role)} class:missing={!hasRole(role)}>
-                {#if hasRole(role)}
-                  <Check size={12} />
-                {:else}
-                  <X size={12} />
-                {/if}
-                {role.role}
-              </span>
-            {/each}
-            {#each entry.optional as role}
-              <span class="role-badge optional" class:has={hasRole(role)} class:missing={!hasRole(role)}>
-                {#if hasRole(role)}
-                  <Check size={12} />
-                {:else}
-                  <X size={12} />
-                {/if}
-                {role.role}
-                <span class="optional-label">optional</span>
-              </span>
-            {/each}
+    <div class="tree">
+      {#snippet renderNode(node: TreeNode, isLast: boolean, depth: number)}
+        <div class="tree-item" class:blocked={node.entry && !node.entry.accessible}>
+          <div class="tree-row">
+            <div class="tree-indent" style="width: {depth * 1.5}rem"></div>
+            <span class="tree-connector">{isLast ? "└── " : "├── "}</span>
+            {#if node.entry}
+              <a href={node.entry.route} class="tree-link" class:blocked={!node.entry.accessible}>
+                <span class="tree-segment">{node.segment}</span>
+              </a>
+            {:else}
+              <span class="tree-segment tree-folder">{node.segment}</span>
+            {/if}
+            {#if node.entry}
+              <div class="roles-list">
+                {#each node.entry.required as role}
+                  <span class="role-badge" class:has={hasRole(role)} class:missing={!hasRole(role)}>
+                    {#if hasRole(role)}
+                      <Check size={11} />
+                    {:else}
+                      <X size={11} />
+                    {/if}
+                    {role.role}
+                    {#if role.bankScoped}
+                      <span class="scope-label">bank</span>
+                    {/if}
+                  </span>
+                {/each}
+                {#each node.entry.optional as role}
+                  <span class="role-badge optional" class:has={hasRole(role)} class:missing={!hasRole(role)}>
+                    {#if hasRole(role)}
+                      <Check size={11} />
+                    {:else}
+                      <X size={11} />
+                    {/if}
+                    {role.role}
+                    <span class="optional-label">optional</span>
+                  </span>
+                {/each}
+              </div>
+            {/if}
           </div>
-          {#if getMissingRoles(entry).length > 0}
-            <MissingRoleAlert roles={getMissingRoles(entry)} />
+          {#if node.entry && getMissingRoles(node.entry).length > 0}
+            <div class="tree-alert" style="margin-left: {(depth + 1) * 1.5 + 2.5}rem">
+              <MissingRoleAlert roles={getMissingRoles(node.entry)} />
+            </div>
           {/if}
         </div>
+        {#each node.children as child, i}
+          {@render renderNode(child, i === node.children.length - 1, depth + 1)}
+        {/each}
+      {/snippet}
+
+      {#each sectionTrees[sectionKey] as node, i}
+        {@render renderNode(node, i === sectionTrees[sectionKey].length - 1, 0)}
       {/each}
     </div>
   </div>
@@ -334,49 +420,86 @@
     color: var(--color-surface-300);
   }
 
-  /* Page entries */
-  .page-list {
+  /* Tree */
+  .tree {
+    padding: 0.5rem 1rem 0.75rem;
+    font-family: monospace;
+  }
+
+  .tree-item {
     display: flex;
     flex-direction: column;
   }
 
-  .page-entry {
-    padding: 0.625rem 1rem;
-    border-bottom: 1px solid #f3f4f6;
-    display: flex;
-    flex-direction: column;
-    gap: 0.375rem;
-  }
-
-  .page-entry:last-child {
-    border-bottom: none;
-  }
-
-  :global([data-mode="dark"]) .page-entry {
-    border-bottom-color: rgb(var(--color-surface-700));
-  }
-
-  .page-entry.blocked {
+  .tree-item.blocked {
     background: #fef2f2;
+    border-radius: 4px;
   }
 
-  :global([data-mode="dark"]) .page-entry.blocked {
+  :global([data-mode="dark"]) .tree-item.blocked {
     background: rgba(220, 38, 38, 0.05);
   }
 
-  .route-link {
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: #2563eb;
-    text-decoration: none;
+  .tree-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 0.3rem 0;
+    min-height: 1.75rem;
   }
 
-  .route-link:hover {
+  .tree-indent {
+    flex-shrink: 0;
+  }
+
+  .tree-connector {
+    flex-shrink: 0;
+    color: #d1d5db;
+    font-size: 0.8rem;
+    white-space: pre;
+    user-select: none;
+  }
+
+  :global([data-mode="dark"]) .tree-connector {
+    color: var(--color-surface-600);
+  }
+
+  .tree-segment {
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  .tree-folder {
+    color: #6b7280;
+  }
+
+  :global([data-mode="dark"]) .tree-folder {
+    color: var(--color-surface-400);
+  }
+
+  .tree-link {
+    text-decoration: none;
+    color: #2563eb;
+  }
+
+  .tree-link:hover {
     text-decoration: underline;
   }
 
-  :global([data-mode="dark"]) .route-link {
+  .tree-link.blocked {
+    color: #dc2626;
+  }
+
+  :global([data-mode="dark"]) .tree-link {
     color: rgb(var(--color-primary-400));
+  }
+
+  :global([data-mode="dark"]) .tree-link.blocked {
+    color: rgb(var(--color-error-400));
+  }
+
+  .tree-alert {
+    padding-bottom: 0.25rem;
   }
 
   /* Roles */
@@ -384,6 +507,8 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.375rem;
+    margin-left: 0.75rem;
+    font-family: system-ui, -apple-system, sans-serif;
   }
 
   .role-badge {
@@ -392,7 +517,7 @@
     gap: 0.25rem;
     padding: 0.125rem 0.5rem;
     border-radius: 9999px;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     font-weight: 500;
   }
 
@@ -422,9 +547,17 @@
   }
 
   .optional-label {
-    font-size: 0.6rem;
+    font-size: 0.55rem;
     opacity: 0.7;
     font-style: italic;
+  }
+
+  .scope-label {
+    font-size: 0.55rem;
+    opacity: 0.7;
+    padding: 0 0.2rem;
+    border: 1px solid currentColor;
+    border-radius: 3px;
   }
 
   .empty-text {

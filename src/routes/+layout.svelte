@@ -554,7 +554,7 @@
                   <option value="">-- Select a bank --</option>
                   {#each currentBank.banks as bank}
                     <option value={bank.bank_id}>
-                      {bank.short_name} — {bank.full_name}
+                      {bank.bank_id} — {bank.bank_code} — {bank.full_name}
                     </option>
                   {/each}
                 </select>
