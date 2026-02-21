@@ -61,6 +61,11 @@ function buildMyAccountItems(): NavigationItem[] {
       iconComponent: IdCardLanyard,
     },
     {
+      href: "/account-access/accounts",
+      label: "My Accounts",
+      iconComponent: Landmark,
+    },
+    {
       href: "/api-collections",
       label: "My Collections",
       iconComponent: FolderOpen,
@@ -330,11 +335,6 @@ function buildAccountAccessItems(): NavigationItem[] {
       iconComponent: Eye,
     },
     {
-      href: "/account-access/accounts",
-      label: "Accounts",
-      iconComponent: Landmark,
-    },
-    {
       href: "/account-access/account-directory",
       label: "Account Directory",
       iconComponent: FolderOpen,
@@ -535,7 +535,7 @@ export function getActiveAbacMenuItem(pathname: string) {
 }
 
 export const navSections: NavigationSection[] = [
-  { id: "my-account", label: "My Account", iconComponent: User, items: myAccountItems, basePaths: ["/user"] },
+  { id: "my-account", label: "My Profile", iconComponent: User, items: myAccountItems, basePaths: ["/user", "/account-access/accounts"] },
   { id: "system", label: "System", iconComponent: Server, items: systemItems, basePaths: ["/system"] },
   { id: "signals", label: "Signals", iconComponent: Radio, items: signalsItems, basePaths: ["/system/signal-publish", "/system/signal-channels", "/system/signal-channels-stats"] },
   { id: "integration", label: "Integration", iconComponent: Plug, items: integrationItems, basePaths: ["/integration"] },
