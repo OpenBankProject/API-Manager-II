@@ -237,17 +237,17 @@
         </div>
       {:else}
         <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <table class="min-w-full table-fixed divide-y divide-gray-200 dark:divide-gray-700">
             <thead class="bg-gray-50 dark:bg-gray-900">
               <tr>
-                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Name</th>
+                <th class="w-1/3 px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Name</th>
                 <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Value</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
               {#each filteredProps as prop}
                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                  <td class="whitespace-nowrap px-4 py-3 text-sm font-mono font-medium text-gray-900 dark:text-gray-100">
+                  <td class="w-1/3 px-4 py-3 text-sm font-mono font-medium text-gray-900 dark:text-gray-100 break-all">
                     {prop.name}
                   </td>
                   <td class="px-4 py-3 text-sm font-mono text-gray-600 dark:text-gray-400">
