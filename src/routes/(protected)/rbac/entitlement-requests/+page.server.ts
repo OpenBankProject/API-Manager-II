@@ -21,7 +21,9 @@ interface EntitlementRequestsResponse {
   entitlement_requests: EntitlementRequest[];
 }
 
-export const load: PageServerLoad = async ({ locals }) => {
+const DEFAULT_LIMIT = 50;
+
+export const load: PageServerLoad = async ({ locals, url }) => {
   const session = locals.session;
 
   if (!session?.data?.user) {
@@ -38,12 +40,18 @@ export const load: PageServerLoad = async ({ locals }) => {
       entitlementRequests: [],
       hasApiAccess: false,
       error: "No API access token available",
+      limit: DEFAULT_LIMIT,
+      offset: 0,
     };
   }
 
+  const limit = parseInt(url.searchParams.get("limit") || String(DEFAULT_LIMIT));
+  const offset = parseInt(url.searchParams.get("offset") || "0");
+  const sortDirection = url.searchParams.get("sort_direction") || "DESC";
+
   try {
     logger.info("=== ENTITLEMENT REQUESTS API CALL ===");
-    const endpoint = `/obp/v6.0.0/entitlement-requests`;
+    const endpoint = `/obp/v6.0.0/entitlement-requests?limit=${limit}&offset=${offset}&sort_direction=${sortDirection}`;
     logger.info(`Request: ${endpoint}`);
 
     const response: EntitlementRequestsResponse = await obp_requests.get(
@@ -58,6 +66,8 @@ export const load: PageServerLoad = async ({ locals }) => {
     return {
       entitlementRequests: response.entitlement_requests || [],
       hasApiAccess: true,
+      limit,
+      offset,
     };
   } catch (err) {
     logger.error("Error loading entitlement requests:", err);
@@ -69,6 +79,8 @@ export const load: PageServerLoad = async ({ locals }) => {
         err instanceof Error
           ? err.message
           : "Failed to load entitlement requests",
+      limit,
+      offset,
     };
   }
 };

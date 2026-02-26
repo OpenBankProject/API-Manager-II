@@ -915,11 +915,6 @@
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead class="bg-gray-50 dark:bg-gray-900">
             <tr>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
-              >
-                ID
-              </th>
               {#each Object.keys(properties).slice(0, 4) as fieldName}
                 <th
                   class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
@@ -939,13 +934,7 @@
           >
             {#each filteredRecords as record, index}
               {@const recordData = getRecordData(record)}
-              {@const recordId = getRecordId(record)}
               <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                <td
-                  class="max-w-xs truncate px-6 py-4 text-sm font-mono text-gray-600 dark:text-gray-400"
-                >
-                  {recordId || "-"}
-                </td>
                 {#each Object.keys(properties).slice(0, 4) as fieldName}
                   <td
                     class="max-w-xs truncate px-6 py-4 text-sm text-gray-900 dark:text-gray-100"
@@ -1339,14 +1328,6 @@
 
       <div class="bg-white p-6 dark:bg-gray-800">
         <dl class="space-y-4">
-          <div>
-            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">
-              ID
-            </dt>
-            <dd class="mt-1 text-sm font-mono text-gray-600 dark:text-gray-400">
-              {getRecordId(selectedRecord) || "-"}
-            </dd>
-          </div>
           {#each Object.entries(properties) as [fieldName, fieldDef]}
             {@const recordData = getRecordData(selectedRecord)}
             <div>

@@ -205,6 +205,12 @@ export const SITE_MAP: Record<string, PageRoleConfig> = {
   "/users/[provider]/[username]": {
     required: [{ role: "CanGetAnyUser" }],
   },
+  "/users/[provider]/[username]/unlock": {
+    required: [{ role: "CanUnlockUser" }],
+  },
+  "/users/[provider]/[username]/lock": {
+    required: [{ role: "CanLockUser" }],
+  },
 
   // ── Dynamic Entities ──────────────────────────────────
   "/dynamic-entities/diagnostics": {

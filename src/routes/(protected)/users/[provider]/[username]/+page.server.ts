@@ -5,17 +5,6 @@ import { obp_requests } from "$lib/obp/requests";
 import { SessionOAuthHelper } from "$lib/oauth/sessionHelper";
 import { error } from "@sveltejs/kit";
 
-interface UserDetail {
-  user_id: string;
-  username: string;
-  email: string;
-  provider: string;
-  created_date: string;
-  entitlements?: any[];
-  views?: any[];
-  accounts?: any[];
-}
-
 export const load: PageServerLoad = async ({ locals, params }) => {
   const session = locals.session;
 
@@ -42,8 +31,10 @@ export const load: PageServerLoad = async ({ locals, params }) => {
     };
   }
 
+  let user = null;
+
   try {
-    // Fetch user details from OBP API using v5.1.0 endpoint
+    // Fetch user details from OBP API
     logger.info("=== USER DETAIL API CALL ===");
     const endpoint = `/obp/v6.0.0/users/provider/${encodeURIComponent(provider)}/username/${encodeURIComponent(username)}`;
     logger.info(`Request: ${endpoint}`);
@@ -53,12 +44,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
     logger.info(`Response: User ${username} from provider ${provider}`);
 
     if (response) {
-      return {
-        user: response,
-        provider,
-        username,
-        hasApiAccess: true,
-      };
+      user = response;
     } else {
       logger.warn("NO USER DATA IN RESPONSE");
       return {
@@ -84,4 +70,11 @@ export const load: PageServerLoad = async ({ locals, params }) => {
       error: err instanceof Error ? err.message : "Failed to load user details",
     };
   }
+
+  return {
+    user,
+    provider,
+    username,
+    hasApiAccess: true,
+  };
 };

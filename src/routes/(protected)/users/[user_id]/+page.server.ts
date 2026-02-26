@@ -45,6 +45,8 @@ export const load: PageServerLoad = async ({ locals, params }) => {
     };
   }
 
+  let user: UserDetail | null = null;
+
   try {
     // Fetch user details from OBP API using user_id endpoint
     logger.info("=== USER DETAIL API CALL ===");
@@ -54,28 +56,9 @@ export const load: PageServerLoad = async ({ locals, params }) => {
     const response = await obp_requests.get(endpoint, accessToken);
 
     logger.info(`Response: User ${user_id}`);
-    logger.info("=== FULL USER DETAIL RESPONSE ===");
-    logger.info(JSON.stringify(response, null, 2));
-    logger.info("=== AVAILABLE FIELDS ===");
-    logger.info(
-      `Fields in response: ${response ? Object.keys(response).join(", ") : "none"}`,
-    );
-    logger.info(`Has last_activity_date: ${!!response?.last_activity_date}`);
-    logger.info(
-      `Has recent_operation_ids: ${!!response?.recent_operation_ids}`,
-    );
-    if (response?.recent_operation_ids) {
-      logger.info(
-        `recent_operation_ids count: ${response.recent_operation_ids.length}`,
-      );
-    }
 
     if (response) {
-      return {
-        user: response,
-        user_id,
-        hasApiAccess: true,
-      };
+      user = response;
     } else {
       logger.warn("NO USER DATA IN RESPONSE");
       return {
@@ -99,4 +82,10 @@ export const load: PageServerLoad = async ({ locals, params }) => {
       error: err instanceof Error ? err.message : "Failed to load user details",
     };
   }
+
+  return {
+    user,
+    user_id,
+    hasApiAccess: true,
+  };
 };

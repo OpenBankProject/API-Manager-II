@@ -6,7 +6,7 @@
 
   let user = $derived(data.user);
   let hasApiAccess = $derived(data.hasApiAccess);
-  let error = $derived(data.error);
+  let pageError = $derived(data.error);
 
   function formatDate(dateString: string): string {
     if (!dateString) return "N/A";
@@ -40,10 +40,10 @@
   </nav>
 
   <!-- Error Alert -->
-  {#if error}
+  {#if pageError}
     <div class="alert alert-error mb-6">
       <strong>Error:</strong>
-      {error}
+      {pageError}
     </div>
   {/if}
 
@@ -89,8 +89,14 @@
             <div class="info-value">
               {#if user.is_locked}
                 <span class="badge badge-error">Yes</span>
+                {#if user.provider && user.username}
+                  <a href="/users/{encodeURIComponent(user.provider)}/{encodeURIComponent(user.username)}/unlock" class="action-link">Unlock User</a>
+                {/if}
               {:else}
                 <span class="badge badge-success">No</span>
+                {#if user.provider && user.username}
+                  <a href="/users/{encodeURIComponent(user.provider)}/{encodeURIComponent(user.username)}/lock" class="action-link">Lock User</a>
+                {/if}
               {/if}
             </div>
           </div>
@@ -491,6 +497,21 @@
     color: rgb(var(--color-error-200));
   }
 
+  .action-link {
+    margin-left: 0.5rem;
+    font-size: 0.75rem;
+    color: #3b82f6;
+    text-decoration: none;
+  }
+
+  .action-link:hover {
+    text-decoration: underline;
+  }
+
+  :global([data-mode="dark"]) .action-link {
+    color: rgb(var(--color-primary-400));
+  }
+
   .system-wide-badge {
     display: inline-block;
     padding: 0.25rem 0.5rem;
@@ -531,6 +552,28 @@
     color: var(--color-surface-400);
   }
 
+  .empty-state-inline {
+    text-align: center;
+    padding: 1.5rem;
+    color: #6b7280;
+    font-size: 0.875rem;
+  }
+
+  :global([data-mode="dark"]) .empty-state-inline {
+    color: var(--color-surface-400);
+  }
+
+  .empty-state-inline code {
+    background: #f3f4f6;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    font-size: 0.8125rem;
+  }
+
+  :global([data-mode="dark"]) .empty-state-inline code {
+    background: rgb(var(--color-surface-700));
+  }
+
   .alert {
     padding: 1rem;
     border-radius: 0.375rem;
@@ -547,5 +590,73 @@
     background: rgb(var(--color-error-900));
     color: rgb(var(--color-error-200));
     border-color: rgb(var(--color-error-800));
+  }
+
+  .alert-success {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+  }
+
+  :global([data-mode="dark"]) .alert-success {
+    background: rgb(var(--color-success-900));
+    color: rgb(var(--color-success-200));
+    border-color: rgb(var(--color-success-800));
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+  }
+
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    background: #e5e7eb;
+  }
+
+  :global([data-mode="dark"]) .btn-secondary {
+    background: rgb(var(--color-surface-700));
+    color: var(--color-surface-200);
+    border-color: rgb(var(--color-surface-600));
+  }
+
+  :global([data-mode="dark"]) .btn-secondary:hover:not(:disabled) {
+    background: rgb(var(--color-surface-600));
+  }
+
+  .btn-success {
+    background: #059669;
+    color: white;
+  }
+
+  .btn-success:hover:not(:disabled) {
+    background: #047857;
+  }
+
+  .btn-danger {
+    background: #dc2626;
+    color: white;
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background: #b91c1c;
   }
 </style>

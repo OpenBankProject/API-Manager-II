@@ -8,9 +8,12 @@
     User,
     Calendar,
     ArrowUpDown,
+    ChevronLeft,
+    ChevronRight,
   } from "@lucide/svelte";
   import { toast } from "$lib/utils/toastService";
   import { trackedFetch } from "$lib/utils/trackedFetch";
+  import { goto, invalidateAll } from "$app/navigation";
 
   interface EntitlementRequest {
     entitlement_request_id: string;
@@ -29,6 +32,10 @@
   let entitlementRequests = $derived(data.entitlementRequests || []);
   let hasApiAccess = $derived(data.hasApiAccess);
   let error = $derived(data.error);
+  let limit = $derived(data.limit || 50);
+  let offset = $derived(data.offset || 0);
+  let hasNextPage = $derived(entitlementRequests.length >= limit);
+  let hasPreviousPage = $derived(offset > 0);
   // Search state
   let searchQuery = $state("");
 
@@ -67,6 +74,17 @@
     }
     return sorted;
   });
+
+  // Pagination
+  function nextPage() {
+    const newOffset = offset + limit;
+    goto(`?limit=${limit}&offset=${newOffset}&sort_direction=DESC`);
+  }
+
+  function previousPage() {
+    const newOffset = Math.max(0, offset - limit);
+    goto(`?limit=${limit}&offset=${newOffset}&sort_direction=DESC`);
+  }
 
   // Helper function to format date
   function formatDate(dateString: string): string {
@@ -159,7 +177,7 @@
           );
 
           setTimeout(() => {
-            window.location.reload();
+            invalidateAll();
           }, 1000);
           return;
         }
@@ -445,6 +463,34 @@
                 </div>
               </div>
             {/each}
+          </div>
+
+          <!-- Pagination -->
+          <div class="pagination">
+            <div class="pagination-info">
+              Showing {offset + 1}–{offset + entitlementRequests.length}
+              {#if offset > 0}
+                <span class="pagination-offset">(offset: {offset})</span>
+              {/if}
+            </div>
+            <div class="pagination-buttons">
+              <button
+                class="btn-pagination"
+                onclick={previousPage}
+                disabled={!hasPreviousPage}
+              >
+                <ChevronLeft size={16} />
+                Previous
+              </button>
+              <button
+                class="btn-pagination"
+                onclick={nextPage}
+                disabled={!hasNextPage}
+              >
+                Next
+                <ChevronRight size={16} />
+              </button>
+            </div>
           </div>
         </div>
       {/if}
@@ -956,6 +1002,78 @@
 
   :global([data-mode="dark"]) .btn-decline:hover {
     background: rgb(var(--color-error-700));
+  }
+
+  .pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  :global([data-mode="dark"]) .pagination {
+    border-top-color: rgb(var(--color-surface-700));
+  }
+
+  .pagination-info {
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+
+  :global([data-mode="dark"]) .pagination-info {
+    color: var(--color-surface-400);
+  }
+
+  .pagination-offset {
+    margin-left: 0.25rem;
+    color: #9ca3af;
+  }
+
+  :global([data-mode="dark"]) .pagination-offset {
+    color: var(--color-surface-500);
+  }
+
+  .pagination-buttons {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .btn-pagination {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    background: white;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-pagination:hover:not(:disabled) {
+    background: #f9fafb;
+    border-color: #9ca3af;
+  }
+
+  .btn-pagination:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  :global([data-mode="dark"]) .btn-pagination {
+    background: rgb(var(--color-surface-700));
+    border-color: rgb(var(--color-surface-600));
+    color: var(--color-surface-200);
+  }
+
+  :global([data-mode="dark"]) .btn-pagination:hover:not(:disabled) {
+    background: rgb(var(--color-surface-600));
+    border-color: rgb(var(--color-surface-500));
   }
 
   @media (max-width: 768px) {
