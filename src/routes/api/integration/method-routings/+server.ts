@@ -7,7 +7,7 @@ import { createLogger } from "$lib/utils/logger";
 const logger = createLogger("MethodRoutingsAPI");
 
 // GET - Fetch all method routings
-export const GET: RequestHandler = async ({ locals }) => {
+export const GET: RequestHandler = async ({ locals, url }) => {
   const session = locals.session;
 
   logger.info("=== METHOD ROUTINGS GET API CALL ===");
@@ -31,7 +31,8 @@ export const GET: RequestHandler = async ({ locals }) => {
   }
 
   try {
-    const endpoint = `/obp/v3.1.0/management/method_routings`;
+    const queryString = url.searchParams.toString();
+    const endpoint = `/obp/v3.1.0/management/method_routings${queryString ? `?${queryString}` : ""}`;
     logger.info(`Request: ${endpoint}`);
 
     const response = await obp_requests.get(endpoint, accessToken);

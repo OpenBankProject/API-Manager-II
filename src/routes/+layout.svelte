@@ -151,7 +151,7 @@
     if (href.startsWith("http")) return label;
     const path = href.split("?")[0];
     const config = SITE_MAP[path];
-    if (!config) return `${label}\n(Not in Site Map)`;
+    if (!config) return `${label}\nNo Roles required`;
     const roles = config.required.map((r) => r.role);
     if (roles.length === 0) return `${label}\nRequired roles: (none)`;
     return `${label}\nRequired roles: ${roles.join(", ")}`;

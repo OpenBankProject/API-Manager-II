@@ -14,6 +14,7 @@
   let methodNames = $state<string[]>([]);
   let connectorNames = $state<string[]>([]);
   let bankIds = $state<string[]>([]);
+  let viewMode = $state<"active" | "configured">("active");
   let isLoading = $state(false);
   let isLoadingMethodNames = $state(false);
   let isLoadingConnectors = $state(false);
@@ -38,7 +39,8 @@
       isLoading = true;
       error = null;
 
-      const response = await fetch("/api/integration/method-routings");
+      const queryParams = viewMode === "active" ? "?active=true" : "";
+      const response = await fetch(`/api/integration/method-routings${queryParams}`);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -249,6 +251,15 @@
     successMessage = null;
   }
 
+  function switchViewMode(mode: "active" | "configured") {
+    viewMode = mode;
+    fetchMethodRoutings();
+  }
+
+  function isDefaultRouting(routing: MethodRouting): boolean {
+    return !routing.method_routing_id || routing.method_routing_id === "";
+  }
+
   onMount(() => {
     fetchMethodRoutings();
     fetchMethodNames();
@@ -435,8 +446,24 @@
 
   <!-- Method Routings List -->
   <div class="panel">
-    <div class="panel-header">
+    <div class="panel-header panel-header-with-actions">
       <h2 class="panel-title">Method Routings List</h2>
+      <div class="view-toggle">
+        <button
+          onclick={() => switchViewMode("active")}
+          class="btn {viewMode === 'active' ? 'btn-primary' : 'btn-secondary'}"
+          disabled={isLoading}
+        >
+          Active
+        </button>
+        <button
+          onclick={() => switchViewMode("configured")}
+          class="btn {viewMode === 'configured' ? 'btn-primary' : 'btn-secondary'}"
+          disabled={isLoading}
+        >
+          Configured
+        </button>
+      </div>
     </div>
     <div class="panel-content">
       {#if isLoading && methodRoutings.length === 0}
@@ -453,12 +480,15 @@
                 <th>Connector Name</th>
                 <th>Bank ID Pattern</th>
                 <th>Exact Match</th>
+                {#if viewMode === "active"}
+                  <th>Source</th>
+                {/if}
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {#each methodRoutings as routing}
-                <tr>
+                <tr class={isDefaultRouting(routing) ? "row-default" : ""}>
                   <td class="font-mono text-sm">{routing.method_name}</td>
                   <td>{routing.connector_name}</td>
                   <td class="font-mono text-sm">
@@ -473,15 +503,24 @@
                       {routing.is_bank_id_exact_match ? "Yes" : "No"}
                     </span>
                   </td>
+                  {#if viewMode === "active"}
+                    <td>
+                      <span class="badge {isDefaultRouting(routing) ? 'badge-default' : 'badge-custom'}">
+                        {isDefaultRouting(routing) ? "Default" : "Custom"}
+                      </span>
+                    </td>
+                  {/if}
                   <td>
-                    <button
-                      onclick={() => startEdit(routing)}
-                      class="btn-icon"
-                      title="Edit"
-                      disabled={isLoading}
-                    >
-                      Edit
-                    </button>
+                    {#if !isDefaultRouting(routing)}
+                      <button
+                        onclick={() => startEdit(routing)}
+                        class="btn-icon"
+                        title="Edit"
+                        disabled={isLoading}
+                      >
+                        Edit
+                      </button>
+                    {/if}
                   </td>
                 </tr>
               {/each}
@@ -489,10 +528,13 @@
           </table>
         </div>
         <div class="table-footer">
-          Showing {methodRoutings.length} method routing{methodRoutings.length !==
-          1
-            ? "s"
-            : ""}
+          {#if viewMode === "active"}
+            {@const customCount = methodRoutings.filter((r) => !isDefaultRouting(r)).length}
+            {@const defaultCount = methodRoutings.filter((r) => isDefaultRouting(r)).length}
+            Showing {methodRoutings.length} active method routing{methodRoutings.length !== 1 ? "s" : ""} ({customCount} custom, {defaultCount} default)
+          {:else}
+            Showing {methodRoutings.length} method routing{methodRoutings.length !== 1 ? "s" : ""}
+          {/if}
         </div>
       {:else}
         <div class="empty-state">
@@ -534,8 +576,19 @@
     border-bottom: 1px solid #e5e7eb;
   }
 
+  .panel-header-with-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
   :global([data-mode="dark"]) .panel-header {
     border-bottom-color: rgb(var(--color-surface-700));
+  }
+
+  .view-toggle {
+    display: flex;
+    gap: 0.5rem;
   }
 
   .panel-title {
@@ -814,6 +867,20 @@
   :global([data-mode="dark"]) .badge-default {
     background: rgb(var(--color-surface-700));
     color: var(--color-surface-300);
+  }
+
+  .badge-custom {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+
+  :global([data-mode="dark"]) .badge-custom {
+    background: rgb(var(--color-primary-900));
+    color: rgb(var(--color-primary-200));
+  }
+
+  .row-default {
+    opacity: 0.75;
   }
 
   .alert {
