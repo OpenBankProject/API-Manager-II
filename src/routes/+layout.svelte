@@ -3,6 +3,7 @@
   import { Navigation } from "@skeletonlabs/skeleton-svelte";
   import { page } from "$app/state";
   import { navSections as allNavSections, type NavigationSection } from "$lib/config/navigation";
+  import { SITE_MAP } from "$lib/utils/roleChecker";
 
   // Separate My Account and Banks from other sections so they render in specific positions
   const myAccountSection = allNavSections.find(s => s.id === "my-account");
@@ -144,6 +145,16 @@
 
   function toggleSection(id: string) {
     expandedSections[id] = !expandedSections[id];
+  }
+
+  function getMenuTooltip(href: string, label: string): string {
+    if (href.startsWith("http")) return label;
+    const path = href.split("?")[0];
+    const config = SITE_MAP[path];
+    if (!config) return `${label}\n(Not in Site Map)`;
+    const roles = config.required.map((r) => r.role);
+    if (roles.length === 0) return `${label}\nRequired roles: (none)`;
+    return `${label}\nRequired roles: ${roles.join(", ")}`;
   }
 
   logger.info("🧭 Navigation state initialized");
@@ -303,7 +314,7 @@
                 class:border={page.url.pathname === item.href}
                 class:border-solid-secondary-500={page.url.pathname ===
                   item.href}
-                title={item.label}
+                title={getMenuTooltip(item.href, item.label)}
                 aria-label={item.label}
                 target={item.external ? "_blank" : undefined}
                 rel={item.external ? "noopener noreferrer" : undefined}
@@ -349,7 +360,7 @@
                     class:border-l-2={page.url.pathname === subItem.href}
                     class:border-primary-500={page.url.pathname ===
                       subItem.href}
-                    title={subItem.label}
+                    title={getMenuTooltip(subItem.href, subItem.label)}
                     aria-label={subItem.label}
                     target={subItem.external ? "_blank" : undefined}
                     rel={subItem.external ? "noopener noreferrer" : undefined}
@@ -395,7 +406,7 @@
                     class:preset-filled-primary-50-950={page.url.pathname === item.href}
                     class:border={page.url.pathname === item.href}
                     class:border-solid-secondary-500={page.url.pathname === item.href}
-                    title={item.label}
+                    title={getMenuTooltip(item.href, item.label)}
                     aria-label={item.label}
                   >
                     <ItemIcon class="size-5" />
@@ -420,7 +431,7 @@
                 class:border={page.url.pathname === item.href}
                 class:border-solid-secondary-500={page.url.pathname ===
                   item.href}
-                title={item.label}
+                title={getMenuTooltip(item.href, item.label)}
                 aria-label={item.label}
                 target={item.external ? "_blank" : undefined}
                 rel={item.external ? "noopener noreferrer" : undefined}
@@ -467,7 +478,7 @@
                       class:border-l-2={currentUrl === subItem.href}
                       class:border-primary-500={currentUrl ===
                         subItem.href}
-                      title={subItem.label}
+                      title={getMenuTooltip(subItem.href, subItem.label)}
                       aria-label={subItem.label}
                       target={subItem.external ? "_blank" : undefined}
                       rel={subItem.external ? "noopener noreferrer" : undefined}
