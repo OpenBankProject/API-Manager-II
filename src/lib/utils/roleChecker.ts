@@ -212,6 +212,15 @@ export const SITE_MAP: Record<string, PageRoleConfig> = {
     required: [{ role: "CanLockUser" }],
   },
 
+  // ── Integration ─────────────────────────────────────
+  "/integration/method-routings": {
+    required: [{ role: "CanGetMethodRoutings" }],
+    optional: [
+      { role: "CanCreateMethodRouting" },
+      { role: "CanUpdateMethodRouting" },
+    ],
+  },
+
   // ── Dynamic Entities ──────────────────────────────────
   "/dynamic-entities/diagnostics": {
     required: [{ role: "CanGetSystemLevelDynamicEntities" }],

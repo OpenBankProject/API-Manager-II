@@ -20,6 +20,7 @@
     { key: "account-access", label: "Account Access", prefix: "/account-access/" },
     { key: "users", label: "Users", prefix: "/users" },
     { key: "dynamic-entities", label: "Dynamic Entities", prefix: "/dynamic-entities/" },
+    { key: "integration", label: "Integration", prefix: "/integration/" },
   ];
 
   function getSection(route: string): string {
