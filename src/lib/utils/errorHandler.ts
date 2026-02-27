@@ -57,11 +57,6 @@ export async function extractErrorFromResponse(
     // Store full error for logging
     details.fullError = errorData;
 
-    // If we have an error code, prepend it to the message
-    if (details.code && !details.message.includes(details.code)) {
-      details.message = `${details.code}: ${details.message}`;
-    }
-
   } catch (parseError) {
     // If JSON parsing fails, try to get text response
     try {
@@ -114,14 +109,7 @@ export function extractErrorMessage(
  * @returns string - Formatted error message
  */
 export function formatErrorForDisplay(details: OBPErrorDetails): string {
-  let message = details.message;
-
-  // Add status code if not already in message
-  if (details.status && !message.includes(details.status.toString())) {
-    message = `${message} (Status: ${details.status})`;
-  }
-
-  return message;
+  return details.message;
 }
 
 /**

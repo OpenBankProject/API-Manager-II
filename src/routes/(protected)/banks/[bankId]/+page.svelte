@@ -92,7 +92,7 @@
 
   <!-- Header -->
   <div class="mb-6 flex items-start gap-6">
-    {#if bank.logo}
+    {#if bank.logo && !bank.logo.includes('example.com')}
       <img
         src={bank.logo}
         alt="{bank.full_name} logo"

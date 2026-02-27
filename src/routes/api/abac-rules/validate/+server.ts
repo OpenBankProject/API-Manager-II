@@ -60,22 +60,17 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     logger.debug("OBP API response:", JSON.stringify(response, null, 2));
 
     // OBP API response format should include validation result
+    // Only return the OBP error message verbatim
     return json({
       valid: response.valid ?? true,
-      error: response.error || null,
       message: response.message || null,
-      details: response.details || null,
     });
   } catch (err) {
     logger.error("Error validating ABAC rule:", err);
 
-    // Return full OBP error without sanitization
     return json({
       valid: false,
-      error: err instanceof Error ? err.message : String(err),
-      message: "Rule validation failed",
-      obpError: err,
-      fullError: JSON.stringify(err, Object.getOwnPropertyNames(err)),
+      message: err instanceof Error ? err.message : String(err),
     });
   }
 };

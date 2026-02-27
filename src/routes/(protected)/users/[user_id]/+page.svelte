@@ -90,12 +90,12 @@
               {#if user.is_locked}
                 <span class="badge badge-error">Yes</span>
                 {#if user.provider && user.username}
-                  <a href="/users/{encodeURIComponent(user.provider)}/{encodeURIComponent(user.username)}/unlock" class="action-link">Unlock User</a>
+                  <a href="/users/{encodeURIComponent(user.provider)}/{encodeURIComponent(user.username)}/unlock" class="action-link" style="color: #059669;">Unlock User</a>
                 {/if}
               {:else}
                 <span class="badge badge-success">No</span>
                 {#if user.provider && user.username}
-                  <a href="/users/{encodeURIComponent(user.provider)}/{encodeURIComponent(user.username)}/lock" class="action-link">Lock User</a>
+                  <a href="/users/{encodeURIComponent(user.provider)}/{encodeURIComponent(user.username)}/lock" class="action-link" style="color: #dc2626;">Lock User</a>
                 {/if}
               {/if}
             </div>
@@ -508,9 +508,6 @@
     text-decoration: underline;
   }
 
-  :global([data-mode="dark"]) .action-link {
-    color: rgb(var(--color-primary-400));
-  }
 
   .system-wide-badge {
     display: inline-block;

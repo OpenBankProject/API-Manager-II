@@ -210,7 +210,7 @@
                     title="Set {bank.full_name || bank.bank_id} as current bank"
                     onclick={() => currentBank.select(bank)}
                   >
-                    {#if bank.logo}
+                    {#if bank.logo && !bank.logo.includes('example.com')}
                       <img
                         src={bank.logo}
                         alt="{bank.full_name} logo"

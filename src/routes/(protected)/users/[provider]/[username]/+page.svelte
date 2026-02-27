@@ -86,10 +86,10 @@
             <div class="info-value">
               {#if user.is_locked}
                 <span class="badge badge-error">Yes</span>
-                <a href="/users/{encodeURIComponent(data.provider)}/{encodeURIComponent(data.username)}/unlock" class="action-link">Unlock User</a>
+                <a href="/users/{encodeURIComponent(data.provider)}/{encodeURIComponent(data.username)}/unlock" class="action-link" style="color: #059669;">Unlock User</a>
               {:else}
                 <span class="badge badge-success">No</span>
-                <a href="/users/{encodeURIComponent(data.provider)}/{encodeURIComponent(data.username)}/lock" class="action-link">Lock User</a>
+                <a href="/users/{encodeURIComponent(data.provider)}/{encodeURIComponent(data.username)}/lock" class="action-link" style="color: #dc2626;">Lock User</a>
               {/if}
             </div>
           </div>
@@ -481,9 +481,6 @@
     text-decoration: underline;
   }
 
-  :global([data-mode="dark"]) .action-link {
-    color: rgb(var(--color-primary-400));
-  }
 
   .empty-state {
     text-align: center;

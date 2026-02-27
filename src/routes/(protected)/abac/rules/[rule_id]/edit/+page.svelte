@@ -319,8 +319,8 @@
       } else {
         validationStatus = "invalid";
         validationError =
-          result.error || result.message || "Rule validation failed";
-        validationDetails = result;
+          result.message || "Rule validation failed";
+        validationDetails = null;
       }
     } catch (err) {
       validationStatus = "invalid";

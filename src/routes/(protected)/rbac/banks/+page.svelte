@@ -131,7 +131,7 @@
           {#each filteredBanks as bank}
             <div class="bank-card">
               <div class="bank-header">
-                {#if bank.logo}
+                {#if bank.logo && !bank.logo.includes('example.com')}
                   <img src={bank.logo} alt={bank.short_name} class="bank-logo" />
                 {:else}
                   <div class="bank-logo-placeholder">
