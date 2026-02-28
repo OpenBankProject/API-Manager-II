@@ -38,6 +38,44 @@
   let abacRuleId = $state<string>("");
   let accessCheckDone = $state(false);
 
+  let usersWithAccess = $state<any>(null);
+  let usersWithAccessLoading = $state(false);
+  let usersWithAccessError = $state<string | null>(null);
+
+  let usersWithAccessParsedError = $derived.by(() => {
+    if (!usersWithAccessError) return null;
+    const missingRoleMatch = usersWithAccessError.match(
+      /OBP-(\d+):.*missing one or more roles:\s*(.+)/i,
+    );
+    if (missingRoleMatch) {
+      const roles = missingRoleMatch[2].split(",").map((r: string) => r.trim());
+      return { type: "missing_role" as const, code: missingRoleMatch[1], roles, message: usersWithAccessError };
+    }
+    return { type: "general" as const, message: usersWithAccessError };
+  });
+
+  // Group users by view_id and access_source for display in Views Available
+  let usersByView = $derived.by(() => {
+    if (!usersWithAccess?.users) return new Map<string, { direct: string[]; abac: string[] }>();
+    const map = new Map<string, { direct: string[]; abac: string[] }>();
+    for (const user of usersWithAccess.users) {
+      if (!user.views) continue;
+      for (const view of user.views) {
+        if (!map.has(view.view_id)) {
+          map.set(view.view_id, { direct: [], abac: [] });
+        }
+        const entry = map.get(view.view_id)!;
+        const name = user.username || user.user_id || "Unknown";
+        if (view.access_source === "ABAC") {
+          entry.abac.push(name);
+        } else {
+          entry.direct.push(name);
+        }
+      }
+    }
+    return map;
+  });
+
   let bankId = $derived(page.params.bank_id);
   let accountId = $derived(page.params.account_id);
   let viewId = $derived(page.params.view_id);
@@ -92,12 +130,36 @@
     }
   }
 
+  async function fetchUsersWithAccess(bankId: string, accountId: string) {
+    usersWithAccessLoading = true;
+    usersWithAccessError = null;
+    try {
+      const res = await trackedFetch(
+        `/api/obp/banks/${encodeURIComponent(bankId)}/accounts/${encodeURIComponent(accountId)}/users-with-access`
+      );
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to fetch users with account access");
+      }
+      usersWithAccess = await res.json();
+    } catch (err) {
+      usersWithAccessError = err instanceof Error ? err.message : "Failed to fetch users with account access";
+      usersWithAccess = null;
+    } finally {
+      usersWithAccessLoading = false;
+    }
+  }
+
   async function loadPage(bankId: string, accountId: string, viewId: string) {
     account = null;
     error = null;
+    usersWithAccess = null;
     await checkAccountAccess(bankId, accountId, viewId);
     if (hasAccountAccess) {
-      await fetchAccount(bankId, accountId, viewId);
+      await Promise.all([
+        fetchAccount(bankId, accountId, viewId),
+        fetchUsersWithAccess(bankId, accountId)
+      ]);
     }
   }
 
@@ -350,16 +412,60 @@
             <h2 class="section-title">
               Views Available ({account.views_available.length})
             </h2>
-            <div class="views-list">
+            {#if usersWithAccessError}
+              {#if usersWithAccessParsedError && usersWithAccessParsedError.type === "missing_role"}
+                <MissingRoleAlert
+                  roles={usersWithAccessParsedError.roles}
+                  errorCode={usersWithAccessParsedError.code}
+                  message={usersWithAccessParsedError.message}
+                  bankId={bankId}
+                />
+              {:else}
+                <div class="users-access-error">
+                  {usersWithAccessError}
+                </div>
+              {/if}
+            {/if}
+            <div class="views-table">
+              <div class="views-table-header">
+                <div class="views-col-name">View</div>
+                <div class="views-col-users">Direct</div>
+                <div class="views-col-users">ABAC</div>
+              </div>
               {#each account.views_available as view}
-                <div class="view-item">
-                  <span class="view-name">{view.short_name || view.id}</span>
-                  {#if view.description}
-                    <span class="view-description">{view.description}</span>
-                  {/if}
-                  {#if view.is_public}
-                    <span class="view-badge public">PUBLIC</span>
-                  {/if}
+                {@const viewUsers = usersByView.get(view.id)}
+                <div class="views-table-row">
+                  <div class="views-col-name">
+                    <span class="view-name">{view.short_name || view.id}</span>
+                    {#if view.description}
+                      <span class="view-description">{view.description}</span>
+                    {/if}
+                    {#if view.is_public}
+                      <span class="view-badge public">PUBLIC</span>
+                    {/if}
+                  </div>
+                  <div class="views-col-users">
+                    {#if usersWithAccessLoading}
+                      <Loader2 size={14} class="spinner-icon" />
+                    {:else if viewUsers?.direct?.length}
+                      {#each viewUsers.direct as username}
+                        <span class="user-chip direct">{username}</span>
+                      {/each}
+                    {:else if !usersWithAccessError}
+                      <span class="no-users">—</span>
+                    {/if}
+                  </div>
+                  <div class="views-col-users">
+                    {#if usersWithAccessLoading}
+                      <Loader2 size={14} class="spinner-icon" />
+                    {:else if viewUsers?.abac?.length}
+                      {#each viewUsers.abac as username}
+                        <span class="user-chip abac">{username}</span>
+                      {/each}
+                    {:else if !usersWithAccessError}
+                      <span class="no-users">—</span>
+                    {/if}
+                  </div>
                 </div>
               {/each}
             </div>
@@ -810,6 +916,23 @@
     color: var(--color-surface-300);
   }
 
+  /* Users with access error */
+  .users-access-error {
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    border-radius: 6px;
+    color: #991b1b;
+    font-size: 0.875rem;
+  }
+
+  :global([data-mode="dark"]) .users-access-error {
+    background: rgba(220, 38, 38, 0.1);
+    border-color: rgba(220, 38, 38, 0.3);
+    color: rgb(var(--color-error-300));
+  }
+
   /* Routings */
   .routings-list {
     display: flex;
@@ -935,26 +1058,78 @@
     color: rgb(var(--color-warning-300));
   }
 
-  /* Views */
-  .views-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .view-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
-    background: #fafafa;
+  /* Views table */
+  .views-table {
     border: 1px solid #e5e7eb;
     border-radius: 6px;
+    overflow: hidden;
   }
 
-  :global([data-mode="dark"]) .view-item {
-    background: rgb(var(--color-surface-900));
+  :global([data-mode="dark"]) .views-table {
     border-color: rgb(var(--color-surface-700));
+  }
+
+  .views-table-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+    background: #f3f4f6;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  :global([data-mode="dark"]) .views-table-header {
+    background: rgb(var(--color-surface-900));
+    border-bottom-color: rgb(var(--color-surface-700));
+    color: var(--color-surface-400);
+  }
+
+  .views-table-header > div {
+    padding: 0.625rem 1rem;
+  }
+
+  .views-table-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .views-table-row:last-child {
+    border-bottom: none;
+  }
+
+  :global([data-mode="dark"]) .views-table-row {
+    border-bottom-color: rgb(var(--color-surface-700));
+  }
+
+  .views-col-name {
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .views-col-users {
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+
+  .views-col-users :global(.spinner-icon) {
+    animation: spin 1s linear infinite;
+    color: #9ca3af;
+  }
+
+  :global([data-mode="dark"]) .views-col-users :global(.spinner-icon) {
+    color: var(--color-surface-500);
   }
 
   .view-name {
@@ -970,7 +1145,6 @@
   .view-description {
     font-size: 0.8rem;
     color: #6b7280;
-    flex: 1;
   }
 
   :global([data-mode="dark"]) .view-description {
@@ -982,7 +1156,6 @@
     padding: 0.125rem 0.5rem;
     border-radius: 9999px;
     font-weight: 600;
-    margin-left: auto;
   }
 
   .view-badge.public {
@@ -995,14 +1168,41 @@
     color: rgb(var(--color-success-300));
   }
 
-  .view-badge.private {
-    background: #fee2e2;
-    color: #991b1b;
+  .user-chip {
+    display: inline-block;
+    font-size: 0.75rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 500;
   }
 
-  :global([data-mode="dark"]) .view-badge.private {
-    background: rgba(239, 68, 68, 0.2);
-    color: rgb(var(--color-error-300));
+  .user-chip.direct {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+
+  :global([data-mode="dark"]) .user-chip.direct {
+    background: rgba(59, 130, 246, 0.2);
+    color: rgb(var(--color-primary-300));
+  }
+
+  .user-chip.abac {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  :global([data-mode="dark"]) .user-chip.abac {
+    background: rgba(245, 158, 11, 0.2);
+    color: rgb(var(--color-warning-300));
+  }
+
+  .no-users {
+    color: #d1d5db;
+    font-size: 0.875rem;
+  }
+
+  :global([data-mode="dark"]) .no-users {
+    color: var(--color-surface-600);
   }
 
   /* Empty / Loading / Error states */
