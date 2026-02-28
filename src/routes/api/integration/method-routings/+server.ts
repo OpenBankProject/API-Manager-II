@@ -35,7 +35,18 @@ export const GET: RequestHandler = async ({ locals, url }) => {
     const endpoint = `/obp/v3.1.0/management/method_routings${queryString ? `?${queryString}` : ""}`;
     logger.info(`Request: ${endpoint}`);
 
-    const response = await obp_requests.get(endpoint, accessToken);
+    let response;
+    try {
+      response = await obp_requests.get(endpoint, accessToken);
+    } catch (firstErr: any) {
+      const errMsg = firstErr instanceof Error ? firstErr.message : String(firstErr);
+      if (errMsg.includes("JOSE") || errMsg.includes("JWK")) {
+        logger.warn(`Transient JOSE error, retrying: ${errMsg}`);
+        response = await obp_requests.get(endpoint, accessToken);
+      } else {
+        throw firstErr;
+      }
+    }
 
     logger.info("Method routings fetched successfully");
     logger.info("Response type:", typeof response);
