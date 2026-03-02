@@ -1,5 +1,6 @@
 import {
   User,
+  UserRound,
   ShieldUser,
   KeyRound,
   IdCardLanyard,
@@ -13,6 +14,7 @@ import {
   Users,
   FileCheck,
   Plus,
+  Building,
   Building2,
   Eye,
   Landmark,
@@ -539,6 +541,37 @@ export function getActiveAbacMenuItem(pathname: string) {
   return found || abacItems[0]; // fallback to first item
 }
 
+// Customers navigation items
+function buildCustomersItems(): NavigationItem[] {
+  const items: NavigationItem[] = [
+    {
+      href: "/customers/individual",
+      label: "Individual",
+      iconComponent: UserRound,
+    },
+    {
+      href: "/customers/corporate",
+      label: "Corporate",
+      iconComponent: Building,
+    },
+  ];
+
+  return items;
+}
+
+export const customersItems = buildCustomersItems();
+
+export function getActiveCustomersMenuItem(pathname: string) {
+  const found = customersItems.find((item) => {
+    if (item.external) {
+      return false;
+    }
+    return pathname.startsWith(item.href);
+  });
+
+  return found || customersItems[0];
+}
+
 export const navSections: NavigationSection[] = [
   { id: "my-account", label: "My Profile", iconComponent: User, items: myAccountItems, basePaths: ["/user", "/account-access/accounts"] },
   { id: "system", label: "System", iconComponent: Server, items: systemItems, basePaths: ["/system"] },
@@ -550,6 +583,7 @@ export const navSections: NavigationSection[] = [
   { id: "financial-products", label: "Financial Products", iconComponent: Banknote, items: financialProductsItems, basePaths: ["/products/financial", "/products/collections"] },
   { id: "rbac", label: "RBAC", iconComponent: Shield, items: rbacItems, basePaths: ["/rbac"] },
   { id: "banks", label: "Banks", iconComponent: Building2, items: banksItems, basePaths: ["/banks"] },
+  { id: "customers", label: "Customers", iconComponent: Users, items: customersItems, basePaths: ["/customers"] },
   { id: "account-access", label: "Account Access", iconComponent: Landmark, items: accountAccessItems, basePaths: ["/account-access"] },
   { id: "dynamic-entities", label: "Dynamic Entities", iconComponent: Box, items: dynamicEntitiesItems, basePaths: ["/dynamic-entities"] },
   { id: "dynamic-endpoints", label: "Dynamic Endpoints", iconComponent: Plug, items: dynamicEndpointsItems, basePaths: ["/dynamic-endpoints"] },

@@ -10,6 +10,11 @@
     return s.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   }
 
+  /** Handle v6.0.0 views_available using view_id instead of id */
+  function viewId_(view: any): string {
+    return view.id || view.view_id || "";
+  }
+
   let userId = $derived(data.userId || "");
   let copied = $state(false);
 
@@ -124,15 +129,16 @@
 
     const settled = await Promise.allSettled(
       views.map(async (view) => {
+        const vid = viewId_(view);
         const res = await trackedFetch(
-          `/api/obp/banks/${encodeURIComponent(bankId)}/accounts/${encodeURIComponent(accountId)}/views/${encodeURIComponent(view.id)}/users-with-access`
+          `/api/obp/banks/${encodeURIComponent(bankId)}/accounts/${encodeURIComponent(accountId)}/views/${encodeURIComponent(vid)}/users-with-access`
         );
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || `Failed to fetch users with access for view ${view.id}`);
+          throw new Error(data.error || `Failed to fetch users with access for view ${vid}`);
         }
         const data = await res.json();
-        return { viewId: view.id, users: data.users || [] };
+        return { viewId: vid, users: data.users || [] };
       })
     );
 
@@ -142,7 +148,7 @@
 
     for (let i = 0; i < settled.length; i++) {
       const result = settled[i];
-      const viewId = views[i].id;
+      const viewId = viewId_(views[i]);
       if (result.status === "fulfilled") {
         anySuccess = true;
         const entry = { direct: [] as string[], abac: [] as string[] };
@@ -176,12 +182,13 @@
     usersWithAccess = null;
     usersByView = new Map();
     viewErrors = new Map();
-    await checkAccountAccess(bankId, accountId, viewId);
-    if (hasAccountAccess) {
-      await fetchAccount(bankId, accountId, viewId);
-      if (account?.views_available?.length) {
-        await fetchUsersWithAccess(bankId, accountId, account.views_available);
-      }
+    // Run access check and account fetch in parallel — access check is informational only
+    await Promise.all([
+      checkAccountAccess(bankId, accountId, viewId),
+      fetchAccount(bankId, accountId, viewId),
+    ]);
+    if (account?.views_available?.length) {
+      await fetchUsersWithAccess(bankId, accountId, account.views_available);
     }
   }
 
@@ -204,60 +211,7 @@
     <span class="breadcrumb-current">{account?.label || accountId}</span>
   </nav>
 
-  {#if !accessCheckDone}
-    <div class="loading-state">
-      <Loader2 size={32} class="spinner-icon" />
-      <p>Checking account access...</p>
-    </div>
-  {:else if hasAccountAccess === false}
-    <div class="access-warning">
-      You may need further ABAC Access in order to access this account.
-    </div>
-    <details class="debug-panel">
-      <summary class="debug-summary">
-        Debug Status
-        <button class="copy-btn" onclick={(e) => { e.stopPropagation(); copyDebugInfo(); }} title="Copy all debug info">
-          {#if copied}<Check size={14} />{:else}<Copy size={14} />{/if}
-        </button>
-      </summary>
-      <div class="debug-content">
-        <div class="debug-grid">
-          <span class="debug-label">User ID</span>
-          <span class="debug-value">{userId || "—"}</span>
-          <span class="debug-label">Bank ID</span>
-          <span class="debug-value">{bankId || "—"}</span>
-          <span class="debug-label">Account ID</span>
-          <span class="debug-value">{accountId || "—"}</span>
-          <span class="debug-label">View ID</span>
-          <span class="debug-value">{viewId || "—"}</span>
-          <span class="debug-label">Access Check Done</span>
-          <span class="debug-value">{accessCheckDone}</span>
-          <span class="debug-label">Has Account Access</span>
-          <span class="debug-value debug-false">{String(hasAccountAccess)}</span>
-          <span class="debug-label">Access Source</span>
-          <span class="debug-value">{accessSource || "—"}</span>
-          <span class="debug-label">ABAC Rule ID</span>
-          <span class="debug-value">{abacRuleId || "—"}</span>
-          <span class="debug-label">Has CanExecuteAbacRule</span>
-          <span class="debug-value" class:debug-true={hasAbacRole} class:debug-false={!hasAbacRole}>{hasAbacRole}</span>
-          <span class="debug-label">Account Loading</span>
-          <span class="debug-value">{loading}</span>
-          <span class="debug-label">Account Loaded</span>
-          <span class="debug-value" class:debug-true={!!account} class:debug-false={!account && accessCheckDone && hasAccountAccess}>{!!account}</span>
-          <span class="debug-label">Error</span>
-          <span class="debug-value" class:debug-false={!!error}>{error || "none"}</span>
-          <span class="debug-label">User Entitlements</span>
-          <span class="debug-value">{userEntitlements.length} entitlement{userEntitlements.length !== 1 ? "s" : ""}</span>
-        </div>
-      </div>
-    </details>
-    {#if !hasAbacRole}
-      <MissingRoleAlert
-        roles={["CanExecuteAbacRule"]}
-        message="You may need this role to gain ABAC access to accounts."
-      />
-    {/if}
-  {:else if loading}
+  {#if loading}
     <div class="loading-state">
       <Loader2 size={32} class="spinner-icon" />
       <p>Loading account...</p>
@@ -297,6 +251,11 @@
 
       <!-- Content -->
       <div class="panel-content">
+        {#if accessCheckDone && hasAccountAccess === false}
+          <div class="access-warning">
+            You may need further ABAC Access in order to access this account.
+          </div>
+        {/if}
         <!-- Account Info + Owners row -->
         <div class="info-owners-row">
           <!-- Basic Info -->
@@ -444,18 +403,27 @@
             <div class="views-table">
               <div class="views-table-header">
                 <div class="views-col-name">View</div>
+                <div class="views-col-link">Transactions</div>
+                <div class="views-col-link">Counterparties</div>
                 <div class="views-col-users">Direct Access</div>
                 <div class="views-col-users">ABAC Access</div>
               </div>
               {#each account.views_available as view}
-                {@const viewUsers = usersByView.get(view.id)}
-                {@const viewError = viewErrors.get(view.id)}
+                {@const vid = viewId_(view)}
+                {@const viewUsers = usersByView.get(vid)}
+                {@const viewError = viewErrors.get(vid)}
                 <div class="views-table-row">
                   <div class="views-col-name">
-                    <a href="/account-access/accounts/{encodeURIComponent(bankId)}/{encodeURIComponent(accountId)}/{encodeURIComponent(view.id)}/transactions" class="view-name-link">{toTitleCase(view.id)}</a>
+                    <a href="/account-access/{view.is_system ? 'system-views' : 'custom-views'}/{encodeURIComponent(vid)}" class="view-name-link">{toTitleCase(vid)}</a>
                     {#if view.is_public}
                       <span class="view-badge public">PUBLIC</span>
                     {/if}
+                  </div>
+                  <div class="views-col-link">
+                    <a href="/account-access/accounts/{encodeURIComponent(bankId)}/{encodeURIComponent(accountId)}/{encodeURIComponent(vid)}/transactions" class="view-name-link">Transactions</a>
+                  </div>
+                  <div class="views-col-link">
+                    <a href="/account-access/accounts/{encodeURIComponent(bankId)}/{encodeURIComponent(accountId)}/{encodeURIComponent(vid)}/counterparties" class="view-name-link">Counterparties</a>
                   </div>
                   {#if viewError}
                     <div class="views-col-users view-error" style="grid-column: span 2;">
@@ -1086,7 +1054,7 @@
 
   .views-table-header {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr auto auto 1fr 1fr;
     gap: 0;
     background: #f3f4f6;
     border-bottom: 1px solid #e5e7eb;
@@ -1109,7 +1077,7 @@
 
   .views-table-row {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr auto auto 1fr 1fr;
     gap: 0;
     border-bottom: 1px solid #e5e7eb;
   }
@@ -1130,6 +1098,12 @@
     flex-wrap: wrap;
   }
 
+  .views-col-link {
+    padding: 0.5rem 0.75rem;
+    display: flex;
+    align-items: center;
+  }
+
   .views-col-users {
     padding: 0.5rem 0.75rem;
     display: flex;
@@ -1145,6 +1119,16 @@
 
   :global([data-mode="dark"]) .views-col-users :global(.spinner-icon) {
     color: var(--color-surface-500);
+  }
+
+  .view-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #111827;
+  }
+
+  :global([data-mode="dark"]) .view-name {
+    color: var(--color-surface-100);
   }
 
   .view-name-link {

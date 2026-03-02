@@ -195,6 +195,14 @@ export const SITE_MAP: Record<string, PageRoleConfig> = {
     optional: [{ role: "CanExecuteAbacRule" }],
   },
 
+  // ── Customers ───────────────────────────────────────────
+  "/customers/individual": {
+    required: [{ role: "CanGetCustomersAtOneBank", bankScoped: true }],
+  },
+  "/customers/corporate": {
+    required: [{ role: "CanGetCustomersAtOneBank", bankScoped: true }],
+  },
+
   // ── Users ─────────────────────────────────────────────
   "/users": {
     required: [{ role: "CanGetAnyUser" }],

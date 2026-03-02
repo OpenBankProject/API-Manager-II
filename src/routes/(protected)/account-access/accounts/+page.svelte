@@ -86,7 +86,8 @@
           <ul class="account-list">
             {#each accounts as account}
               {@const acctId = account.id || account.account_id}
-              {@const firstView = account.views_available?.[0]?.id || "owner"}
+              {@const firstViewObj = account.views_available?.[0]}
+              {@const firstView = firstViewObj?.id || firstViewObj?.view_id || "owner"}
               <li class="account-item">
                 <a href="/account-access/accounts/{encodeURIComponent(currentBank.bankId)}/{encodeURIComponent(acctId)}/{encodeURIComponent(firstView)}" class="account-link">
                   <span class="account-id">{acctId}</span>
