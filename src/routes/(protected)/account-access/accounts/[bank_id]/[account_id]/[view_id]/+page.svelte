@@ -58,27 +58,9 @@
     return { type: "general" as const, message: usersWithAccessError };
   });
 
-  // Group users by view_id and access_source for display in Views Available
-  let usersByView = $derived.by(() => {
-    if (!usersWithAccess?.users) return new Map<string, { direct: string[]; abac: string[] }>();
-    const map = new Map<string, { direct: string[]; abac: string[] }>();
-    for (const user of usersWithAccess.users) {
-      if (!user.views) continue;
-      for (const view of user.views) {
-        if (!map.has(view.view_id)) {
-          map.set(view.view_id, { direct: [], abac: [] });
-        }
-        const entry = map.get(view.view_id)!;
-        const name = user.username || user.user_id || "Unknown";
-        if (view.access_source === "ABAC") {
-          entry.abac.push(name);
-        } else {
-          entry.direct.push(name);
-        }
-      }
-    }
-    return map;
-  });
+  // Users grouped by view_id for display in Views Available
+  let usersByView = $state(new Map<string, { direct: string[]; abac: string[] }>());
+  let viewErrors = $state(new Map<string, string>());
 
   let bankId = $derived(page.params.bank_id || "");
   let accountId = $derived(page.params.account_id || "");
@@ -134,36 +116,72 @@
     }
   }
 
-  async function fetchUsersWithAccess(bankId: string, accountId: string) {
+  async function fetchUsersWithAccess(bankId: string, accountId: string, views: any[]) {
     usersWithAccessLoading = true;
     usersWithAccessError = null;
-    try {
-      const res = await trackedFetch(
-        `/api/obp/banks/${encodeURIComponent(bankId)}/accounts/${encodeURIComponent(accountId)}/users-with-access`
-      );
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Failed to fetch users with account access");
+    usersByView = new Map();
+    viewErrors = new Map();
+
+    const settled = await Promise.allSettled(
+      views.map(async (view) => {
+        const res = await trackedFetch(
+          `/api/obp/banks/${encodeURIComponent(bankId)}/accounts/${encodeURIComponent(accountId)}/views/${encodeURIComponent(view.id)}/users-with-access`
+        );
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || `Failed to fetch users with access for view ${view.id}`);
+        }
+        const data = await res.json();
+        return { viewId: view.id, users: data.users || [] };
+      })
+    );
+
+    const map = new Map<string, { direct: string[]; abac: string[] }>();
+    const errors = new Map<string, string>();
+    let anySuccess = false;
+
+    for (let i = 0; i < settled.length; i++) {
+      const result = settled[i];
+      const viewId = views[i].id;
+      if (result.status === "fulfilled") {
+        anySuccess = true;
+        const entry = { direct: [] as string[], abac: [] as string[] };
+        for (const user of result.value.users) {
+          const name = user.username || user.user_id || "Unknown";
+          if (user.access_source === "ABAC") {
+            entry.abac.push(name);
+          } else {
+            entry.direct.push(name);
+          }
+        }
+        map.set(viewId, entry);
+      } else {
+        const msg = result.reason instanceof Error ? result.reason.message : String(result.reason);
+        errors.set(viewId, msg);
       }
-      usersWithAccess = await res.json();
-    } catch (err) {
-      usersWithAccessError = err instanceof Error ? err.message : "Failed to fetch users with account access";
-      usersWithAccess = null;
-    } finally {
-      usersWithAccessLoading = false;
     }
+
+    usersByView = map;
+    viewErrors = errors;
+    usersWithAccess = anySuccess ? { users: [] } : null;
+    if (errors.size > 0 && !anySuccess) {
+      usersWithAccessError = "Failed to fetch users with access for all views";
+    }
+    usersWithAccessLoading = false;
   }
 
   async function loadPage(bankId: string, accountId: string, viewId: string) {
     account = null;
     error = null;
     usersWithAccess = null;
+    usersByView = new Map();
+    viewErrors = new Map();
     await checkAccountAccess(bankId, accountId, viewId);
     if (hasAccountAccess) {
-      await Promise.all([
-        fetchAccount(bankId, accountId, viewId),
-        fetchUsersWithAccess(bankId, accountId)
-      ]);
+      await fetchAccount(bankId, accountId, viewId);
+      if (account?.views_available?.length) {
+        await fetchUsersWithAccess(bankId, accountId, account.views_available);
+      }
     }
   }
 
@@ -431,6 +449,7 @@
               </div>
               {#each account.views_available as view}
                 {@const viewUsers = usersByView.get(view.id)}
+                {@const viewError = viewErrors.get(view.id)}
                 <div class="views-table-row">
                   <div class="views-col-name">
                     <a href="/account-access/accounts/{encodeURIComponent(bankId)}/{encodeURIComponent(accountId)}/{encodeURIComponent(view.id)}/transactions" class="view-name-link">{toTitleCase(view.id)}</a>
@@ -438,28 +457,34 @@
                       <span class="view-badge public">PUBLIC</span>
                     {/if}
                   </div>
-                  <div class="views-col-users">
-                    {#if usersWithAccessLoading}
-                      <Loader2 size={14} class="spinner-icon" />
-                    {:else if viewUsers?.direct?.length}
-                      {#each viewUsers.direct as username}
-                        <span class="user-chip direct">{username}</span>
-                      {/each}
-                    {:else if !usersWithAccessError}
-                      <span class="no-users">—</span>
-                    {/if}
-                  </div>
-                  <div class="views-col-users">
-                    {#if usersWithAccessLoading}
-                      <Loader2 size={14} class="spinner-icon" />
-                    {:else if viewUsers?.abac?.length}
-                      {#each viewUsers.abac as username}
-                        <span class="user-chip abac">{username}</span>
-                      {/each}
-                    {:else if !usersWithAccessError}
-                      <span class="no-users">—</span>
-                    {/if}
-                  </div>
+                  {#if viewError}
+                    <div class="views-col-users view-error" style="grid-column: span 2;">
+                      {viewError}
+                    </div>
+                  {:else}
+                    <div class="views-col-users">
+                      {#if usersWithAccessLoading}
+                        <Loader2 size={14} class="spinner-icon" />
+                      {:else if viewUsers?.direct?.length}
+                        {#each viewUsers.direct as username}
+                          <span class="user-chip direct">{username}</span>
+                        {/each}
+                      {:else}
+                        <span class="no-users">—</span>
+                      {/if}
+                    </div>
+                    <div class="views-col-users">
+                      {#if usersWithAccessLoading}
+                        <Loader2 size={14} class="spinner-icon" />
+                      {:else if viewUsers?.abac?.length}
+                        {#each viewUsers.abac as username}
+                          <span class="user-chip abac">{username}</span>
+                        {/each}
+                      {:else}
+                        <span class="no-users">—</span>
+                      {/if}
+                    </div>
+                  {/if}
                 </div>
               {/each}
             </div>
@@ -1181,6 +1206,16 @@
   :global([data-mode="dark"]) .user-chip.abac {
     background: rgba(245, 158, 11, 0.2);
     color: rgb(var(--color-warning-300));
+  }
+
+  .view-error {
+    font-size: 0.75rem;
+    color: #dc2626;
+    padding: 0.5rem 0.75rem;
+  }
+
+  :global([data-mode="dark"]) .view-error {
+    color: rgb(var(--color-error-400));
   }
 
   .no-users {

@@ -44,9 +44,13 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     // Fetch users from OBP API - get recent users with pagination
     logger.info("=== USERS API CALL ===");
     const role = url.searchParams.get("role_name");
+    const bankId = url.searchParams.get("bank_id");
     let endpoint = `/obp/v6.0.0/users?limit=100`;
     if (role) {
       endpoint += `&role_name=${encodeURIComponent(role)}`;
+    }
+    if (bankId) {
+      endpoint += `&bank_id=${encodeURIComponent(bankId)}`;
     }
     logger.info(`Request: ${endpoint}`);
 

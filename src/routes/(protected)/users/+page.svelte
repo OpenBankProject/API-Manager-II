@@ -7,9 +7,11 @@
   let { data } = $props<{ data: PageData }>();
 
   let roleFilter = $state(page.url.searchParams.get("role_name") || "");
+  let bankIdFilter = $state(page.url.searchParams.get("bank_id") || "");
   let roles = $state<string[]>([]);
+  let banks = $state<string[]>([]);
 
-  // Fetch roles on mount
+  // Fetch roles and banks on mount
   $effect(() => {
     async function fetchRoles() {
       try {
@@ -22,7 +24,19 @@
         console.error("Error fetching roles:", err);
       }
     }
+    async function fetchBanks() {
+      try {
+        const response = await fetch("/api/banks");
+        const result = await response.json();
+        if (result.banks) {
+          banks = result.banks.map((b: any) => b.id).sort();
+        }
+      } catch (err) {
+        console.error("Error fetching banks:", err);
+      }
+    }
     fetchRoles();
+    fetchBanks();
   });
 
   let users = $derived(data.users || []);
@@ -245,6 +259,9 @@
           if (roleFilter.trim()) {
             params.set("role_name", roleFilter.trim());
           }
+          if (bankIdFilter.trim()) {
+            params.set("bank_id", bankIdFilter.trim());
+          }
           const qs = params.toString();
           goto(qs ? `?${qs}` : "/users", { invalidateAll: true });
         }}
@@ -265,13 +282,28 @@
             {/each}
           </select>
         </div>
+        <div style="flex: 0 0 300px;">
+          <label for="bank-id-input" class="block text-sm font-medium mb-2"
+            >Bank ID</label
+          >
+          <select
+            id="bank-id-input"
+            bind:value={bankIdFilter}
+            class="form-input w-full"
+          >
+            <option value="">All banks</option>
+            {#each banks as bank}
+              <option value={bank}>{bank}</option>
+            {/each}
+          </select>
+        </div>
         <button
           type="submit"
           class="btn btn-primary"
         >
-          Filter by Role
+          Filter
         </button>
-        {#if page.url.searchParams.has("role_name")}
+        {#if page.url.searchParams.has("role_name") || page.url.searchParams.has("bank_id")}
           <a href="/users" class="btn btn-secondary">Clear</a>
         {/if}
       </form>
@@ -334,8 +366,8 @@
   <!-- Users List Panel -->
   <div class="panel">
     <div class="panel-header">
-      <h2 class="panel-title">{page.url.searchParams.has("role_name") ? `Users with Role: ${page.url.searchParams.get("role_name")}` : "Recent Users"}</h2>
-      <div class="panel-subtitle">{page.url.searchParams.has("role_name") ? `Filtered by role` : "Most recently created users"} (up to 100)</div>
+      <h2 class="panel-title">{page.url.searchParams.has("role_name") || page.url.searchParams.has("bank_id") ? `Users${page.url.searchParams.has("role_name") ? ` with Role: ${page.url.searchParams.get("role_name")}` : ""}${page.url.searchParams.has("bank_id") ? ` at Bank: ${page.url.searchParams.get("bank_id")}` : ""}` : "Recent Users"}</h2>
+      <div class="panel-subtitle">{page.url.searchParams.has("role_name") || page.url.searchParams.has("bank_id") ? "Filtered results" : "Most recently created users"} (up to 100)</div>
     </div>
     <div class="panel-content">
       {#if users && users.length > 0}
