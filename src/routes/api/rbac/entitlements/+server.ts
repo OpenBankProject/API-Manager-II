@@ -80,16 +80,23 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
     return json(response);
   } catch (err) {
-    logger.error("Error creating entitlement:", err);
-
     // Extract full error details - NEVER hide or simplify OBP error messages!
     const { message, obpErrorCode } = extractErrorDetails(err);
+
+    // Pass through the original OBP status code (e.g. 400, 409) instead of always 500
+    const statusCode = (err as any)?.statusCode || 500;
+
+    if (statusCode >= 500) {
+      logger.error("Error creating entitlement:", err);
+    } else {
+      logger.warn(`Entitlement creation rejected (${statusCode}): ${message}`);
+    }
 
     const errorResponse: any = { error: message };
     if (obpErrorCode) {
       errorResponse.obpErrorCode = obpErrorCode;
     }
 
-    return json(errorResponse, { status: 500 });
+    return json(errorResponse, { status: statusCode });
   }
 };

@@ -161,11 +161,13 @@
     if (!config) return `${label}\nNo Roles required`;
     const roles = config.required;
     if (roles.length === 0) return `${label}\nRequired roles: (none)`;
+    const logic = config.requirementType === "AND" ? "AND" : "OR";
+    const separator = logic === "AND" ? "\n" : `\n  ${logic} `;
     const lines = roles.map((r) => {
       const has = userHasRole(r.role);
       return `${has ? "\u2713" : "\u2717"} ${r.role}`;
     });
-    return `${label}\nRequired roles:\n${lines.join("\n")}`;
+    return `${label}\nRequired roles (${logic}):\n${lines.join(separator)}`;
   }
 
   logger.info("🧭 Navigation state initialized");

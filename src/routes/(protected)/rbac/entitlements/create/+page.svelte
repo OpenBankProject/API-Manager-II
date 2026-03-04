@@ -1,6 +1,7 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
+  import { onDestroy } from "svelte";
   import { toast } from "$lib/utils/toastService";
   import { trackedFetch } from "$lib/utils/trackedFetch";
   import UserSearchPickerWidget from "$lib/components/UserSearchPickerWidget.svelte";
@@ -29,6 +30,26 @@
   let bankId = $state(currentBank.bankId);
   let roleSearchQuery = $state("");
   let isSubmitting = $state(false);
+  let formError = $state("");
+  let errorTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function setFormError(message: string) {
+    if (errorTimer) clearTimeout(errorTimer);
+    formError = message;
+    if (message) {
+      errorTimer = setTimeout(() => { formError = ""; }, 5000);
+    }
+  }
+
+  onDestroy(() => {
+    if (errorTimer) clearTimeout(errorTimer);
+  });
+
+  // Clear error when user changes form inputs
+  $effect(() => {
+    roleName; userId; bankId;
+    setFormError("");
+  });
 
   // Determine if selected role requires bank_id
   let selectedRoleRequiresBank = $derived.by(() => {
@@ -68,6 +89,7 @@
     }
 
     isSubmitting = true;
+    setFormError("");
 
     try {
       const response = await trackedFetch("/api/rbac/entitlements", {
@@ -88,8 +110,8 @@
           "Failed to create entitlement",
         );
         logErrorDetails("Create Entitlement", errorDetails);
-        const errorMessage = formatErrorForDisplay(errorDetails);
-        throw new Error(errorMessage);
+        setFormError(formatErrorForDisplay(errorDetails));
+        return;
       }
 
       toast.success(
@@ -97,9 +119,9 @@
         `Successfully granted ${roleName} to user ${userId}`,
       );
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to create entitlement";
-      toast.error("Error", errorMessage);
+      setFormError(
+        error instanceof Error ? error.message : "Failed to create entitlement",
+      );
     } finally {
       isSubmitting = false;
     }
@@ -157,6 +179,12 @@
           hideSearch
           disabled={isSubmitting}
         />
+
+        {#if formError}
+          <div class="form-error" data-testid="form-error">
+            {formError}
+          </div>
+        {/if}
 
         <div class="form-actions">
           <button
@@ -301,6 +329,22 @@
   :global([data-mode="dark"]) .search-input:focus {
     border-color: rgb(var(--color-primary-500));
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+  }
+
+  .form-error {
+    padding: 0.75rem 1rem;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    color: #991b1b;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  :global([data-mode="dark"]) .form-error {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
   }
 
   .form-actions {

@@ -15,6 +15,7 @@
     userEntitlements={data.userEntitlements}
     required={pageRoles.required}
     optional={pageRoles.optional}
+    requirementType={pageRoles.requirementType}
     currentBankId={currentBank.bankId}
   >
     {@render children()}
