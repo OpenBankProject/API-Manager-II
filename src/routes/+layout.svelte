@@ -161,12 +161,15 @@
     if (!config) return `${label}\nNo Roles required`;
     const roles = config.required;
     if (roles.length === 0) return `${label}\nRequired roles: (none)`;
-    const logic = config.requirementType === "AND" ? "AND" : "OR";
-    const separator = logic === "AND" ? "\n" : `\n  ${logic} `;
     const lines = roles.map((r) => {
       const has = userHasRole(r.role);
       return `${has ? "\u2713" : "\u2717"} ${r.role}`;
     });
+    if (roles.length === 1) {
+      return `${label}\nRequired role:\n${lines[0]}`;
+    }
+    const logic = config.requirementType === "AND" ? "AND" : "OR";
+    const separator = logic === "AND" ? "\n" : `\n  ${logic} `;
     return `${label}\nRequired roles (${logic}):\n${lines.join(separator)}`;
   }
 
