@@ -1,5 +1,9 @@
 # CLAUDE.md — API Manager II
 
+## Communication style
+
+- Never deflect blame or make excuses like "this isn't related to my changes". Just focus on diagnosing and fixing the problem.
+
 ## HTML best practices
 
 Follow the guidelines in [`docs/playwright-friendly-html.md`](docs/playwright-friendly-html.md) when writing or modifying Svelte components:

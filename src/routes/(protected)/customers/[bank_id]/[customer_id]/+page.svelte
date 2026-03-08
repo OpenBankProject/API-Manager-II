@@ -42,6 +42,11 @@
   let bankId = $derived(page.params.bank_id || "");
   let customerId = $derived(page.params.customer_id || "");
 
+  let isCorporate = $derived(
+    customer?.customer_type?.toLowerCase() === "corporate" ||
+    customer?.customer_type?.toLowerCase() === "business"
+  );
+
   let parsedError = $derived.by(() => {
     if (!error) return null;
     const match = error.match(/OBP-(\d+):.*missing one or more roles:\s*(.+)/i);
@@ -86,7 +91,7 @@
 <div class="container mx-auto px-4 py-8">
   <!-- Breadcrumb -->
   <nav class="breadcrumb mb-4" aria-label="Breadcrumb">
-    <a href="/customers/individual" class="breadcrumb-link">Customers</a>
+    <a href="/customers/{isCorporate ? 'corporate' : 'individual'}" class="breadcrumb-link">Customers</a>
     <span class="breadcrumb-separator">&rsaquo;</span>
     <span class="breadcrumb-current">{customer?.legal_name || customerId}</span>
   </nav>
@@ -107,7 +112,7 @@
           </h1>
           <div class="panel-subtitle">{bankId} / {customerId}</div>
         </div>
-        <a href="/customers/individual" class="btn-secondary" data-testid="back-button">
+        <a href="/customers/{isCorporate ? 'corporate' : 'individual'}" class="btn-secondary" data-testid="back-button">
           <ArrowLeft size={16} />
           Back
         </a>
@@ -168,10 +173,12 @@
               <span class="info-label">Phone</span>
               <span class="info-value">{customer.mobile_phone_number || "—"}</span>
             </div>
-            <div class="info-item">
-              <span class="info-label">Date of Birth</span>
-              <span class="info-value">{customer.date_of_birth || "—"}</span>
-            </div>
+            {#if !isCorporate}
+              <div class="info-item">
+                <span class="info-label">Date of Birth</span>
+                <span class="info-value">{customer.date_of_birth || "—"}</span>
+              </div>
+            {/if}
             <div class="info-item">
               <span class="info-label">Bank ID</span>
               <span class="info-value mono">{customer.bank_id || "—"}</span>
@@ -196,47 +203,53 @@
               <span class="info-label">Last OK Date</span>
               <span class="info-value">{customer.last_ok_date || "—"}</span>
             </div>
-            {#if customer.parent_customer_id}
-              <div class="info-item">
+            {#if isCorporate || customer.parent_customer_id}
+              <div class="info-item" data-testid="parent-customer">
                 <span class="info-label">Parent Customer</span>
                 <span class="info-value">
-                  <a href="/customers/{encodeURIComponent(bankId)}/{encodeURIComponent(customer.parent_customer_id)}" class="info-link">
-                    {customer.parent_customer_id}
-                  </a>
+                  {#if customer.parent_customer_id}
+                    <a href="/customers/{encodeURIComponent(bankId)}/{encodeURIComponent(customer.parent_customer_id)}" class="info-link">
+                      {customer.parent_customer_id}
+                    </a>
+                  {:else}
+                    —
+                  {/if}
                 </span>
               </div>
             {/if}
           </div>
         </section>
 
-        <!-- Personal Details -->
-        <section class="detail-section">
-          <h2 class="section-title">Personal Details</h2>
-          <div class="info-grid">
-            <div class="info-item">
-              <span class="info-label">Relationship Status</span>
-              <span class="info-value">{customer.relationship_status || "—"}</span>
+        {#if !isCorporate}
+          <!-- Personal Details (Individual customers only) -->
+          <section class="detail-section">
+            <h2 class="section-title">Personal Details</h2>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">Relationship Status</span>
+                <span class="info-value">{customer.relationship_status || "—"}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Dependants</span>
+                <span class="info-value">{customer.dependants ?? "—"}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Highest Education</span>
+                <span class="info-value">{customer.highest_education_attained || "—"}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Employment Status</span>
+                <span class="info-value">{customer.employment_status || "—"}</span>
+              </div>
             </div>
-            <div class="info-item">
-              <span class="info-label">Dependants</span>
-              <span class="info-value">{customer.dependants ?? "—"}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Highest Education</span>
-              <span class="info-value">{customer.highest_education_attained || "—"}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Employment Status</span>
-              <span class="info-value">{customer.employment_status || "—"}</span>
-            </div>
-          </div>
-          {#if customer.dob_of_dependants && customer.dob_of_dependants.length > 0}
-            <div class="sub-detail">
-              <span class="info-label">Dependants DOB</span>
-              <span class="info-value">{customer.dob_of_dependants.join(", ")}</span>
-            </div>
-          {/if}
-        </section>
+            {#if customer.dob_of_dependants && customer.dob_of_dependants.length > 0}
+              <div class="sub-detail">
+                <span class="info-label">Dependants DOB</span>
+                <span class="info-value">{customer.dob_of_dependants.join(", ")}</span>
+              </div>
+            {/if}
+          </section>
+        {/if}
 
         <!-- Credit Info -->
         <section class="detail-section">
