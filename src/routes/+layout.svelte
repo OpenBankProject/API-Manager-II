@@ -12,7 +12,7 @@
   import Toast from "$lib/components/Toast.svelte";
   import ApiActivityIndicator from "$lib/components/ApiActivityIndicator.svelte";
   import OpeyInsightBar from "$lib/components/OpeyInsightBar.svelte";
-  import { getInsightForRoute } from "$lib/config/insightMessages";
+  import { describeRoute } from "$lib/config/insightMessages";
   import { createLogger } from "$lib/utils/logger";
   import { resourceDocsCache } from "$lib/stores/resourceDocsCache";
   import { currentBank } from "$lib/stores/currentBank.svelte";
@@ -643,9 +643,10 @@
         class="flex flex-col overflow-auto"
         style="height: calc(100vh - 80px);"
       >
-        {#if page.url.pathname !== '/'}
-          {@const insight = getInsightForRoute(page.url.pathname)}
-          <OpeyInsightBar message={insight.message} prompt={insight.prompt} />
+        {#if isAuthenticated && page.url.pathname !== '/'}
+          {#key page.url.pathname}
+            <OpeyInsightBar pathname={page.url.pathname} pageContext={describeRoute(page.url.pathname)} />
+          {/key}
         {/if}
         {@render children()}
       </main>

@@ -4,6 +4,10 @@
 
 - Never deflect blame or make excuses like "this isn't related to my changes". Just focus on diagnosing and fixing the problem.
 
+## UX tone
+
+- Do not add patronising or condescending warnings, tooltips, or helper text (e.g. "Use with caution", "Are you sure?", "This action cannot be undone"). Trust that users understand what they are doing.
+
 ## HTML best practices
 
 Follow the guidelines in [`docs/playwright-friendly-html.md`](docs/playwright-friendly-html.md) when writing or modifying Svelte components:

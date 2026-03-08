@@ -16,7 +16,7 @@
       For more information visit
       <a
         href="https://www.openbankproject.com"
-        class="text-primary-500 hover:underline"
+        class="text-primary-600 dark:text-primary-400 underline hover:text-primary-800 dark:hover:text-primary-300"
         target="_blank"
         rel="noopener noreferrer"
       >openbankproject.com</a>.
@@ -24,15 +24,15 @@
 
     <h2 class="h3 pt-4" data-testid="useful-links-title">Useful Links</h2>
 
-    <ul class="list-disc space-y-1 pl-5">
+    <ul class="list-disc space-y-2 pl-5">
       <li>
-        <a href="/site-map" class="text-primary-500 hover:underline" data-testid="link-site-map">
+        <a href="/site-map" class="text-primary-600 dark:text-primary-400 underline hover:text-primary-800 dark:hover:text-primary-300" data-testid="link-site-map">
           Site Map
         </a>
         — view all pages and the roles required to access them
       </li>
       <li>
-        <a href="/status" class="text-primary-500 hover:underline" data-testid="link-status">
+        <a href="/status" class="text-primary-600 dark:text-primary-400 underline hover:text-primary-800 dark:hover:text-primary-300" data-testid="link-status">
           System Status
         </a>
         — check the health of the API
@@ -40,14 +40,14 @@
       <li>
         <a
           href="https://github.com/OpenBankProject"
-          class="text-primary-500 hover:underline"
+          class="text-primary-600 dark:text-primary-400 underline hover:text-primary-800 dark:hover:text-primary-300"
           target="_blank"
           rel="noopener noreferrer"
           data-testid="link-github"
         >
           GitHub
         </a>
-        — source code and issue tracking
+        — source code
       </li>
     </ul>
   </div>

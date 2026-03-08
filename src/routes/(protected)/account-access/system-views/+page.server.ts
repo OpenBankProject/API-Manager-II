@@ -13,6 +13,8 @@ interface SystemView {
   is_public: boolean;
   alias?: string;
   hide_metadata_if_alias_used?: boolean;
+  bank_id?: string;
+  account_id?: string;
 }
 
 interface ViewsResponse {

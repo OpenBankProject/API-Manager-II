@@ -173,8 +173,8 @@
 					<div class="text-2xl font-bold text-green-600 dark:text-green-400">{data.summary.healthy}</div>
 					<div class="text-sm text-gray-600 dark:text-gray-400">Healthy</div>
 				</div>
-				<div class="bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
-					<div class="text-2xl font-bold text-red-600 dark:text-red-400">{data.summary.unhealthy}</div>
+				<div class="{data.summary.unhealthy > 0 ? 'bg-red-50 dark:bg-red-900/20' : 'bg-green-50 dark:bg-green-900/20'} rounded-lg p-4">
+					<div class="text-2xl font-bold {data.summary.unhealthy > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}">{data.summary.unhealthy}</div>
 					<div class="text-sm text-gray-600 dark:text-gray-400">Unhealthy</div>
 				</div>
 				<div class="bg-gray-100 dark:bg-gray-600 rounded-lg p-4">

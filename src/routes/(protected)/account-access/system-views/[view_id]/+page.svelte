@@ -5,8 +5,6 @@
     ArrowLeft,
     Shield,
     CheckCircle,
-    XCircle,
-    AlertCircle,
   } from "@lucide/svelte";
 
   let { data } = $props<{ data: PageData }>();
@@ -15,113 +13,36 @@
   let hasApiAccess = $derived(data.hasApiAccess);
   let error = $derived(data.error);
 
-  // Helper function to check if permission is enabled in allowed_actions array
-  function hasPermission(permissionKey: string): boolean {
-    if (!view) return false;
-    if (
-      !(view as any).allowed_actions ||
-      !Array.isArray((view as any).allowed_actions)
-    ) {
-      return false;
-    }
-    return (view as any).allowed_actions.includes(permissionKey);
+  interface ActionGroup {
+    label: string;
+    actions: string[];
   }
 
-  // Group permissions by category
-  let transactionPermissions = $derived.by(() => {
-    if (!view) return [];
-    return [
-      {
-        label: "This Bank Account",
-        key: "can_see_transaction_this_bank_account",
-      },
-      {
-        label: "Other Bank Account",
-        key: "can_see_transaction_other_bank_account",
-      },
-      { label: "Metadata", key: "can_see_transaction_metadata" },
-      { label: "Label", key: "can_see_transaction_label" },
-      { label: "Amount", key: "can_see_transaction_amount" },
-      { label: "Type", key: "can_see_transaction_type" },
-      { label: "Currency", key: "can_see_transaction_currency" },
-      { label: "Start Date", key: "can_see_transaction_start_date" },
-      { label: "Finish Date", key: "can_see_transaction_finish_date" },
-      { label: "Balance", key: "can_see_transaction_balance" },
+  let groupedActions = $derived.by(() => {
+    const actions: string[] = (view as any)?.allowed_actions || [];
+    const groups: ActionGroup[] = [
+      { label: "Transaction Permissions", actions: [] },
+      { label: "Account Permissions", actions: [] },
+      { label: "Counterparty Permissions", actions: [] },
+      { label: "Write Permissions", actions: [] },
+      { label: "Other Permissions", actions: [] },
     ];
-  });
 
-  let accountPermissions = $derived.by(() => {
-    if (!view) return [];
-    return [
-      { label: "Owners", key: "can_see_bank_account_owners" },
-      { label: "Type", key: "can_see_bank_account_type" },
-      { label: "Balance", key: "can_see_bank_account_balance" },
-      { label: "Currency", key: "can_see_bank_account_currency" },
-      { label: "Label", key: "can_see_bank_account_label" },
-      {
-        label: "National Identifier",
-        key: "can_see_bank_account_national_identifier",
-      },
-      { label: "SWIFT BIC", key: "can_see_bank_account_swift_bic" },
-      { label: "IBAN", key: "can_see_bank_account_iban" },
-      { label: "Number", key: "can_see_bank_account_number" },
-      { label: "Bank Name", key: "can_see_bank_account_bank_name" },
-      { label: "Credit Limit", key: "can_see_bank_account_credit_limit" },
-    ];
-  });
+    for (const action of actions) {
+      if (action.includes("transaction")) {
+        groups[0].actions.push(action);
+      } else if (action.includes("bank_account") || action.includes("bank_routing")) {
+        groups[1].actions.push(action);
+      } else if (action.includes("other_account") || action.includes("other_bank") || action.includes("public_alias") || action.includes("private_alias") || action.includes("counterparty")) {
+        groups[2].actions.push(action);
+      } else if (action.startsWith("can_add_") || action.startsWith("can_delete_") || action.startsWith("can_edit_") || action.startsWith("can_create_")) {
+        groups[3].actions.push(action);
+      } else {
+        groups[4].actions.push(action);
+      }
+    }
 
-  let otherPermissions = $derived.by(() => {
-    if (!view) return [];
-    return [
-      { label: "Comments", key: "can_see_comments" },
-      { label: "Narrative", key: "can_see_narrative" },
-      { label: "Tags", key: "can_see_tags" },
-      { label: "Images", key: "can_see_images" },
-      { label: "More Info", key: "can_see_more_info" },
-      { label: "URL", key: "can_see_url" },
-      { label: "Image URL", key: "can_see_image_url" },
-      { label: "Where Tag", key: "can_see_where_tag" },
-    ];
-  });
-
-  let counterpartyPermissions = $derived.by(() => {
-    if (!view) return [];
-    return [
-      {
-        label: "National Identifier",
-        key: "can_see_other_account_national_identifier",
-      },
-      { label: "SWIFT BIC", key: "can_see_other_account_swift_bic" },
-      { label: "IBAN", key: "can_see_other_account_iban" },
-      { label: "Bank Name", key: "can_see_other_account_bank_name" },
-      { label: "Number", key: "can_see_other_account_number" },
-      { label: "Metadata", key: "can_see_other_account_metadata" },
-      { label: "Kind", key: "can_see_other_account_kind" },
-      { label: "Public Alias", key: "can_see_public_alias" },
-      { label: "Private Alias", key: "can_see_private_alias" },
-    ];
-  });
-
-  let writePermissions = $derived.by(() => {
-    if (!view) return [];
-    return [
-      { label: "Add Comment", key: "can_add_comment" },
-      { label: "Delete Comment", key: "can_delete_comment" },
-      { label: "Add Tag", key: "can_add_tag" },
-      { label: "Delete Tag", key: "can_delete_tag" },
-      { label: "Add Image", key: "can_add_image" },
-      { label: "Delete Image", key: "can_delete_image" },
-      { label: "Edit Narrative", key: "can_edit_narrative" },
-      { label: "Create Counterparty", key: "can_create_counterparty" },
-      {
-        label: "Transaction Request (Own)",
-        key: "can_add_transaction_request_to_own_account",
-      },
-      {
-        label: "Transaction Request (Any)",
-        key: "can_add_transaction_request_to_any_account",
-      },
-    ];
+    return groups.filter((g) => g.actions.length > 0);
   });
 </script>
 
@@ -231,11 +152,21 @@
             Allowed Actions ({(view as any).allowed_actions?.length || 0})
           </h2>
           {#if (view as any).allowed_actions && (view as any).allowed_actions.length > 0}
-            <div class="permissions-grid">
-              {#each (view as any).allowed_actions as action}
-                <div class="permission-item">
-                  <CheckCircle size={16} class="permission-icon enabled" />
-                  <span class="permission-label">{action}</span>
+            <div class="permission-groups">
+              {#each groupedActions as group}
+                <div class="permission-group">
+                  <div class="group-header">
+                    <span class="group-label">{group.label}</span>
+                    <span class="group-count">{group.actions.length}</span>
+                  </div>
+                  <div class="permissions-grid">
+                    {#each group.actions as action}
+                      <div class="permission-item" data-testid="perm-{action}">
+                        <CheckCircle size={16} class="permission-icon enabled" />
+                        <span class="permission-label">{action}</span>
+                      </div>
+                    {/each}
+                  </div>
                 </div>
               {/each}
             </div>
@@ -589,26 +520,70 @@
     background: rgb(var(--color-surface-900));
   }
 
+  .permission-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .permission-group {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  :global([data-mode="dark"]) .permission-group {
+    border-color: rgb(var(--color-surface-700));
+  }
+
+  .group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.625rem 1rem;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  :global([data-mode="dark"]) .group-header {
+    background: rgb(var(--color-surface-900));
+    border-bottom-color: rgb(var(--color-surface-700));
+  }
+
+  .group-label {
+    font-size: 0.813rem;
+    font-weight: 600;
+    color: #374151;
+  }
+
+  :global([data-mode="dark"]) .group-label {
+    color: var(--color-surface-200);
+  }
+
+  .group-count {
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+
+  :global([data-mode="dark"]) .group-count {
+    color: var(--color-surface-400);
+  }
+
   .permissions-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 0.75rem;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.25rem;
+    padding: 0.5rem;
   }
 
   .permission-item {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
-    background: #fafafa;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
+    gap: 0.5rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 4px;
   }
 
-  :global([data-mode="dark"]) .permission-item {
-    background: rgb(var(--color-surface-900));
-    border-color: rgb(var(--color-surface-700));
-  }
 
   .permission-icon {
     flex-shrink: 0;
@@ -631,7 +606,7 @@
   }
 
   .permission-label {
-    font-size: 0.875rem;
+    font-size: 0.813rem;
     color: #374151;
     font-weight: 500;
   }
@@ -663,7 +638,7 @@
     }
 
     .permissions-grid {
-      grid-template-columns: 1fr;
+      grid-template-columns: 1fr 1fr;
     }
 
     .header-title-row {

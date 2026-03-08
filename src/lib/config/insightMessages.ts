@@ -1,36 +1,63 @@
 /**
- * Route-based contextual insight messages for the Opey Insight Bar.
- * Maps route patterns to short hints that help users discover Opey.
+ * Maps route patterns to human-readable page descriptions.
+ * Used by the Opey Insight Bar to give Opey context about where the user is.
  */
 
-const routeInsights: Array<{ pattern: RegExp; message: string; prompt: string }> = [
-  { pattern: /^\/banks\/create$/, message: "I can help you set up a new bank and configure its settings.", prompt: "Help me create a new bank" },
-  { pattern: /^\/banks$/, message: "I can help you explore banks and their settings.", prompt: "Tell me about the banks on this instance" },
-  { pattern: /^\/banks\//, message: "I can help you understand this bank's configuration.", prompt: "Tell me about this bank" },
-  { pattern: /^\/users$/, message: "I can help you find users and manage their roles.", prompt: "Help me find a user" },
-  { pattern: /^\/consumers$/, message: "I can help you understand API consumers and their access.", prompt: "Tell me about API consumers" },
-  { pattern: /^\/metrics/, message: "I can help you analyse API usage and performance metrics.", prompt: "Help me understand API metrics" },
-  { pattern: /^\/aggregate-metrics/, message: "I can help you understand aggregate API usage patterns.", prompt: "Explain aggregate metrics" },
-  { pattern: /^\/connector-/, message: "I can help you understand connector performance.", prompt: "Tell me about connector metrics" },
-  { pattern: /^\/rbac\//, message: "I can help you manage roles, entitlements, and access control.", prompt: "Help me with RBAC" },
-  { pattern: /^\/system\//, message: "I can help you understand system configuration and settings.", prompt: "Tell me about system settings" },
-  { pattern: /^\/products/, message: "I can help you manage API and financial products.", prompt: "Tell me about products" },
-  { pattern: /^\/dynamic-entities/, message: "I can help you work with dynamic entities.", prompt: "Explain dynamic entities" },
-  { pattern: /^\/dynamic-endpoints/, message: "I can help you manage dynamic endpoints.", prompt: "Explain dynamic endpoints" },
-  { pattern: /^\/customers/, message: "I can help you manage customer records.", prompt: "Help me with customers" },
-  { pattern: /^\/account-access/, message: "I can help you manage account access and views.", prompt: "Tell me about account access" },
-  { pattern: /^\/user\/consents/, message: "I can help you understand and manage your consents.", prompt: "Explain consents" },
-  { pattern: /^\/user\/entitlements/, message: "I can help you understand your entitlements.", prompt: "Tell me about my entitlements" },
-  { pattern: /^\/user$/, message: "I can help you with your account settings.", prompt: "Help me with my account" },
-  { pattern: /^\/abac/, message: "I can help you understand attribute-based access control rules.", prompt: "Explain ABAC rules" },
-  { pattern: /^\/integration/, message: "I can help you configure method routings and integrations.", prompt: "Help me with integrations" },
-  { pattern: /^\/api-collections/, message: "I can help you organise your API collections.", prompt: "Tell me about API collections" },
-  { pattern: /^\/site-map$/, message: "I can help you navigate the API Manager.", prompt: "Help me find what I need" },
+const routeDescriptions: Array<{ pattern: RegExp; description: string }> = [
+  { pattern: /^\/banks\/create$/, description: "Create Bank page" },
+  { pattern: /^\/banks\/([^/]+)\/([^/]+)/, description: "Bank detail page" },
+  { pattern: /^\/banks$/, description: "Banks list page" },
+  { pattern: /^\/users$/, description: "Users list page" },
+  { pattern: /^\/consumers$/, description: "API Consumers list page" },
+  { pattern: /^\/aggregate-metrics/, description: "Aggregate Metrics page" },
+  { pattern: /^\/connector-metrics/, description: "Connector Metrics page" },
+  { pattern: /^\/connector-traces/, description: "Connector Traces page" },
+  { pattern: /^\/connector-counts/, description: "Connector Counts page" },
+  { pattern: /^\/metrics/, description: "API Metrics page" },
+  { pattern: /^\/rbac\/entitlements\/create/, description: "Create Entitlement page" },
+  { pattern: /^\/rbac\/entitlements/, description: "Entitlements page" },
+  { pattern: /^\/rbac\/roles/, description: "Roles page" },
+  { pattern: /^\/rbac\/groups/, description: "Groups page" },
+  { pattern: /^\/rbac\/memberships/, description: "Memberships page" },
+  { pattern: /^\/rbac\/entitlement-requests/, description: "Entitlement Requests page" },
+  { pattern: /^\/rbac\/banks/, description: "RBAC Banks page" },
+  { pattern: /^\/system\/cache/, description: "System Cache page" },
+  { pattern: /^\/system\/config-props/, description: "System Config Props page" },
+  { pattern: /^\/system\/database-pool/, description: "Database Pool page" },
+  { pattern: /^\/system\/migrations/, description: "System Migrations page" },
+  { pattern: /^\/system\/webui-props/, description: "WebUI Props page" },
+  { pattern: /^\/system\/signal/, description: "Signals page" },
+  { pattern: /^\/system\//, description: "System settings page" },
+  { pattern: /^\/products\/financial/, description: "Financial Products page" },
+  { pattern: /^\/products\/collections/, description: "Product Collections page" },
+  { pattern: /^\/products\/bootstrap/, description: "Products Bootstrap page" },
+  { pattern: /^\/products/, description: "API Products page" },
+  { pattern: /^\/dynamic-entities\/diagnostics/, description: "Dynamic Entities Diagnostics page" },
+  { pattern: /^\/dynamic-entities\/personal/, description: "Personal Dynamic Entities page" },
+  { pattern: /^\/dynamic-entities/, description: "Dynamic Entities page" },
+  { pattern: /^\/dynamic-endpoints/, description: "Dynamic Endpoints page" },
+  { pattern: /^\/customers\/individual/, description: "Individual Customers page" },
+  { pattern: /^\/customers\/corporate/, description: "Corporate Customers page" },
+  { pattern: /^\/customers/, description: "Customers page" },
+  { pattern: /^\/account-access\/system-views/, description: "System Views page" },
+  { pattern: /^\/account-access\/custom-views/, description: "Custom Views page" },
+  { pattern: /^\/account-access\/account-directory/, description: "Account Directory page" },
+  { pattern: /^\/account-access\/accounts/, description: "My Accounts page" },
+  { pattern: /^\/account-access/, description: "Account Access page" },
+  { pattern: /^\/user\/consents/, description: "My Consents page" },
+  { pattern: /^\/user\/entitlements/, description: "My Entitlements page" },
+  { pattern: /^\/user$/, description: "My Profile page" },
+  { pattern: /^\/abac/, description: "ABAC Rules page" },
+  { pattern: /^\/integration/, description: "Integration / Method Routings page" },
+  { pattern: /^\/api-collections/, description: "API Collections page" },
+  { pattern: /^\/site-map$/, description: "Site Map page" },
+  { pattern: /^\/about$/, description: "About page" },
 ];
 
-const fallback = { message: "I can help you navigate and understand the Open Bank Project API.", prompt: "What can you help me with?" };
-
-export function getInsightForRoute(pathname: string): { message: string; prompt: string } {
-  const match = routeInsights.find((r) => r.pattern.test(pathname));
-  return match ? { message: match.message, prompt: match.prompt } : fallback;
+/**
+ * Get a human-readable description of the current page for Opey context.
+ */
+export function describeRoute(pathname: string): string {
+  const match = routeDescriptions.find((r) => r.pattern.test(pathname));
+  return match ? match.description : `Page: ${pathname}`;
 }

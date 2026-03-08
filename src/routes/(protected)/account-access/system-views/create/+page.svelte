@@ -26,6 +26,38 @@
   let grantAccessViews = $state("");
   let revokeAccessViews = $state("");
 
+  // Group actions by category based on prefix
+  interface ActionGroup {
+    label: string;
+    actions: string[];
+  }
+
+  let groupedActions = $derived.by(() => {
+    const groups: ActionGroup[] = [
+      { label: "Transaction Permissions", actions: [] },
+      { label: "Account Permissions", actions: [] },
+      { label: "Counterparty Permissions", actions: [] },
+      { label: "Write Permissions", actions: [] },
+      { label: "Other Permissions", actions: [] },
+    ];
+
+    for (const action of allAllowedActions) {
+      if (action.includes("transaction")) {
+        groups[0].actions.push(action);
+      } else if (action.includes("bank_account") || action.includes("bank_routing")) {
+        groups[1].actions.push(action);
+      } else if (action.includes("other_account") || action.includes("other_bank") || action.includes("public_alias") || action.includes("private_alias") || action.includes("counterparty")) {
+        groups[2].actions.push(action);
+      } else if (action.startsWith("can_add_") || action.startsWith("can_delete_") || action.startsWith("can_edit_") || action.startsWith("can_create_")) {
+        groups[3].actions.push(action);
+      } else {
+        groups[4].actions.push(action);
+      }
+    }
+
+    return groups.filter((g) => g.actions.length > 0);
+  });
+
   function toggleAction(action: string) {
     if (selectedActions.includes(action)) {
       selectedActions = selectedActions.filter((a) => a !== action);
@@ -40,6 +72,19 @@
 
   function deselectAllActions() {
     selectedActions = [];
+  }
+
+  function selectAllInGroup(group: ActionGroup) {
+    const toAdd = group.actions.filter((a) => !selectedActions.includes(a));
+    selectedActions = [...selectedActions, ...toAdd];
+  }
+
+  function deselectAllInGroup(group: ActionGroup) {
+    selectedActions = selectedActions.filter((a) => !group.actions.includes(a));
+  }
+
+  function countSelectedInGroup(group: ActionGroup): number {
+    return group.actions.filter((a) => selectedActions.includes(a)).length;
   }
 
   async function handleSubmit(event: Event) {
@@ -162,11 +207,18 @@
               <input
                 id="name"
                 type="text"
+                name="name"
+                data-testid="view-name"
                 bind:value={formName}
                 required
                 placeholder="e.g., owner"
                 class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:focus:border-blue-400"
               />
+              {#if formName.trim()}
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  view_id will be: <code class="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs dark:bg-gray-700">{formName.trim()}</code>
+                </p>
+              {/if}
             </div>
 
             <!-- Description Field -->
@@ -199,7 +251,7 @@
                 id="metadata_view"
                 bind:value={formMetadataView}
                 rows="2"
-                placeholder="Optional metadata description (defaults to description)"
+                placeholder="e.g., owner — the view used to retrieve metadata for this view"
                 class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:focus:border-blue-400"
               ></textarea>
             </div>
@@ -306,11 +358,11 @@
 
             <!-- Allowed Actions -->
             <div>
-              <div class="mb-2 flex items-center justify-between">
+              <div class="mb-3 flex items-center justify-between">
                 <label
                   class="block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
-                  Allowed Actions ({selectedActions.length} selected)
+                  Allowed Actions ({selectedActions.length} of {allAllowedActions.length} selected)
                 </label>
                 <div class="flex gap-2">
                   <button
@@ -329,26 +381,52 @@
                   </button>
                 </div>
               </div>
-              <div
-                class="max-h-96 overflow-y-auto rounded-lg border border-gray-300 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-900"
-              >
-                <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
-                  {#each allAllowedActions as action}
-                    <label class="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={selectedActions.includes(action)}
-                        onclick={() => toggleAction(action)}
-                        class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
-                      />
-                      <span
-                        class="ml-2 text-xs text-gray-700 dark:text-gray-300"
-                      >
-                        {action}
+
+              <div class="space-y-4">
+                {#each groupedActions as group}
+                  <div class="rounded-lg border border-gray-300 dark:border-gray-600">
+                    <div class="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-4 py-2 dark:border-gray-600 dark:bg-gray-800">
+                      <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        {group.label}
+                        <span class="ml-1 font-normal text-gray-500 dark:text-gray-400">({countSelectedInGroup(group)}/{group.actions.length})</span>
                       </span>
-                    </label>
-                  {/each}
-                </div>
+                      <div class="flex gap-2">
+                        <button
+                          type="button"
+                          onclick={() => selectAllInGroup(group)}
+                          class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                        >
+                          All
+                        </button>
+                        <button
+                          type="button"
+                          onclick={() => deselectAllInGroup(group)}
+                          class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                        >
+                          None
+                        </button>
+                      </div>
+                    </div>
+                    <div class="grid grid-cols-1 gap-1 p-3 md:grid-cols-2">
+                      {#each group.actions as action}
+                        <label class="flex items-center rounded px-1 py-0.5 hover:bg-gray-50 dark:hover:bg-gray-800">
+                          <input
+                            type="checkbox"
+                            checked={selectedActions.includes(action)}
+                            onclick={() => toggleAction(action)}
+                            data-testid="action-{action}"
+                            class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+                          />
+                          <span
+                            class="ml-2 text-xs text-gray-700 dark:text-gray-300"
+                          >
+                            {action}
+                          </span>
+                        </label>
+                      {/each}
+                    </div>
+                  </div>
+                {/each}
               </div>
             </div>
           </div>

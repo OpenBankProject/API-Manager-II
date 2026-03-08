@@ -1,22 +1,13 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import type { PageData } from "./$types";
-  import { Eye, Search, Shield, CheckCircle, XCircle } from "@lucide/svelte";
+  import { Search, CheckCircle } from "@lucide/svelte";
 
   let { data } = $props<{ data: PageData }>();
 
   let views = $derived(data.views || []);
   let hasApiAccess = $derived(data.hasApiAccess);
   let error = $derived(data.error);
-
-  // Debug logging
-  $effect(() => {
-    console.log("Views data:", views);
-    if (views.length > 0) {
-      console.log("First view:", views[0]);
-      console.log("First view id:", views[0].view_id);
-    }
-  });
 
   // Search functionality
   let searchQuery = $state("");
@@ -51,11 +42,13 @@
           <h1 class="panel-title">System Views</h1>
           <div class="panel-subtitle">
             System-defined views that control account data visibility
+            ({views.length} total, {views.filter((v: any) => v.is_public).length} public)
           </div>
         </div>
         <div class="header-controls">
           <button
             onclick={handleCreateView}
+            data-testid="create-system-view-btn"
             class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:bg-blue-500 dark:hover:bg-blue-600"
           >
             Create System View
@@ -67,113 +60,72 @@
     <div class="panel-content">
       {#if error}
         <div class="error-message">
-          <p>⚠️ {error}</p>
+          <p>{error}</p>
         </div>
       {/if}
 
       {#if views.length === 0}
         <div class="empty-state">
-          <div class="empty-icon">
-            <Eye size={48} />
-          </div>
           <h4 class="empty-title">No Views Found</h4>
           <p class="empty-description">
-            There are currently no views available. Views may need to be created
-            first or you may need specific permissions to see them.
+            No views available. You may need to create views or have specific permissions.
           </p>
-          <div class="debug-info">
-            <p><strong>API Access:</strong> {hasApiAccess ? "Yes" : "No"}</p>
-            <p><strong>Views Count:</strong> {views.length}</p>
-            <p><strong>Error:</strong> {error || "None"}</p>
-          </div>
         </div>
       {:else}
         <!-- Search Bar -->
         <div class="search-bar">
-          <Search class="search-icon" size={18} />
+          <Search class="search-icon" size={16} />
           <input
             type="text"
             class="search-input"
-            placeholder="Search views by name, description, or ID..."
+            name="search-views"
+            data-testid="search-views"
+            placeholder="Search views..."
             bind:value={searchQuery}
           />
+          {#if searchQuery}
+            <span class="search-count">{filteredViews.length} of {views.length}</span>
+          {/if}
         </div>
 
-        <!-- Stats -->
-        <div class="stats">
-          <div class="stat-item">
-            <div class="stat-label">Total Views</div>
-            <div class="stat-value">{views.length}</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-label">Public Views</div>
-            <div class="stat-value">
-              {views.filter((v: any) => v.is_public).length}
-            </div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-label">Showing</div>
-            <div class="stat-value">{filteredViews.length}</div>
-          </div>
-        </div>
-
-        <!-- Views Grid -->
+        <!-- Views Table -->
         {#if filteredViews.length === 0}
-          <div class="empty-state">
-            <div class="empty-icon">
-              <Search size={48} />
-            </div>
-            <h4 class="empty-title">No views found</h4>
-            <p class="empty-description">Try adjusting your search query</p>
-          </div>
+          <p class="no-results">No views match your search.</p>
         {:else}
-          <div class="views-grid">
-            {#each filteredViews as view}
-              <a
-                href="/account-access/system-views/{view.view_id}"
-                class="view-card"
-                onclick={(e) => {
-                  console.log("Clicked view:", view);
-                  console.log(
-                    "Link href:",
-                    `/account-access/system-views/${view.view_id}`,
-                  );
-                }}
-              >
-                <div class="view-card-header">
-                  <div class="view-icon">
-                    <Eye size={24} />
-                  </div>
-                  <div class="view-status">
+          <table class="views-table" data-testid="system-views-table">
+            <thead>
+              <tr>
+                <th>View ID</th>
+                <th>Description</th>
+                <th>Alias</th>
+                <th>Bank ID</th>
+                <th>Account ID</th>
+                <th>Public</th>
+              </tr>
+            </thead>
+            <tbody>
+              {#each filteredViews as view}
+                <tr data-testid="view-row-{view.view_id}">
+                  <td class="cell-mono">
+                    <a href="/account-access/system-views/{view.view_id}" class="view-link" data-testid="view-link-{view.view_id}">
+                      {view.view_id}
+                    </a>
+                  </td>
+                  <td class="cell-description">{view.description}</td>
+                  <td class="cell-mono">{view.alias || "—"}</td>
+                  <td class="cell-mono">{view.bank_id || "—"}</td>
+                  <td class="cell-mono">{view.account_id || "—"}</td>
+                  <td class="cell-center">
                     {#if view.is_public}
-                      <span class="status-badge status-public">
-                        <CheckCircle size={14} />
-                        Public
-                      </span>
+                      <CheckCircle size={16} class="icon-public" />
+                    {:else}
+                      <span class="text-muted">—</span>
                     {/if}
-                  </div>
-                </div>
-                <div class="view-card-body">
-                  <h3 class="view-name">{view.short_name}</h3>
-                  <p class="view-description">{view.description}</p>
-                  {#if view.alias}
-                    <div class="view-alias">
-                      <span class="alias-label">Alias:</span>
-                      <span class="alias-value">{view.alias}</span>
-                    </div>
-                  {/if}
-                </div>
-                <div class="view-card-footer">
-                  <div class="view-meta">
-                    <div class="meta-item">
-                      <Shield size={14} />
-                      <span>ID: {view.view_id}</span>
-                    </div>
-                  </div>
-                </div>
-              </a>
-            {/each}
-          </div>
+                  </td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
         {/if}
       {/if}
     </div>
@@ -197,7 +149,7 @@
   }
 
   .panel-header {
-    padding: 1.5rem;
+    padding: 1rem 1.5rem;
     border-bottom: 1px solid #e5e7eb;
   }
 
@@ -224,9 +176,9 @@
   }
 
   .panel-subtitle {
-    font-size: 0.875rem;
+    font-size: 0.813rem;
     color: #6b7280;
-    margin-top: 0.5rem;
+    margin-top: 0.25rem;
   }
 
   :global([data-mode="dark"]) .panel-subtitle {
@@ -234,12 +186,12 @@
   }
 
   .panel-content {
-    padding: 2rem;
+    padding: 1rem 1.5rem;
   }
 
   .error-message {
-    margin-bottom: 1.5rem;
-    padding: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
     background: #fef2f2;
     border: 1px solid #fecaca;
     border-radius: 6px;
@@ -255,7 +207,7 @@
 
   .empty-state {
     text-align: center;
-    padding: 3rem;
+    padding: 2rem;
     color: #6b7280;
   }
 
@@ -263,19 +215,8 @@
     color: var(--color-surface-400);
   }
 
-  .empty-icon {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 1rem;
-    color: #d1d5db;
-  }
-
-  :global([data-mode="dark"]) .empty-icon {
-    color: var(--color-surface-600);
-  }
-
   .empty-title {
-    font-size: 1.125rem;
+    font-size: 1rem;
     font-weight: 600;
     color: #4a5568;
     margin: 0 0 0.5rem 0;
@@ -286,33 +227,12 @@
   }
 
   .empty-description {
-    margin: 0 0 1.5rem 0;
+    margin: 0;
     color: #6b7280;
+    font-size: 0.875rem;
   }
 
   :global([data-mode="dark"]) .empty-description {
-    color: var(--color-surface-400);
-  }
-
-  .debug-info {
-    margin-top: 1rem;
-    padding: 1rem;
-    background: #f3f4f6;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    text-align: left;
-  }
-
-  :global([data-mode="dark"]) .debug-info {
-    background: rgb(var(--color-surface-800));
-  }
-
-  .debug-info p {
-    margin: 0.25rem 0;
-    color: #6b7280;
-  }
-
-  :global([data-mode="dark"]) .debug-info p {
     color: var(--color-surface-400);
   }
 
@@ -323,7 +243,7 @@
 
   .search-bar :global(.search-icon) {
     position: absolute;
-    left: 1rem;
+    left: 0.75rem;
     top: 50%;
     transform: translateY(-50%);
     color: #9ca3af;
@@ -336,10 +256,10 @@
 
   .search-input {
     width: 100%;
-    padding: 0.75rem 1rem 0.75rem 3rem;
+    padding: 0.5rem 0.75rem 0.5rem 2.25rem;
     border: 1px solid #d1d5db;
     border-radius: 6px;
-    font-size: 0.875rem;
+    font-size: 0.813rem;
     transition: all 0.2s;
   }
 
@@ -360,230 +280,121 @@
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
   }
 
-  .stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .stat-item {
-    padding: 1rem;
-    background: #f9fafb;
-    border-radius: 6px;
-    border: 1px solid #e5e7eb;
-  }
-
-  :global([data-mode="dark"]) .stat-item {
-    background: rgb(var(--color-surface-900));
-    border-color: rgb(var(--color-surface-700));
-  }
-
-  .stat-label {
+  .search-count {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
     font-size: 0.75rem;
-    color: #6b7280;
-    margin-bottom: 0.25rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-weight: 600;
+    color: #9ca3af;
   }
 
-  :global([data-mode="dark"]) .stat-label {
+  :global([data-mode="dark"]) .search-count {
     color: var(--color-surface-400);
   }
 
-  .stat-value {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #111827;
+  .no-results {
+    text-align: center;
+    color: #6b7280;
+    font-size: 0.875rem;
+    padding: 1rem 0;
   }
 
-  :global([data-mode="dark"]) .stat-value {
-    color: var(--color-surface-100);
+  .views-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.813rem;
   }
 
-  .views-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 1.5rem;
+  .views-table thead {
+    border-bottom: 2px solid #e5e7eb;
   }
 
-  .view-card {
-    display: flex;
-    flex-direction: column;
-    padding: 1.5rem;
-    background: #fafafa;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    transition: all 0.2s;
-    text-decoration: none;
-    color: inherit;
+  :global([data-mode="dark"]) .views-table thead {
+    border-bottom-color: rgb(var(--color-surface-600));
   }
 
-  .view-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
-    border-color: #3b82f6;
+  .views-table th {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
   }
 
-  :global([data-mode="dark"]) .view-card {
+  :global([data-mode="dark"]) .views-table th {
+    color: var(--color-surface-400);
+  }
+
+  .views-table td {
+    padding: 0.5rem 0.75rem;
+    color: #374151;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: top;
+  }
+
+  :global([data-mode="dark"]) .views-table td {
+    color: var(--color-surface-200);
+    border-bottom-color: rgb(var(--color-surface-700));
+  }
+
+  .views-table tbody tr:hover {
+    background: #f9fafb;
+  }
+
+  :global([data-mode="dark"]) .views-table tbody tr:hover {
     background: rgb(var(--color-surface-900));
-    border-color: rgb(var(--color-surface-700));
   }
 
-  :global([data-mode="dark"]) .view-card:hover {
-    border-color: rgb(var(--color-primary-500));
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  .view-link {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 500;
+    white-space: nowrap;
   }
 
-  .view-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1rem;
+  .view-link:hover {
+    text-decoration: underline;
   }
 
-  .view-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
-    background: #eff6ff;
-    color: #3b82f6;
-    border-radius: 8px;
-  }
-
-  :global([data-mode="dark"]) .view-icon {
-    background: rgba(59, 130, 246, 0.2);
+  :global([data-mode="dark"]) .view-link {
     color: rgb(var(--color-primary-400));
   }
 
-  .view-status {
-    flex-shrink: 0;
-  }
-
-  .status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 600;
-  }
-
-  .status-public {
-    background: #10b981;
-    color: #ffffff;
-    font-weight: 600;
-  }
-
-  :global([data-mode="dark"]) .status-public {
-    background: #10b981;
-    color: #ffffff;
-    font-weight: 600;
-  }
-
-  .status-private {
-    background: #fee2e2;
-    color: #991b1b;
-  }
-
-  :global([data-mode="dark"]) .status-private {
-    background: rgba(239, 68, 68, 0.2);
-    color: rgb(var(--color-error-300));
-  }
-
-  .view-card-body {
-    flex: 1;
-    margin-bottom: 1rem;
-  }
-
-  .view-name {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #111827;
-    margin: 0 0 0.5rem 0;
-  }
-
-  :global([data-mode="dark"]) .view-name {
-    color: var(--color-surface-100);
-  }
-
-  .view-description {
-    font-size: 0.875rem;
-    color: #6b7280;
-    margin: 0 0 0.75rem 0;
-    line-height: 1.5;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  :global([data-mode="dark"]) .view-description {
-    color: var(--color-surface-400);
-  }
-
-  .view-alias {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.75rem;
-    padding: 0.5rem;
-    background: #f3f4f6;
-    border-radius: 4px;
-  }
-
-  :global([data-mode="dark"]) .view-alias {
-    background: rgb(var(--color-surface-800));
-  }
-
-  .alias-label {
-    color: #6b7280;
-    font-weight: 600;
-  }
-
-  :global([data-mode="dark"]) .alias-label {
-    color: var(--color-surface-400);
-  }
-
-  .alias-value {
-    color: #111827;
-    font-weight: 500;
+  .cell-mono {
     font-family: monospace;
-  }
-
-  :global([data-mode="dark"]) .alias-value {
-    color: var(--color-surface-200);
-  }
-
-  .view-card-footer {
-    border-top: 1px solid #e5e7eb;
-    padding-top: 1rem;
-  }
-
-  :global([data-mode="dark"]) .view-card-footer {
-    border-top-color: rgb(var(--color-surface-700));
-  }
-
-  .view-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
-
-  .meta-item {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
     font-size: 0.75rem;
-    color: #6b7280;
+    white-space: nowrap;
   }
 
-  :global([data-mode="dark"]) .meta-item {
-    color: var(--color-surface-400);
+  .cell-description {
+    max-width: 400px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .cell-center {
+    text-align: center;
+  }
+
+  :global(.icon-public) {
+    color: #10b981;
+  }
+
+  :global([data-mode="dark"]) :global(.icon-public) {
+    color: #34d399;
+  }
+
+  .text-muted {
+    color: #d1d5db;
+  }
+
+  :global([data-mode="dark"]) .text-muted {
+    color: var(--color-surface-600);
   }
 
   @media (max-width: 768px) {
@@ -592,12 +403,13 @@
       align-items: flex-start;
     }
 
-    .views-grid {
-      grid-template-columns: 1fr;
+    .views-table {
+      display: block;
+      overflow-x: auto;
     }
 
-    .stats {
-      grid-template-columns: 1fr;
+    .cell-description {
+      max-width: 200px;
     }
   }
 </style>

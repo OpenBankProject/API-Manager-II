@@ -115,15 +115,26 @@ export const load: PageServerLoad = async ({ locals, params }) => {
   try {
     logger.info("=== FETCHING CUSTOM VIEW DETAIL ===");
     logger.info(`View ID: ${view_id}`);
-    const endpoint = `/obp/v6.0.0/management/custom-views/${view_id}`;
+    const endpoint = `/obp/v6.0.0/management/custom-views`;
     logger.info(`Request: ${endpoint}`);
 
-    const response: SystemView = await obp_requests.get(endpoint, accessToken);
+    const response = await obp_requests.get(endpoint, accessToken);
+    const views: SystemView[] = response.views || [];
+    const view = views.find((v) => v.id === view_id);
 
-    logger.info(`Response: View ${response.short_name}`);
+    if (!view) {
+      logger.warn(`Custom view not found: ${view_id}`);
+      return {
+        view: null,
+        hasApiAccess: true,
+        error: `Custom view '${view_id}' not found`,
+      };
+    }
+
+    logger.info(`Response: View ${view.short_name}`);
 
     return {
-      view: response,
+      view,
       hasApiAccess: true,
     };
   } catch (err) {

@@ -3,16 +3,15 @@
   import { Eye, ArrowLeft, Shield, AlertCircle, Save } from "@lucide/svelte";
   import { goto } from "$app/navigation";
   import MissingRoleAlert from "$lib/components/MissingRoleAlert.svelte";
+  import { currentBank } from "$lib/stores/currentBank.svelte";
 
   let { data } = $props<{ data: PageData }>();
 
-  let banks = $derived(data.banks || []);
   let hasApiAccess = $derived(data.hasApiAccess);
   let error = $derived(data.error);
 
   // Form state
   let formData = $state({
-    bank_id: "",
     account_id: "",
     name: "",
     description: "",
@@ -26,36 +25,68 @@
   let isSubmitting = $state(false);
   let submitError = $state<string | null>(null);
   let submitSuccess = $state(false);
-  let accounts = $state<any[]>([]);
-  let loadingAccounts = $state(false);
+  let submitAttempted = $state(false);
 
-  // Fetch accounts when bank is selected
+  // Account search via Account Directory
+  let accountSearchQuery = $state("");
+  let accountResults = $state<any[]>([]);
+  let loadingAccounts = $state(false);
+  let showAccountDropdown = $state(false);
+  let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  // Debounced search against account directory
   $effect(() => {
-    if (formData.bank_id) {
-      fetchAccounts(formData.bank_id);
-    } else {
-      accounts = [];
-      formData.account_id = "";
+    const query = accountSearchQuery.trim();
+    const bankId = currentBank.bankId;
+
+    if (searchTimeout) clearTimeout(searchTimeout);
+
+    if (!bankId || query.length < 2) {
+      accountResults = [];
+      return;
     }
+
+    searchTimeout = setTimeout(() => {
+      searchAccountDirectory(bankId, query);
+    }, 300);
   });
 
-  async function fetchAccounts(bankId: string) {
+  async function searchAccountDirectory(bankId: string, query: string) {
     loadingAccounts = true;
     try {
-      const response = await fetch(`/api/obp/banks/${bankId}/accounts`);
-      if (response.ok) {
-        const data = await response.json();
-        accounts = data.accounts || [];
+      const res = await fetch(
+        `/api/obp/banks/${encodeURIComponent(bankId)}/account-directory?limit=20`,
+      );
+      if (res.ok) {
+        const data = await res.json();
+        const all = data.accounts || [];
+        const q = query.toLowerCase();
+        accountResults = all.filter(
+          (a: any) =>
+            a.account_id?.toLowerCase().includes(q) ||
+            a.label?.toLowerCase().includes(q) ||
+            a.account_number?.toLowerCase().includes(q),
+        );
       } else {
-        console.error("Failed to fetch accounts");
-        accounts = [];
+        accountResults = [];
       }
-    } catch (err) {
-      console.error("Error fetching accounts:", err);
-      accounts = [];
+    } catch {
+      accountResults = [];
     } finally {
       loadingAccounts = false;
     }
+  }
+
+  function selectAccount(account: any) {
+    formData.account_id = account.account_id;
+    accountSearchQuery = account.account_id;
+    showAccountDropdown = false;
+  }
+
+  function clearAccountSelection() {
+    formData.account_id = "";
+    accountSearchQuery = "";
+    accountResults = [];
   }
 
   // Permission checkboxes state - organized by category
@@ -138,7 +169,7 @@
   // Validation
   let validationErrors = $derived.by(() => {
     const errors: string[] = [];
-    if (!formData.bank_id) errors.push("Bank is required");
+    if (!currentBank.bankId) errors.push("No bank selected — use the bank selector");
     if (!formData.account_id) errors.push("Account is required");
     if (!formData.name || formData.name.trim().length === 0)
       errors.push("Name is required");
@@ -152,6 +183,7 @@
   async function handleSubmit(e: Event) {
     e.preventDefault();
 
+    submitAttempted = true;
     if (!isValid || isSubmitting) return;
 
     isSubmitting = true;
@@ -185,7 +217,7 @@
 
       // Make the API call
       const response = await fetch(
-        `/api/obp/banks/${formData.bank_id}/accounts/${formData.account_id}/views`,
+        `/api/obp/banks/${currentBank.bankId}/accounts/${formData.account_id}/views`,
         {
           method: "POST",
           headers: {
@@ -306,46 +338,56 @@
 
             <div class="form-grid">
               <div class="form-group">
-                <label for="bank_id" class="form-label">
-                  Bank <span class="required">*</span>
-                </label>
-                <select
-                  id="bank_id"
-                  class="form-select"
-                  bind:value={formData.bank_id}
-                  required
-                >
-                  <option value="">Select a bank...</option>
-                  {#each banks as bank}
-                    <option value={bank.bank_id}>{bank.full_name || bank.bank_id}</option>
-                  {/each}
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label for="account_id" class="form-label">
+                <label for="account_search" class="form-label">
                   Account <span class="required">*</span>
                 </label>
-                <select
-                  id="account_id"
-                  class="form-select"
-                  bind:value={formData.account_id}
-                  required
-                  disabled={!formData.bank_id || loadingAccounts}
-                >
-                  <option value="">
-                    {loadingAccounts
-                      ? "Loading accounts..."
-                      : formData.bank_id
-                        ? "Select an account..."
-                        : "Select a bank first"}
-                  </option>
-                  {#each accounts as account}
-                    <option value={account.id}>
-                      {account.label || account.id}
-                    </option>
-                  {/each}
-                </select>
+                {#if formData.account_id}
+                  <div class="selected-account" data-testid="selected-account">
+                    <span class="selected-account-id">{formData.account_id}</span>
+                    <button type="button" class="clear-btn" onclick={clearAccountSelection} data-testid="clear-account">
+                      &times;
+                    </button>
+                  </div>
+                {:else}
+                  <div class="account-search-wrapper">
+                    <input
+                      type="text"
+                      id="account_search"
+                      class="form-input"
+                      name="account_search"
+                      data-testid="account-search"
+                      placeholder={currentBank.bankId ? "Type to search accounts..." : "Select a bank first"}
+                      disabled={!currentBank.bankId}
+                      bind:value={accountSearchQuery}
+                      onfocus={() => showAccountDropdown = true}
+                      onblur={() => setTimeout(() => showAccountDropdown = false, 200)}
+                    />
+                    {#if loadingAccounts}
+                      <span class="search-spinner">...</span>
+                    {/if}
+                    {#if showAccountDropdown && accountResults.length > 0}
+                      <ul class="account-results" data-testid="account-results">
+                        {#each accountResults as account}
+                          <li>
+                            <button
+                              type="button"
+                              class="account-result-item"
+                              data-testid="account-option-{account.account_id}"
+                              onmousedown={() => selectAccount(account)}
+                            >
+                              <span class="result-id">{account.account_id}</span>
+                              {#if account.label}
+                                <span class="result-label">{account.label}</span>
+                              {/if}
+                            </button>
+                          </li>
+                        {/each}
+                      </ul>
+                    {:else if showAccountDropdown && accountSearchQuery.length >= 2 && !loadingAccounts}
+                      <div class="account-results no-results-msg">No accounts found</div>
+                    {/if}
+                  </div>
+                {/if}
               </div>
 
               <div class="form-group">
@@ -879,13 +921,6 @@
               </div>
             </div>
 
-            <div class="alert-warning">
-              <AlertCircle size={16} />
-              <span
-                >Write permissions allow users to modify data. Use with caution.</span
-              >
-            </div>
-
             <div class="permissions-grid">
               <label class="permission-checkbox">
                 <input
@@ -965,7 +1000,7 @@
           </section>
 
           <!-- Validation Errors -->
-          {#if validationErrors.length > 0}
+          {#if submitAttempted && validationErrors.length > 0}
             <div class="validation-errors">
               <h3>Please fix the following errors:</h3>
               <ul>
@@ -978,9 +1013,15 @@
 
           <!-- Form Actions -->
           <div class="form-actions">
+            {#if !isValid && validationErrors.length > 0}
+              <div class="form-status" data-testid="form-status">
+                Missing: {validationErrors.join(", ")}
+              </div>
+            {/if}
             <button
               type="submit"
               class="btn-primary"
+              data-testid="submit-create-view"
               disabled={!isValid || isSubmitting}
             >
               {#if isSubmitting}
@@ -1461,8 +1502,153 @@
     margin: 0.25rem 0;
   }
 
+  .form-status {
+    font-size: 0.813rem;
+    color: #b45309;
+    padding: 0.5rem 0;
+  }
+
+  :global([data-mode="dark"]) .form-status {
+    color: #fbbf24;
+  }
+
+  .account-search-wrapper {
+    position: relative;
+  }
+
+  .search-spinner {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 0.75rem;
+  }
+
+  .account-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+    max-height: 240px;
+    overflow-y: auto;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  :global([data-mode="dark"]) .account-results {
+    background: rgb(var(--color-surface-700));
+    border-color: rgb(var(--color-surface-600));
+  }
+
+  .account-results.no-results-msg {
+    padding: 0.75rem;
+    font-size: 0.813rem;
+    color: #6b7280;
+    text-align: center;
+  }
+
+  .account-result-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    background: none;
+    border: none;
+    border-bottom: 1px solid #f3f4f6;
+    cursor: pointer;
+    font-size: 0.813rem;
+  }
+
+  .account-result-item:hover {
+    background: #f3f4f6;
+  }
+
+  :global([data-mode="dark"]) .account-result-item {
+    border-bottom-color: rgb(var(--color-surface-600));
+  }
+
+  :global([data-mode="dark"]) .account-result-item:hover {
+    background: rgb(var(--color-surface-600));
+  }
+
+  .result-id {
+    font-family: monospace;
+    font-weight: 500;
+    color: #111827;
+  }
+
+  :global([data-mode="dark"]) .result-id {
+    color: var(--color-surface-100);
+  }
+
+  .result-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+
+  :global([data-mode="dark"]) .result-label {
+    color: var(--color-surface-400);
+  }
+
+  .selected-account {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    border-radius: 6px;
+  }
+
+  :global([data-mode="dark"]) .selected-account {
+    background: rgba(34, 197, 94, 0.1);
+    border-color: rgba(34, 197, 94, 0.3);
+  }
+
+  .selected-account-id {
+    font-family: monospace;
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: #111827;
+    flex: 1;
+  }
+
+  :global([data-mode="dark"]) .selected-account-id {
+    color: var(--color-surface-100);
+  }
+
+  .clear-btn {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    line-height: 1;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0 0.25rem;
+  }
+
+  .clear-btn:hover {
+    color: #111827;
+  }
+
+  :global([data-mode="dark"]) .clear-btn:hover {
+    color: var(--color-surface-100);
+  }
+
   .form-actions {
     display: flex;
+    flex-wrap: wrap;
+    align-items: center;
     gap: 1rem;
     padding-top: 1.5rem;
     border-top: 1px solid #e5e7eb;
