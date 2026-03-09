@@ -228,6 +228,23 @@ export const SITE_MAP: Record<string, PageRoleConfig> = {
     optional: [{ role: "CanExecuteAbacRule" }],
   },
 
+  // ── Mandates ────────────────────────────────────────────
+  "/mandates/[bank_id]/[account_id]": {
+    required: [{ role: "CanGetMandate", bankScoped: true }],
+  },
+  "/mandates/[bank_id]/[account_id]/create": {
+    required: [{ role: "CanCreateMandate", bankScoped: true }],
+  },
+  "/mandates/[bank_id]/[account_id]/[mandate_id]": {
+    required: [{ role: "CanGetMandate", bankScoped: true }],
+    optional: [
+      { role: "CanCreateSignatoryPanel", bankScoped: true },
+      { role: "CanCreateMandateProvision", bankScoped: true },
+      { role: "CanGetSignatoryPanel", bankScoped: true },
+      { role: "CanGetMandateProvision", bankScoped: true },
+    ],
+  },
+
   // ── Customers ───────────────────────────────────────────
   "/customers/individual": {
     required: [{ role: "CanGetCustomersAtOneBank", bankScoped: true }],

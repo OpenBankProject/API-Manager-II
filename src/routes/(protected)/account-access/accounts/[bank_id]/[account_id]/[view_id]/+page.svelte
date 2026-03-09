@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from "$app/state";
-  import { Landmark, ArrowLeft, Loader2, User, Tag, Route, Copy, Check, Plus } from "@lucide/svelte";
+  import { Landmark, ArrowLeft, Loader2, User, Tag, Route, Copy, Check, Plus, FileSignature } from "@lucide/svelte";
   import { trackedFetch } from "$lib/utils/trackedFetch";
   import MissingRoleAlert from "$lib/components/MissingRoleAlert.svelte";
 
@@ -305,6 +305,10 @@
             </div>
           </div>
           <div class="header-actions">
+            <a href="/mandates/{encodeURIComponent(bankId)}/{encodeURIComponent(accountId)}" class="btn-secondary" data-testid="view-mandates">
+              <FileSignature size={16} />
+              Mandates
+            </a>
             <a href="/account-access/accounts" class="btn-secondary">
               <ArrowLeft size={16} />
               Back

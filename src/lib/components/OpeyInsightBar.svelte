@@ -33,9 +33,9 @@
       // Ask Opey for a short insight based on notebook + current page
       const insight = await insightService.getInsight(pageContext, recentNotes);
 
-      insightText = insight || "";
+      insightText = insight || pageContext;
     } catch {
-      insightText = "";
+      insightText = pageContext;
     } finally {
       loading = false;
     }

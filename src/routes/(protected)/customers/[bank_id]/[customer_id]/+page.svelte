@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from "$app/state";
-  import { ArrowLeft, UserRound, Loader2 } from "@lucide/svelte";
+  import { ArrowLeft, UserRound, Loader2, FileSignature, Plus } from "@lucide/svelte";
   import { trackedFetch } from "$lib/utils/trackedFetch";
   import MissingRoleAlert from "$lib/components/MissingRoleAlert.svelte";
 
@@ -87,6 +87,57 @@
     }
   }
 
+  // Add Customer Attribute
+  let showAddAttribute = $state(false);
+  let newAttrName = $state("");
+  let newAttrType = $state("STRING");
+  let newAttrValue = $state("");
+  let addingAttribute = $state(false);
+  let addAttributeError = $state<string | null>(null);
+
+  async function addCustomerAttribute() {
+    if (!newAttrName.trim() || !newAttrValue.trim()) return;
+
+    addingAttribute = true;
+    addAttributeError = null;
+
+    try {
+      const res = await trackedFetch(
+        `/api/obp/banks/${encodeURIComponent(bankId)}/customers/${encodeURIComponent(customerId)}/attribute`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: newAttrName.trim(),
+            type: newAttrType,
+            value: newAttrValue.trim(),
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to create customer attribute");
+      }
+
+      const created = await res.json();
+
+      if (!customer!.customer_attributes) {
+        customer!.customer_attributes = [];
+      }
+      customer!.customer_attributes = [...customer!.customer_attributes, created];
+
+      newAttrName = "";
+      newAttrType = "STRING";
+      newAttrValue = "";
+      showAddAttribute = false;
+    } catch (err) {
+      addAttributeError = err instanceof Error ? err.message : "Failed to create customer attribute";
+    } finally {
+      addingAttribute = false;
+    }
+  }
+
   $effect(() => {
     if (bankId && customerId) {
       fetchCustomer(bankId, customerId);
@@ -122,6 +173,10 @@
           </h1>
           <div class="panel-subtitle">{bankId} / {customerId}</div>
         </div>
+        <a href="/mandates?customer_id={encodeURIComponent(customerId)}" class="btn-secondary" data-testid="view-mandates">
+          <FileSignature size={16} />
+          Mandates
+        </a>
         <a href="/customers/{isCorporate ? 'corporate' : 'individual'}" class="btn-secondary" data-testid="back-button">
           <ArrowLeft size={16} />
           Back
@@ -287,31 +342,110 @@
         </section>
 
         <!-- Customer Attributes -->
-        {#if customer.customer_attributes && customer.customer_attributes.length > 0}
-          <section class="detail-section">
-            <h2 class="section-title">Attributes</h2>
-            <div class="table-container">
-              <table class="detail-table" data-testid="customer-attributes-table">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Value</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {#each customer.customer_attributes as attr (attr.customer_attribute_id)}
-                    <tr data-testid="attribute-row-{attr.name}">
-                      <td class="cell-label">{attr.name}</td>
-                      <td><span class="badge">{attr.type}</span></td>
-                      <td class="cell-mono">{attr.value}</td>
-                    </tr>
-                  {/each}
-                </tbody>
-              </table>
+        <section class="detail-section">
+          <div class="section-header-row">
+            <h2 class="section-title" style="margin:0">
+              Customer Attributes ({customer.customer_attributes?.length || 0})
+            </h2>
+            <button
+              type="button"
+              class="btn-add"
+              data-testid="add-customer-attribute"
+              onclick={() => { showAddAttribute = !showAddAttribute; addAttributeError = null; }}
+            >
+              <Plus size={14} />
+              Add
+            </button>
+          </div>
+
+          {#if showAddAttribute}
+            <div class="add-attribute-form" data-testid="add-customer-attribute-form">
+              {#if addAttributeError}
+                <div class="attr-error">{addAttributeError}</div>
+              {/if}
+              <div class="attr-form-row">
+                <div class="attr-form-field">
+                  <label for="cust-attr-name" class="attr-form-label">Name</label>
+                  <input
+                    type="text"
+                    id="cust-attr-name"
+                    name="cust-attr-name"
+                    class="attr-form-input"
+                    data-testid="cust-attr-name"
+                    placeholder="e.g. SPECIAL_TAX_NUMBER"
+                    bind:value={newAttrName}
+                  />
+                </div>
+                <div class="attr-form-field">
+                  <label for="cust-attr-type" class="attr-form-label">Type</label>
+                  <select
+                    id="cust-attr-type"
+                    name="cust-attr-type"
+                    class="attr-form-input"
+                    data-testid="cust-attr-type"
+                    bind:value={newAttrType}
+                  >
+                    <option value="STRING">STRING</option>
+                    <option value="INTEGER">INTEGER</option>
+                    <option value="DOUBLE">DOUBLE</option>
+                    <option value="DATE_WITH_DAY">DATE_WITH_DAY</option>
+                  </select>
+                </div>
+                <div class="attr-form-field attr-form-field-grow">
+                  <label for="cust-attr-value" class="attr-form-label">Value</label>
+                  <input
+                    type="text"
+                    id="cust-attr-value"
+                    name="cust-attr-value"
+                    class="attr-form-input"
+                    data-testid="cust-attr-value"
+                    placeholder="Attribute value"
+                    bind:value={newAttrValue}
+                  />
+                </div>
+                <div class="attr-form-actions">
+                  <button
+                    type="button"
+                    class="btn-attr-save"
+                    data-testid="save-customer-attribute"
+                    disabled={!newAttrName.trim() || !newAttrValue.trim() || addingAttribute}
+                    onclick={addCustomerAttribute}
+                  >
+                    {#if addingAttribute}
+                      <Loader2 size={14} class="spinner-icon" />
+                    {:else}
+                      Save
+                    {/if}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-attr-cancel"
+                    data-testid="cancel-customer-attribute"
+                    onclick={() => { showAddAttribute = false; addAttributeError = null; }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
             </div>
-          </section>
-        {/if}
+          {/if}
+
+          {#if customer.customer_attributes && customer.customer_attributes.length > 0}
+            <div class="attributes-list">
+              {#each customer.customer_attributes as attr (attr.customer_attribute_id)}
+                <div class="attribute-item" data-testid="attribute-{attr.name}">
+                  <span class="attribute-name">{attr.name}</span>
+                  <span class="attribute-value">{attr.value}</span>
+                  {#if attr.type}
+                    <span class="attribute-type">{attr.type}</span>
+                  {/if}
+                </div>
+              {/each}
+            </div>
+          {:else if !showAddAttribute}
+            <p class="no-attributes">No customer attributes</p>
+          {/if}
+        </section>
       {/if}
     </div>
   </div>
@@ -679,6 +813,255 @@
 
   :global([data-mode="dark"]) .error-message {
     color: rgb(var(--color-error-300));
+  }
+
+  /* Attributes */
+  .section-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  :global([data-mode="dark"]) .section-header-row {
+    border-bottom-color: rgb(var(--color-surface-700));
+  }
+
+  .btn-add {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.3rem 0.625rem;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+  }
+
+  .btn-add:hover {
+    background: #2563eb;
+  }
+
+  :global([data-mode="dark"]) .btn-add {
+    background: rgb(var(--color-primary-600));
+  }
+
+  :global([data-mode="dark"]) .btn-add:hover {
+    background: rgb(var(--color-primary-500));
+  }
+
+  .add-attribute-form {
+    margin-bottom: 0.75rem;
+    padding: 0.75rem;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+  }
+
+  :global([data-mode="dark"]) .add-attribute-form {
+    background: rgb(var(--color-surface-900));
+    border-color: rgb(var(--color-surface-700));
+  }
+
+  .attr-error {
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.5rem;
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    border-radius: 4px;
+    color: #991b1b;
+    font-size: 0.8rem;
+  }
+
+  :global([data-mode="dark"]) .attr-error {
+    background: rgba(220, 38, 38, 0.1);
+    border-color: rgba(220, 38, 38, 0.3);
+    color: rgb(var(--color-error-300));
+  }
+
+  .attr-form-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .attr-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 120px;
+  }
+
+  .attr-form-field-grow {
+    flex: 1;
+  }
+
+  .attr-form-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  :global([data-mode="dark"]) .attr-form-label {
+    color: var(--color-surface-400);
+  }
+
+  .attr-form-input {
+    padding: 0.375rem 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 0.813rem;
+    background: white;
+    color: #111827;
+  }
+
+  .attr-form-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  }
+
+  :global([data-mode="dark"]) .attr-form-input {
+    background: rgb(var(--color-surface-800));
+    border-color: rgb(var(--color-surface-600));
+    color: var(--color-surface-100);
+  }
+
+  :global([data-mode="dark"]) .attr-form-input:focus {
+    border-color: rgb(var(--color-primary-500));
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+
+  .attr-form-actions {
+    display: flex;
+    gap: 0.375rem;
+    align-items: center;
+  }
+
+  .btn-attr-save {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.375rem 0.75rem;
+    background: #10b981;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.813rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .btn-attr-save:hover:not(:disabled) {
+    background: #059669;
+  }
+
+  .btn-attr-save:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-attr-save :global(.spinner-icon) {
+    animation: spin 1s linear infinite;
+  }
+
+  .btn-attr-cancel {
+    padding: 0.375rem 0.75rem;
+    background: none;
+    color: #6b7280;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 0.813rem;
+    cursor: pointer;
+  }
+
+  .btn-attr-cancel:hover {
+    background: #f3f4f6;
+  }
+
+  :global([data-mode="dark"]) .btn-attr-cancel {
+    color: var(--color-surface-400);
+    border-color: rgb(var(--color-surface-600));
+  }
+
+  :global([data-mode="dark"]) .btn-attr-cancel:hover {
+    background: rgb(var(--color-surface-800));
+  }
+
+  .attributes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .attribute-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.75rem;
+    background: #fafafa;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+  }
+
+  :global([data-mode="dark"]) .attribute-item {
+    background: rgb(var(--color-surface-900));
+    border-color: rgb(var(--color-surface-700));
+  }
+
+  .attribute-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+  }
+
+  :global([data-mode="dark"]) .attribute-name {
+    color: var(--color-surface-300);
+  }
+
+  .attribute-value {
+    font-size: 0.875rem;
+    font-family: monospace;
+    color: #111827;
+  }
+
+  :global([data-mode="dark"]) .attribute-value {
+    color: var(--color-surface-200);
+  }
+
+  .attribute-type {
+    margin-left: auto;
+    font-size: 0.7rem;
+    padding: 0.125rem 0.5rem;
+    background: #e5e7eb;
+    color: #6b7280;
+    border-radius: 9999px;
+  }
+
+  :global([data-mode="dark"]) .attribute-type {
+    background: rgb(var(--color-surface-700));
+    color: var(--color-surface-400);
+  }
+
+  .no-attributes {
+    font-size: 0.813rem;
+    color: #9ca3af;
+    margin: 0.5rem 0 0 0;
+  }
+
+  :global([data-mode="dark"]) .no-attributes {
+    color: var(--color-surface-500);
   }
 
   @media (max-width: 768px) {

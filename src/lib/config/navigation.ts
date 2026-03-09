@@ -34,6 +34,7 @@ import {
   Hash,
   Map,
   Radio,
+  FileSignature,
 } from "@lucide/svelte";
 import { env } from "$env/dynamic/public";
 
@@ -337,9 +338,19 @@ function buildAccountAccessItems(): NavigationItem[] {
       iconComponent: Eye,
     },
     {
+      href: "/account-access/view-permissions",
+      label: "View Permissions",
+      iconComponent: Shield,
+    },
+    {
       href: "/account-access/account-directory",
       label: "Account Directory",
       iconComponent: FolderOpen,
+    },
+    {
+      href: "/mandates",
+      label: "Mandates",
+      iconComponent: FileSignature,
     },
   ];
 
@@ -584,7 +595,7 @@ export const navSections: NavigationSection[] = [
   { id: "rbac", label: "RBAC", iconComponent: Shield, items: rbacItems, basePaths: ["/rbac"] },
   { id: "banks", label: "Banks", iconComponent: Building2, items: banksItems, basePaths: ["/banks"] },
   { id: "customers", label: "Customers", iconComponent: Users, items: customersItems, basePaths: ["/customers"] },
-  { id: "account-access", label: "Account Access", iconComponent: Landmark, items: accountAccessItems, basePaths: ["/account-access"] },
+  { id: "account-access", label: "Account Access", iconComponent: Landmark, items: accountAccessItems, basePaths: ["/account-access", "/mandates"] },
   { id: "dynamic-entities", label: "Dynamic Entities", iconComponent: Box, items: dynamicEntitiesItems, basePaths: ["/dynamic-entities"] },
   { id: "dynamic-endpoints", label: "Dynamic Endpoints", iconComponent: Plug, items: dynamicEndpointsItems, basePaths: ["/dynamic-endpoints"] },
 ];

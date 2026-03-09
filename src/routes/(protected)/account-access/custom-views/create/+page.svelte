@@ -169,9 +169,9 @@
       const result = await response.json();
       submitSuccess = true;
 
-      // Redirect to the new view's detail page after showing success message
+      // Redirect to the custom views list after showing success message
       setTimeout(() => {
-        goto(`/account-access/custom-views/${result.view_id}`);
+        goto("/account-access/custom-views");
       }, 2500);
     } catch (err) {
       submitError =
