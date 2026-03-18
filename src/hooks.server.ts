@@ -12,7 +12,7 @@ import { oauth2ProviderManager } from "$lib/oauth/providerManager";
 import { SessionOAuthHelper } from "$lib/oauth/sessionHelper";
 import { resourceDocsCache } from "$lib/stores/resourceDocsCache";
 import { healthCheckRegistry } from "$lib/health-check/HealthCheckRegistry";
-import { ensureOpeyNotebook } from "$lib/opey/bootstrap/opeyNotebook";
+import { createOpeyNotebookDynamicEntityIfNeeded } from "$lib/opey/bootstrap/opeyNotebook";
 
 declare const process: { env: Record<string, string | undefined>; argv: string[] };
 
@@ -94,15 +94,19 @@ if (env.OPEY_BASE_URL) {
 healthCheckRegistry.startAll();
 
 // Bootstrap: ensure opey_notebook dynamic entity exists (using application access)
-ensureOpeyNotebook().then((ok) => {
-  if (!ok) {
-    logger.warn(
-      "opey_notebook entity could not be created at startup. " +
-        "Ensure the API Manager consumer has the CanCreateSystemLevelDynamicEntity scope " +
-        "and supports the client_credentials grant. Opey notebook features will not work without it."
-    );
-  }
-});
+if (env.PUBLIC_OPEY_NOTEBOOK_ENABLED === 'true') {
+  createOpeyNotebookDynamicEntityIfNeeded().then((ok) => {
+    if (!ok) {
+      logger.warn(
+        "opey_notebook entity could not be created at startup. " +
+          "Ensure the API Manager consumer has the CanCreateSystemLevelDynamicEntity scope " +
+          "and supports the client_credentials grant. Opey notebook features will not work without it."
+      );
+    }
+  });
+} else {
+  logger.info("Opey notebook is disabled (PUBLIC_OPEY_NOTEBOOK_ENABLED != 'true').");
+}
 
 function needsAuthorization(routeId: string): boolean {
   // protected routes are put in the /(protected)/ route group

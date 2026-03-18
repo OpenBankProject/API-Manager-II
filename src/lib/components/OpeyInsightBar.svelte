@@ -1,9 +1,12 @@
 <script lang="ts">
   import { X, MessageCircle, Loader2 } from "@lucide/svelte";
   import { onMount } from "svelte";
+  import { env } from "$env/dynamic/public";
   import { insightService } from "$lib/opey/services/InsightService";
   import { pageDataSummary } from "$lib/stores/pageDataSummary.svelte";
   import { pageHeading } from "$lib/stores/pageHeading.svelte";
+
+  const notebookEnabled = env.PUBLIC_OPEY_NOTEBOOK_ENABLED === 'true';
 
   let { pathname, pageContext }: { pathname: string; pageContext: string } = $props();
 
@@ -54,7 +57,7 @@
   }
 </script>
 
-{#if !dismissed && (loading || insightText)}
+{#if notebookEnabled && !dismissed && (loading || insightText)}
   <div
     data-testid="opey-insight-bar"
     data-state={loading ? "loading" : "ready"}
