@@ -411,7 +411,7 @@
             data-testid="filters-toggle"
             data-state={filtersExpanded ? "expanded" : "collapsed"}
           >
-            {filtersExpanded ? "▾" : "▸"} Filters
+            {filtersExpanded ? "▾" : "▸"} More
           </button>
         </div>
       </div>
@@ -433,11 +433,11 @@
     {/if}
   </div>
 
-  <!-- Panel 2: API Metrics Results -->
+  <!-- Panel 2: Results -->
   <div class="panel full-width-panel">
     <div class="panel-header-compact">
       <div class="panel-header-row">
-        <h2 class="panel-title">API Metrics Results{#if metrics?.metrics && metrics.metrics.length > 0} <span class="panel-title-count">— {metrics.count} calls from {obpInfo.displayName}</span>{/if}</h2>
+        <h2 class="panel-title">Results{#if metrics?.metrics && metrics.metrics.length > 0} <span class="panel-title-count">— {metrics.count} calls from {obpInfo.displayName}</span>{/if}</h2>
         <div class="panel-meta">
           <button
             class="url-toggle"

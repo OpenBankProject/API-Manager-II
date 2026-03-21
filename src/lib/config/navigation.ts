@@ -37,6 +37,8 @@ import {
   FileSignature,
   Search,
   ToggleLeft,
+  BookOpen,
+  AppWindow,
 } from "@lucide/svelte";
 import { env } from "$env/dynamic/public";
 
@@ -549,6 +551,42 @@ export function getActiveUsersMenuItem(pathname: string) {
   return found || usersItems[0];
 }
 
+// Management Docs navigation items
+function buildManagementDocsItems(): NavigationItem[] {
+  const items: NavigationItem[] = [
+    {
+      href: "/management-docs/consumers",
+      label: "Consumers",
+      iconComponent: AppWindow,
+    },
+    {
+      href: "/management-docs/users",
+      label: "Users",
+      iconComponent: Users,
+    },
+    {
+      href: "/management-docs/entitlements",
+      label: "Entitlements",
+      iconComponent: KeyRound,
+    },
+  ];
+
+  return items;
+}
+
+export const managementDocsItems = buildManagementDocsItems();
+
+export function getActiveManagementDocsMenuItem(pathname: string) {
+  const found = managementDocsItems.find((item) => {
+    if (item.external) {
+      return false;
+    }
+    return pathname.startsWith(item.href);
+  });
+
+  return found || managementDocsItems[0];
+}
+
 // ABAC navigation items
 function buildAbacItems(): NavigationItem[] {
   const items: NavigationItem[] = [
@@ -628,4 +666,5 @@ export const navSections: NavigationSection[] = [
   { id: "account-access", label: "Account Access", iconComponent: Landmark, items: accountAccessItems, basePaths: ["/account-access", "/mandates"] },
   { id: "dynamic-entities", label: "Dynamic Entities", iconComponent: Box, items: dynamicEntitiesItems, basePaths: ["/dynamic-entities"] },
   { id: "dynamic-endpoints", label: "Dynamic Endpoints", iconComponent: Plug, items: dynamicEndpointsItems, basePaths: ["/dynamic-endpoints"] },
+  { id: "management-docs", label: "Management Docs", iconComponent: BookOpen, items: managementDocsItems, basePaths: ["/management-docs"] },
 ];
