@@ -38,14 +38,11 @@
     }
   });
 
-  // Debug data prop changes
+  // Mark results as fresh when new data arrives from the server load
   $effect(() => {
-    console.log("data prop updated:", {
-      hasMetrics: !!data.metrics,
-      metricsCount: data.metrics?.count,
-      lastUpdated: data.lastUpdated,
-      timestamp: new Date().toLocaleTimeString(),
-    });
+    if (data.lastUpdated) {
+      queryStatus = "fresh";
+    }
   });
 
   let refreshInterval: number | undefined = undefined;
@@ -58,6 +55,7 @@
   let timestampColorIndex = $state(0);
   let showUrl = $state(false);
   let filtersExpanded = $state(false);
+  let queryStatus: "fresh" | "dirty" = $state("fresh");
 
   // Configuration information
   let obpInfo = $derived(configHelpers.getObpConnectionInfo());
@@ -141,7 +139,7 @@
       };
 
       // Sync URL with form values and start auto-refresh
-      refreshMetrics();
+      submitQuery();
       startAutoRefresh();
 
       // Update current time every second
@@ -166,56 +164,15 @@
     };
   });
 
-  function refreshMetrics() {
-    console.log("refreshMetrics called at", new Date().toLocaleTimeString());
-    console.log("Current queryForm.limit:", queryForm.limit);
-
-    // Update last refresh timestamp and alternate color
-    lastRefreshTime = new Date().toLocaleString();
-    timestampColorIndex = (timestampColorIndex + 1) % 2;
-
-    // Use currentQueryString - this is the ON_PAGE_METRICS_REQUEST_URL query params
-    console.log("ON_PAGE_METRICS_REQUEST_URL params:", currentQueryString);
-
-    // Call API endpoint directly with the ON_PAGE_METRICS_REQUEST_URL params
-    fetch(`/api/metrics?${currentQueryString}`)
-      .then((response) => response.json())
-      .then((result) => {
-        if (result.error) {
-          console.error("API error:", result.error);
-          metrics = { metrics: [], count: 0, error: result.error };
-        } else if (result.metrics) {
-          metrics = {
-            metrics: result.metrics,
-            count: result.count,
-          };
-          console.log("Metrics fetched, count:", result.count);
-        }
-      })
-      .catch((err) => {
-        console.error("Fetch error:", err);
-        metrics = { metrics: [], count: 0, error: "Failed to fetch metrics" };
-      });
-  }
-
-  function submitQuery() {
-    // Just call refreshMetrics since it already handles the form data
-    refreshMetrics();
-  }
-
-  // Reactive derived value that updates whenever queryForm changes
-  let currentQueryString = $derived.by(() => {
+  function buildQueryString(): string {
     const params = new URLSearchParams();
 
-    // Add date filters only if they have values
     if (queryForm.from_date && queryForm.from_date.trim() !== "") {
       params.set("from_date", formatDateForAPI(queryForm.from_date));
     }
     if (queryForm.to_date && queryForm.to_date.trim() !== "") {
       params.set("to_date", formatDateForAPI(queryForm.to_date));
     }
-
-    // Add other filters if they have values
     if (queryForm.verb && queryForm.verb.trim() !== "") {
       params.set("verb", queryForm.verb);
     }
@@ -249,15 +206,47 @@
     ) {
       params.set("http_status_code", queryForm.http_status_code);
     }
+    if (queryForm.user_id && queryForm.user_id.trim() !== "") {
+      params.set("user_id", queryForm.user_id);
+    }
+    if (
+      queryForm.implemented_by_partial_function &&
+      queryForm.implemented_by_partial_function.trim() !== ""
+    ) {
+      params.set(
+        "implemented_by_partial_function",
+        queryForm.implemented_by_partial_function,
+      );
+    }
+    if (
+      queryForm.implemented_in_version &&
+      queryForm.implemented_in_version.trim() !== ""
+    ) {
+      params.set("implemented_in_version", queryForm.implemented_in_version);
+    }
+    if (queryForm.correlation_id && queryForm.correlation_id.trim() !== "") {
+      params.set("correlation_id", queryForm.correlation_id);
+    }
 
-    // Always include pagination and sorting
-    params.set("limit", queryForm.limit);
-    params.set("offset", queryForm.offset);
+    params.set("limit", String(queryForm.limit));
+    params.set("offset", String(queryForm.offset));
     params.set("sort_by", queryForm.sort_by);
     params.set("direction", queryForm.direction);
 
     return params.toString();
-  });
+  }
+
+  let currentQueryString = $state(buildQueryString());
+
+  function submitQuery() {
+    currentQueryString = buildQueryString();
+    lastRefreshTime = new Date().toLocaleString();
+    timestampColorIndex = (timestampColorIndex + 1) % 2;
+
+    const newUrl = `/metrics?${currentQueryString}`;
+    console.log("Query:", newUrl);
+    goto(newUrl, { replaceState: true, noScroll: true, invalidateAll: true });
+  }
 
   function startAutoRefresh() {
     // Start 5-second auto-refresh cycle
@@ -273,17 +262,16 @@
       console.log("Countdown:", countdown);
       if (countdown <= 0) {
         console.log("Countdown reached 0, refreshing...");
-        refreshMetrics();
+        lastRefreshTime = new Date().toLocaleString();
+        timestampColorIndex = (timestampColorIndex + 1) % 2;
+        invalidate("app:metrics");
         countdown = 5;
       }
     }, 1000);
   }
 
   function handleFieldChange() {
-    // Immediately refresh when field changes
-    console.log("Field changed, refreshing immediately");
-    refreshMetrics();
-    // Restart the normal 5-second auto-refresh cycle
+    submitQuery();
     startAutoRefresh();
   }
 
@@ -376,7 +364,7 @@
     <div class="panel-header-compact">
       <div class="panel-header-row">
         <h2 class="panel-title">Metrics Query</h2>
-        <div class="panel-meta header-fields">
+        <div class="panel-meta header-fields" oninput={() => queryStatus = "dirty"}>
           <label class="hf"><span>From</span>
             <input type="datetime-local" bind:value={queryForm.from_date} onblur={handleFieldChange} onchange={handleFieldChange} step="1" name="from_date" />
           </label>
@@ -393,10 +381,13 @@
             <select bind:value={queryForm.sort_by} onchange={handleFieldChange} name="sort_by">
               <option value="date">Date</option>
               <option value="url">URL</option>
-              <option value="user_name">User</option>
+              <option value="username">User</option>
               <option value="app_name">App</option>
               <option value="verb">Method</option>
-              <option value="duration">Duration</option>
+              <option value="developer_email">Developer Email</option>
+              <option value="consumer_id">Consumer ID</option>
+              <option value="implemented_by_partial_function">Partial Function</option>
+              <option value="implemented_in_version">Version</option>
             </select>
           </label>
           <label class="hf hf-xs"><span>Dir</span>
@@ -413,12 +404,19 @@
           >
             {filtersExpanded ? "▾" : "▸"} More
           </button>
+          <button
+            class="header-btn query-btn"
+            onclick={submitQuery}
+            data-testid="query-btn"
+          >
+            <span class="status-dot" data-status={queryStatus}></span> Query
+          </button>
         </div>
       </div>
     </div>
 
     {#if filtersExpanded}
-      <div class="panel-content">
+      <div class="panel-content" oninput={() => queryStatus = "dirty"}>
         <MetricsQueryForm
           bind:queryForm
           bind:filtersExpanded
@@ -456,7 +454,7 @@
           {/if}
           <button
             class="refresh-btn-inline"
-            onclick={refreshMetrics}
+            onclick={submitQuery}
             title="Manual refresh"
           >
             🔄
@@ -582,7 +580,7 @@
           </div>
           <button
             class="refresh-btn"
-            onclick={refreshMetrics}
+            onclick={submitQuery}
             style="display: block; margin: 0 auto;"
           >
             🔄 Refresh Data
@@ -736,6 +734,47 @@
     color: var(--color-surface-200);
   }
 
+  .query-btn {
+    background: var(--color-primary-500);
+    color: white;
+    border-color: var(--color-primary-500);
+    font-weight: 600;
+  }
+
+  .query-btn:hover {
+    background: var(--color-primary-600);
+    border-color: var(--color-primary-600);
+    color: white;
+  }
+
+  :global([data-mode="dark"]) .query-btn {
+    background: var(--color-primary-500);
+    color: white;
+    border-color: var(--color-primary-500);
+  }
+
+  :global([data-mode="dark"]) .query-btn:hover {
+    background: var(--color-primary-400);
+    border-color: var(--color-primary-400);
+    color: white;
+  }
+
+  .status-dot {
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    vertical-align: middle;
+  }
+
+  .status-dot[data-status="fresh"] {
+    background: #22c55e;
+  }
+
+  .status-dot[data-status="dirty"] {
+    background: #f97316;
+  }
+
   .header-fields {
     flex-wrap: wrap;
   }
@@ -851,7 +890,7 @@
   }
 
   .url-display code {
-    font-size: 0.75rem;
+    font-size: 0.65rem;
     color: var(--color-surface-700);
     word-break: break-all;
   }

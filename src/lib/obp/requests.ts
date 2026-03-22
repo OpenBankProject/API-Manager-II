@@ -61,6 +61,16 @@ class OBPRequests {
     logger.info("Initialized.");
   }
 
+  async getResponse(endpoint: string, accessToken?: string): Promise<Response> {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    if (accessToken) {
+      headers["Authorization"] = `Bearer ${accessToken}`;
+    }
+    return fetch(`${this.base_url}${endpoint}`, { headers });
+  }
+
   async get(endpoint: string, accessToken?: string): Promise<any> {
     const startTime = performance.now();
     logger.debug("GET", endpoint);
@@ -463,6 +473,10 @@ export const obp_requests = {
       obp_requests_instance = new OBPRequests(env.PUBLIC_OBP_BASE_URL);
     }
     return obp_requests_instance;
+  },
+
+  getResponse: function (endpoint: string, accessToken?: string) {
+    return this.instance.getResponse(endpoint, accessToken);
   },
 
   get: function (endpoint: string, accessToken?: string) {
