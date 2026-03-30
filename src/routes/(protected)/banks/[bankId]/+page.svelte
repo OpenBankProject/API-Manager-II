@@ -14,7 +14,7 @@
   $effect(() => {
     if (bank) {
       const attrs = bank.bank_attributes?.length || 0;
-      pageDataSummary.set(`Viewing bank ${bank.full_name} (${bank.bank_id}, code: ${bank.bank_code})${attrs ? `, ${attrs} attributes` : ""}`);
+      pageDataSummary.set(`Viewing bank ${bank.full_name}${attrs ? `, ${attrs} attributes` : ""}`);
       pageHeading.set(bank.full_name);
     }
   });

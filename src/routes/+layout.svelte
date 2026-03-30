@@ -39,6 +39,8 @@
   import CurrentBankSelector from "$lib/components/CurrentBankSelector.svelte";
   import type { RootLayoutData } from "./+layout.server";
 
+  const notebookEnabled = env.PUBLIC_OPEY_NOTEBOOK_ENABLED === 'true';
+
   logger.info("📦 All imports loaded");
   const importsLoadedTime = performance.now();
   logger.info(
@@ -594,6 +596,18 @@
           {/if}
         </div>
         {#if isAuthenticated}
+          {#if notebookEnabled && !userPreferences.opeyInsightsOpen && page.url.pathname !== '/'}
+            <button
+              type="button"
+              data-testid="opey-insight-toggle"
+              class="hover:text-tertiary-400"
+              onclick={() => userPreferences.setOpeyInsightsOpen(true)}
+              aria-label="Show Opey Insights"
+              title="Opey Insights"
+            >
+              <ChevronRight class="size-4" />
+            </button>
+          {/if}
           <div class="relative mx-4">
             <button
               type="button"
@@ -639,7 +653,7 @@
       >
         {#if isAuthenticated && page.url.pathname !== '/'}
           {#key page.url.pathname}
-            <OpeyInsightBar pathname={page.url.pathname} pageContext={describeRoute(page.url.pathname)} />
+            <OpeyInsightBar pathname={page.url.pathname} pageContext={describeRoute(page.url.pathname)} bind:opey_insights_is_open={userPreferences.opeyInsightsOpen} />
           {/key}
         {/if}
         {@render children()}

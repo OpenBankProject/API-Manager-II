@@ -68,7 +68,7 @@
         throw new Error(data.error || `Failed to load mandate (${res.status})`);
       }
       mandate = await res.json();
-      pageDataSummary.set(`Mandate ${mandate.mandate_name} (${mandate.status}) for account ${aId} at bank ${bId}`);
+      pageDataSummary.set(`Mandate ${mandate.mandate_name} (${mandate.status})`);
       pageHeading.set(mandate.mandate_name);
     } catch (err) {
       mandateError = err instanceof Error ? err.message : "Failed to load mandate";

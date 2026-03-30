@@ -83,9 +83,9 @@ export class InsightService {
 			: '(no recent activity)';
 
 		const message = [
-			'You are the Opey Insight Bar. Your job is to make a VERY SHORT observation (1 sentence, max 15 words) based on what the user has been doing and where they are now.',
+			'You are the Opey Insight Bar. Based on the recent activity below, make a VERY SHORT observation (1 sentence, max 15 words) about how this data might be related.',
 			'If you have nothing useful to say, respond with an empty string.',
-			'Do NOT use markdown. Do NOT ask questions. Just make a brief, helpful observation or tip.',
+			'Do NOT use markdown. Do NOT ask questions.',
 			'',
 			`Current page: ${pageContext}`,
 			'',

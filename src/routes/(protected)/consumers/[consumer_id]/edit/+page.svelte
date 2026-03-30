@@ -15,8 +15,8 @@
   $effect(() => {
     if (consumer) {
       const status = consumer.enabled ? "enabled" : "disabled";
-      pageDataSummary.set(`Viewing consumer ${consumer.app_name || consumer.consumer_id} (${status}), ${scopes.length} scopes`);
-      pageHeading.set(consumer.app_name || consumer.consumer_id);
+      pageDataSummary.set(`Viewing consumer ${consumer.app_name || "unnamed"} (${status}), ${scopes.length} scopes`);
+      pageHeading.set(consumer.app_name || "unnamed consumer");
     }
   });
   let availableRoles = $derived(data.availableRoles || []);

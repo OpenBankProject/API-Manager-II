@@ -39,6 +39,8 @@ import {
   ToggleLeft,
   BookOpen,
   AppWindow,
+  Link,
+  Zap,
 } from "@lucide/svelte";
 import { env } from "$env/dynamic/public";
 
@@ -283,6 +285,11 @@ function buildRbacItems(): NavigationItem[] {
       href: "/rbac/entitlements/create",
       label: "Create Entitlement",
       iconComponent: Plus,
+    },
+    {
+      href: "/rbac/entitlements/bulk-grant",
+      label: "Bulk Grant",
+      iconComponent: Zap,
     },
     {
       href: "/rbac/groups",
@@ -631,6 +638,16 @@ function buildCustomersItems(): NavigationItem[] {
       href: "/customers/corporate",
       label: "Corporate",
       iconComponent: Building,
+    },
+    {
+      href: "/customers/account-links",
+      label: "Account Links",
+      iconComponent: Link,
+    },
+    {
+      href: "/customers/graph",
+      label: "Graph",
+      iconComponent: GitBranch,
     },
   ];
 

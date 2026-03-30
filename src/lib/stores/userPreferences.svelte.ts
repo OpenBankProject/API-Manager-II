@@ -32,19 +32,24 @@ interface PersonalDataField {
 interface StoredPreferences {
   dateFormat: DateFormat;
   theme: Theme;
+  opeyInsightsOpen: boolean;
   dateFormatAttributeId?: string;
   themeAttributeId?: string;
+  opeyInsightsOpenAttributeId?: string;
 }
 
 const FIELD_DATE_FORMAT = "DATE_FORMAT";
 const FIELD_THEME = "THEME";
+const FIELD_OPEY_INSIGHTS_OPEN = "OPEY_INSIGHTS_OPEN";
 
 class UserPreferencesStore {
   dateFormat = $state<DateFormat>("DD/MM/YYYY");
   theme = $state<Theme>("dark");
+  opeyInsightsOpen = $state(false);
   loading = $state(false);
   private dateFormatAttributeId: string | null = null;
   private themeAttributeId: string | null = null;
+  private opeyInsightsOpenAttributeId: string | null = null;
   private initialized = false;
 
   constructor() {
@@ -60,8 +65,10 @@ class UserPreferencesStore {
         const prefs: StoredPreferences = JSON.parse(stored);
         this.dateFormat = prefs.dateFormat || "DD/MM/YYYY";
         this.theme = prefs.theme || "dark";
+        this.opeyInsightsOpen = prefs.opeyInsightsOpen || false;
         this.dateFormatAttributeId = prefs.dateFormatAttributeId || null;
         this.themeAttributeId = prefs.themeAttributeId || null;
+        this.opeyInsightsOpenAttributeId = prefs.opeyInsightsOpenAttributeId || null;
         logger.info(`Restored preferences from localStorage: dateFormat=${this.dateFormat}, theme=${this.theme}`);
       } else {
         // Fall back to the legacy theme storage
@@ -82,8 +89,10 @@ class UserPreferencesStore {
       const prefs: StoredPreferences = {
         dateFormat: this.dateFormat,
         theme: this.theme,
+        opeyInsightsOpen: this.opeyInsightsOpen,
         dateFormatAttributeId: this.dateFormatAttributeId || undefined,
         themeAttributeId: this.themeAttributeId || undefined,
+        opeyInsightsOpenAttributeId: this.opeyInsightsOpenAttributeId || undefined,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
       // Keep legacy theme key in sync for LightSwitch compatibility
@@ -115,6 +124,9 @@ class UserPreferencesStore {
           this.themeAttributeId = attr.user_attribute_id;
           // Apply theme immediately
           document.documentElement.setAttribute("data-mode", this.theme);
+        } else if (attr.name === FIELD_OPEY_INSIGHTS_OPEN) {
+          this.opeyInsightsOpen = attr.value === "true";
+          this.opeyInsightsOpenAttributeId = attr.user_attribute_id;
         }
       }
 
@@ -181,6 +193,13 @@ class UserPreferencesStore {
     this.saveToLocalStorage();
   }
 
+  async setOpeyInsightsOpen(open: boolean) {
+    this.opeyInsightsOpen = open;
+    this.saveToLocalStorage();
+    this.opeyInsightsOpenAttributeId = await this.saveToOBP(FIELD_OPEY_INSIGHTS_OPEN, String(open), this.opeyInsightsOpenAttributeId);
+    this.saveToLocalStorage();
+  }
+
   async setTheme(theme: Theme) {
     this.theme = theme;
     // Apply theme immediately
@@ -221,8 +240,10 @@ class UserPreferencesStore {
   clear() {
     this.dateFormat = "DD/MM/YYYY";
     this.theme = "dark";
+    this.opeyInsightsOpen = false;
     this.dateFormatAttributeId = null;
     this.themeAttributeId = null;
+    this.opeyInsightsOpenAttributeId = null;
     this.initialized = false;
     if (browser) {
       localStorage.removeItem(STORAGE_KEY);
