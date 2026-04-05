@@ -289,6 +289,24 @@ export const SITE_MAP: Record<string, PageRoleConfig> = {
     ],
   },
 
+  // ── Chat Rooms ────────────────────────────────────────
+  "/chat-rooms/system": {
+    required: [],
+  },
+  "/chat-rooms/bank": {
+    required: [],
+  },
+  "/chat-rooms/[chat_room_id]": {
+    required: [],
+  },
+  "/chat-rooms/[chat_room_id]/edit": {
+    required: [
+      { role: "CanSetSystemChatRoomAUAP" },
+      { role: "CanSetBankChatRoomAUAP", bankScoped: true },
+    ],
+    requirementType: "OR",
+  },
+
   // ── Dynamic Entities ──────────────────────────────────
   "/dynamic-entities/diagnostics": {
     required: [{ role: "CanGetSystemLevelDynamicEntities" }],

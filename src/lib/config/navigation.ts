@@ -42,6 +42,7 @@ import {
   Link,
   Zap,
   ShieldOff,
+  MessageSquare,
 } from "@lucide/svelte";
 import { env } from "$env/dynamic/public";
 
@@ -668,6 +669,37 @@ export function getActiveCustomersMenuItem(pathname: string) {
   return found || customersItems[0];
 }
 
+// Chat Rooms navigation items
+function buildChatRoomsItems(): NavigationItem[] {
+  const items: NavigationItem[] = [
+    {
+      href: "/chat-rooms/system",
+      label: "System",
+      iconComponent: Settings,
+    },
+    {
+      href: "/chat-rooms/bank",
+      label: "Bank",
+      iconComponent: Building2,
+    },
+  ];
+
+  return items;
+}
+
+export const chatRoomsItems = buildChatRoomsItems();
+
+export function getActiveChatRoomsMenuItem(pathname: string) {
+  const found = chatRoomsItems.find((item) => {
+    if (item.external) {
+      return false;
+    }
+    return pathname.startsWith(item.href);
+  });
+
+  return found || chatRoomsItems[0];
+}
+
 export const navSections: NavigationSection[] = [
   { id: "my-account", label: "My Profile", iconComponent: User, items: myAccountItems, basePaths: ["/user", "/account-access/accounts"] },
   { id: "system", label: "System", iconComponent: Server, items: systemItems, basePaths: ["/system"] },
@@ -684,5 +716,6 @@ export const navSections: NavigationSection[] = [
   { id: "account-access", label: "Account Access", iconComponent: Landmark, items: accountAccessItems, basePaths: ["/account-access", "/mandates"] },
   { id: "dynamic-entities", label: "Dynamic Entities", iconComponent: Box, items: dynamicEntitiesItems, basePaths: ["/dynamic-entities"] },
   { id: "dynamic-endpoints", label: "Dynamic Endpoints", iconComponent: Plug, items: dynamicEndpointsItems, basePaths: ["/dynamic-endpoints"] },
+  { id: "chat-rooms", label: "Chat Rooms", iconComponent: MessageSquare, items: chatRoomsItems, basePaths: ["/chat-rooms"] },
   { id: "management-docs", label: "Management Docs", iconComponent: BookOpen, items: managementDocsItems, basePaths: ["/management-docs"] },
 ];

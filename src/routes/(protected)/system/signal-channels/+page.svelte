@@ -1,5 +1,11 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
+
+  const AUTO_REFRESH_INTERVAL = 15_000;
+  const AUTO_REFRESH_SECONDS = AUTO_REFRESH_INTERVAL / 1000;
+  let autoRefreshTimer: ReturnType<typeof setInterval>;
+  let countdownTimer: ReturnType<typeof setInterval>;
+  let secondsUntilRefresh = $state(AUTO_REFRESH_SECONDS);
 
   interface Channel {
     channel_name: string;
@@ -55,6 +61,7 @@
     try {
       isLoading = true;
       error = null;
+      secondsUntilRefresh = AUTO_REFRESH_SECONDS;
 
       const response = await fetch("/api/signal/channels");
 
@@ -279,6 +286,20 @@
 
   onMount(() => {
     fetchChannels();
+    autoRefreshTimer = setInterval(() => {
+      if (!isLoading) {
+        fetchChannels();
+        secondsUntilRefresh = AUTO_REFRESH_SECONDS;
+      }
+    }, AUTO_REFRESH_INTERVAL);
+    countdownTimer = setInterval(() => {
+      if (secondsUntilRefresh > 0) secondsUntilRefresh--;
+    }, 1000);
+  });
+
+  onDestroy(() => {
+    clearInterval(autoRefreshTimer);
+    clearInterval(countdownTimer);
   });
 </script>
 
@@ -323,6 +344,7 @@
           {#if lastUpdated}
             <div class="last-updated">
               Last updated: <span class="timestamp">{lastUpdated}</span>
+              — next refresh in {String(secondsUntilRefresh).padStart(2, "0")}s
             </div>
           {/if}
         </div>
