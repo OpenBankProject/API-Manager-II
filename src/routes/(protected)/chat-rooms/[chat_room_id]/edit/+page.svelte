@@ -28,7 +28,7 @@
         throw new Error(data.error || "Failed to fetch chat room");
       }
       room = await res.json();
-      allUsers = room?.all_users_are_participants ?? false;
+      allUsers = room?.is_open_room ?? false;
     } catch (err) {
       error = err instanceof Error ? err.message : "Failed to fetch chat room";
       room = null;
@@ -45,12 +45,12 @@
     try {
       const endpoint =
         level === "bank" && bankId
-          ? `/api/obp/banks/${encodeURIComponent(bankId)}/chat-rooms/${encodeURIComponent(chatRoomId)}/all-users-are-participants`
-          : `/api/obp/chat-rooms/${encodeURIComponent(chatRoomId)}/all-users-are-participants`;
+          ? `/api/obp/banks/${encodeURIComponent(bankId)}/chat-rooms/${encodeURIComponent(chatRoomId)}/open-room`
+          : `/api/obp/chat-rooms/${encodeURIComponent(chatRoomId)}/open-room`;
       const res = await trackedFetch(endpoint, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ all_users_are_participants: allUsers }),
+        body: JSON.stringify({ is_open_room: allUsers }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -58,7 +58,7 @@
       }
       const updated = await res.json();
       room = updated;
-      allUsers = updated?.all_users_are_participants ?? allUsers;
+      allUsers = updated?.is_open_room ?? allUsers;
       successMessage = "Chat room updated.";
     } catch (err) {
       error = err instanceof Error ? err.message : "Failed to update chat room";
@@ -122,13 +122,13 @@
       <div class="flex items-center gap-2">
         <input
           type="checkbox"
-          id="all_users_are_participants"
-          name="all_users_are_participants"
+          id="is_open_room"
+          name="is_open_room"
           bind:checked={allUsers}
           class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
-          data-testid="all-users-are-participants-input"
+          data-testid="open-room-input"
         />
-        <label for="all_users_are_participants" class="text-sm font-medium text-gray-700 dark:text-gray-300">All users are participants</label>
+        <label for="is_open_room" class="text-sm font-medium text-gray-700 dark:text-gray-300">Open room</label>
       </div>
       <button
         onclick={save}

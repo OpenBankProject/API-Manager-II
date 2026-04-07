@@ -209,8 +209,8 @@
             <span class="sm:col-span-2 text-gray-900 dark:text-gray-100">{formatDate(room.created_at)}</span>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-1">
-            <span class="font-medium text-gray-600 dark:text-gray-400">All users are participants:</span>
-            <span class="sm:col-span-2 text-gray-900 dark:text-gray-100">{room.all_users_are_participants ? "Yes" : "No"}</span>
+            <span class="font-medium text-gray-600 dark:text-gray-400">Open room:</span>
+            <span class="sm:col-span-2 text-gray-900 dark:text-gray-100">{room.is_open_room ? "Yes" : "No"}</span>
           </div>
           {#if room.joining_key}
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-1">

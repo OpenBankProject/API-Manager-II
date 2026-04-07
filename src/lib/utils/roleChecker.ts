@@ -301,8 +301,8 @@ export const SITE_MAP: Record<string, PageRoleConfig> = {
   },
   "/chat-rooms/[chat_room_id]/edit": {
     required: [
-      { role: "CanSetSystemChatRoomAUAP" },
-      { role: "CanSetBankChatRoomAUAP", bankScoped: true },
+      { role: "CanSetSystemChatRoomIsOpenRoom" },
+      { role: "CanSetBankChatRoomIsOpenRoom", bankScoped: true },
     ],
     requirementType: "OR",
   },

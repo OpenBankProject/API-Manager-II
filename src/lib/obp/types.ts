@@ -109,7 +109,7 @@ export interface OBPChatRoom {
   created_by: string;
   created_by_username: string;
   created_by_provider: string;
-  all_users_are_participants: boolean;
+  is_open_room: boolean;
   is_archived: boolean;
   created_at: string;
   updated_at: string;
