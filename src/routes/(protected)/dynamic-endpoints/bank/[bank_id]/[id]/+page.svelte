@@ -64,7 +64,7 @@
 
     try {
       const response = await fetch(
-        `/api/dynamic-endpoints/bank/${bankId}/${endpoint.dynamic_endpoint_id}/host`,
+        `/backend/dynamic-endpoints/bank/${bankId}/${endpoint.dynamic_endpoint_id}/host`,
         {
           method: "PUT",
           headers: {
@@ -107,7 +107,7 @@
 
     try {
       const response = await fetch(
-        `/api/dynamic-endpoints/bank/${bankId}/${endpoint.dynamic_endpoint_id}`,
+        `/proxy/obp/v6.0.0/management/banks/${bankId}/dynamic-endpoints/${endpoint.dynamic_endpoint_id}`,
         {
           method: "DELETE",
         },

@@ -23,7 +23,7 @@
     try {
       const bankParam = bankId ? `&bank_id=${encodeURIComponent(bankId)}` : "";
       const res = await trackedFetch(
-        `/api/obp/chat-rooms/${encodeURIComponent(chatRoomId)}/participants?level=${level}${bankParam}`,
+        `/proxy/obp/v6.0.0/chat-rooms/${encodeURIComponent(chatRoomId)}/participants?level=${level}${bankParam}`,
       );
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -46,7 +46,7 @@
     try {
       const bankParam = bankId ? `&bank_id=${encodeURIComponent(bankId)}` : "";
       const res = await trackedFetch(
-        `/api/obp/chat-rooms/${encodeURIComponent(chatRoomId)}/participants?level=${level}${bankParam}`,
+        `/proxy/obp/v6.0.0/chat-rooms/${encodeURIComponent(chatRoomId)}/participants?level=${level}${bankParam}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -76,7 +76,7 @@
     try {
       const bankParam = bankId ? `&bank_id=${encodeURIComponent(bankId)}` : "";
       const res = await trackedFetch(
-        `/api/obp/chat-rooms/${encodeURIComponent(chatRoomId)}/participants?user_id=${encodeURIComponent(userId)}&level=${level}${bankParam}`,
+        `/proxy/obp/v6.0.0/chat-rooms/${encodeURIComponent(chatRoomId)}/participants?user_id=${encodeURIComponent(userId)}&level=${level}${bankParam}`,
         { method: "DELETE" },
       );
       if (!res.ok) {

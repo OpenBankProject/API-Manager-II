@@ -87,7 +87,7 @@
           bank_id: effectiveBankId || "",
         };
 
-        const response = await fetch("/api/rbac/entitlement-requests", {
+        const response = await fetch("/backend/rbac/entitlement-requests", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

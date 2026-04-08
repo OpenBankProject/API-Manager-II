@@ -107,7 +107,7 @@ class UserPreferencesStore {
     if (!browser) return;
     this.loading = true;
     try {
-      const res = await trackedFetch("/api/user/preferences");
+      const res = await trackedFetch("/backend/user/preferences");
       if (!res.ok) {
         logger.warn("Failed to load preferences from OBP:", res.status);
         return;
@@ -146,7 +146,7 @@ class UserPreferencesStore {
     try {
       if (attributeId) {
         // Update existing
-        const res = await trackedFetch("/api/user/preferences", {
+        const res = await trackedFetch("/backend/user/preferences", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -164,7 +164,7 @@ class UserPreferencesStore {
         return data.user_attribute_id || attributeId;
       } else {
         // Create new
-        const res = await trackedFetch("/api/user/preferences", {
+        const res = await trackedFetch("/backend/user/preferences", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

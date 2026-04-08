@@ -35,7 +35,7 @@
     loadError = "";
 
     try {
-      const response = await trackedFetch(`/api/financial-products/${bankId}`);
+      const response = await trackedFetch(`/proxy/obp/v6.0.0/banks/${bankId}/products`);
 
       if (!response.ok) {
         const errorDetails = await extractErrorFromResponse(

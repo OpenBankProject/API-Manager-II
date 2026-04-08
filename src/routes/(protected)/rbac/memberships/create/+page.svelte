@@ -73,7 +73,7 @@
     isSubmitting = true;
 
     try {
-      const response = await trackedFetch("/api/rbac/memberships", {
+      const response = await trackedFetch("/backend/rbac/memberships", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

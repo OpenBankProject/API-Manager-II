@@ -55,7 +55,7 @@
     loadingAccounts = true;
     try {
       const res = await fetch(
-        `/api/obp/banks/${encodeURIComponent(bankId)}/account-directory?limit=20`,
+        `/proxy/obp/v6.0.0/banks/${encodeURIComponent(bankId)}/account-directory?limit=20`,
       );
       if (res.ok) {
         const data = await res.json();
@@ -151,7 +151,7 @@
 
       // Make the API call
       const response = await fetch(
-        `/api/obp/banks/${currentBank.bankId}/accounts/${formData.account_id}/views`,
+        `/backend/obp/banks/${currentBank.bankId}/accounts/${formData.account_id}/views`,
         {
           method: "POST",
           headers: {

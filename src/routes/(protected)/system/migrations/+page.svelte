@@ -17,11 +17,11 @@
       isLoading = true;
       error = null;
 
-      const response = await fetch("/api/devops/migrations");
+      const response = await fetch("/proxy/obp/v6.0.0/system/migrations");
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const errorMsg = errorData.error || response.statusText;
+        const errorMsg = errorData.message;
         throw new Error(
           `Failed to fetch migrations (${response.status}): ${errorMsg}`,
         );
@@ -35,8 +35,8 @@
       console.log("Data keys:", data ? Object.keys(data) : "null");
       console.log("Full data:", data);
 
-      if (data.error) {
-        throw new Error(data.error);
+      if (data.message) {
+        throw new Error(data.message);
       }
 
       // Handle both array response and object with migrations/entries property
@@ -60,7 +60,7 @@
       error = err instanceof Error ? err.message : "Failed to fetch migrations";
       console.error("Error fetching migrations:", err);
       console.error("Full error details:", {
-        url: "/api/devops/migrations",
+        url: "/proxy/obp/v6.0.0/system/migrations",
         timestamp: new Date().toISOString(),
       });
     } finally {

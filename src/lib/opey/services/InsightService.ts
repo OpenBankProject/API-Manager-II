@@ -22,7 +22,7 @@ export class InsightService {
 	 */
 	async writeNote(note: string): Promise<void> {
 		try {
-			const res = await fetch('/api/dynamic-entities/personal/opey_notebook/my', {
+			const res = await fetch('/proxy/obp/dynamic-entity/my/opey_notebook', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',
@@ -46,7 +46,7 @@ export class InsightService {
 	 */
 	async getRecentNotes(limit = 10): Promise<NotebookEntry[]> {
 		try {
-			const res = await fetch('/api/dynamic-entities/personal/opey_notebook/my', {
+			const res = await fetch('/proxy/obp/dynamic-entity/my/opey_notebook', {
 				credentials: 'include'
 			});
 
@@ -94,7 +94,7 @@ export class InsightService {
 		].join('\n');
 
 		try {
-			const res = await fetch('/api/opey/invoke', {
+			const res = await fetch('/backend/opey/invoke', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',

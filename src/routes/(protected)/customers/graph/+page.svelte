@@ -59,7 +59,7 @@
     selectedCustomerId = "";
     clearGraph();
     try {
-      const res = await trackedFetch(`/api/obp/banks/${encodeURIComponent(bankId)}/retail-customers?limit=200`);
+      const res = await trackedFetch(`/proxy/obp/v6.0.0/banks/${encodeURIComponent(bankId)}/retail-customers?limit=200`);
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
         throw new Error(d.error || "Failed to fetch customers");
@@ -103,8 +103,8 @@
 
       // Fetch account links and customer links in parallel
       const [accountLinksRes, customerLinksRes] = await Promise.all([
-        trackedFetch(`/api/obp/banks/${encodeURIComponent(bankId)}/customers/${encodeURIComponent(customerId)}/customer-account-links`),
-        trackedFetch(`/api/obp/banks/${encodeURIComponent(bankId)}/customers/${encodeURIComponent(customerId)}/customer-links`),
+        trackedFetch(`/backend/obp/banks/${encodeURIComponent(bankId)}/customers/${encodeURIComponent(customerId)}/customer-account-links`),
+        trackedFetch(`/backend/obp/banks/${encodeURIComponent(bankId)}/customers/${encodeURIComponent(customerId)}/customer-links`),
       ]);
 
       if (!accountLinksRes.ok) {
@@ -205,7 +205,7 @@
 
     try {
       const res = await trackedFetch(
-        `/api/obp/banks/${encodeURIComponent(node.bank_id)}/accounts/${encodeURIComponent(node.account_id)}/owner/transactions?limit=10&sort_direction=DESC`
+        `/proxy/obp/v6.0.0/banks/${encodeURIComponent(node.bank_id)}/accounts/${encodeURIComponent(node.account_id)}/owner/transactions?limit=10&sort_direction=DESC`
       );
       if (!res.ok) return null;
       const data = await res.json();
@@ -263,10 +263,10 @@
       // Fetch account details and customer-account-links in parallel
       const [acctRes, calRes] = await Promise.all([
         trackedFetch(
-          `/api/obp/banks/${encodeURIComponent(accountNode.bank_id)}/accounts/${encodeURIComponent(accountNode.account_id)}/owner/account`
+          `/proxy/obp/v6.0.0/banks/${encodeURIComponent(accountNode.bank_id)}/accounts/${encodeURIComponent(accountNode.account_id)}/owner/account`
         ).catch(() => null),
         trackedFetch(
-          `/api/obp/banks/${encodeURIComponent(accountNode.bank_id)}/accounts/${encodeURIComponent(accountNode.account_id)}/customer-account-links`
+          `/backend/obp/banks/${encodeURIComponent(accountNode.bank_id)}/accounts/${encodeURIComponent(accountNode.account_id)}/customer-account-links`
         ).catch(() => null),
       ]);
 
@@ -332,8 +332,8 @@
 
     try {
       const [alRes, clRes] = await Promise.all([
-        trackedFetch(`/api/obp/banks/${encodeURIComponent(node.bank_id)}/customers/${encodeURIComponent(custId)}/customer-account-links`),
-        trackedFetch(`/api/obp/banks/${encodeURIComponent(node.bank_id)}/customers/${encodeURIComponent(custId)}/customer-links`),
+        trackedFetch(`/backend/obp/banks/${encodeURIComponent(node.bank_id)}/customers/${encodeURIComponent(custId)}/customer-account-links`),
+        trackedFetch(`/backend/obp/banks/${encodeURIComponent(node.bank_id)}/customers/${encodeURIComponent(custId)}/customer-links`),
       ]);
 
       const newNodes: GraphNode[] = [];

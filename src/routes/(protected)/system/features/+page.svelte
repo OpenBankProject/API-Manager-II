@@ -10,11 +10,11 @@
       isLoading = true;
       error = null;
 
-      const response = await fetch("/api/features");
+      const response = await fetch("/proxy/obp/v6.0.0/features");
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const errorMsg = errorData.error || response.statusText;
+        const errorMsg = errorData.message;
         throw new Error(
           `Failed to fetch features (${response.status}): ${errorMsg}`,
         );
@@ -22,8 +22,8 @@
 
       const data = await response.json();
 
-      if (data.error) {
-        throw new Error(data.error);
+      if (data.message) {
+        throw new Error(data.message);
       }
 
       features = data;

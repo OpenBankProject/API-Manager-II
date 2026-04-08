@@ -186,7 +186,7 @@
     console.log("ON_PAGE_METRICS_REQUEST_URL params:", currentQueryString);
 
     // Call API endpoint directly with the ON_PAGE_METRICS_REQUEST_URL params
-    fetch(`/api/aggregate-metrics?${currentQueryString}`)
+    fetch(`/backend/aggregate-metrics?${currentQueryString}`)
       .then((response) => {
         const correlationId =
           response.headers.get("X-Correlation-Id") ||

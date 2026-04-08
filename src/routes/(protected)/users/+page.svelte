@@ -15,7 +15,7 @@
   $effect(() => {
     async function fetchRoles() {
       try {
-        const response = await fetch("/api/rbac/roles-metadata");
+        const response = await fetch("/proxy/obp/v6.0.0/roles");
         const result = await response.json();
         if (result.roles) {
           roles = result.roles.map((r: any) => r.role).sort();
@@ -26,7 +26,7 @@
     }
     async function fetchBanks() {
       try {
-        const response = await fetch("/api/banks");
+        const response = await fetch("/proxy/obp/v6.0.0/banks");
         const result = await response.json();
         if (result.banks) {
           banks = result.banks.map((b: any) => b.id).sort();
@@ -55,7 +55,7 @@
   $effect(() => {
     async function fetchProviders() {
       try {
-        const response = await fetch("/api/users/providers");
+        const response = await fetch("/backend/users/providers");
         const result = await response.json();
         if (result.providers) {
           providers = result.providers;
@@ -105,15 +105,15 @@
       if (type === "email") {
         // Search by email (OBPv4.0.0)
         response = await fetch(
-          `/api/users/search-by-email?email=${encodeURIComponent(searchQuery)}`,
+          `/proxy/obp/v4.0.0/users/email/${encodeURIComponent(searchQuery)}/terminator`,
         );
       } else if (type === "userid") {
-        // Search by user ID (OBPv4.0.0)
+        // Search by user ID (OBPv6.0.0)
         response = await fetch(
-          `/api/users/search-by-userid?user_id=${encodeURIComponent(searchQuery)}`,
+          `/proxy/obp/v6.0.0/users/user-id/${encodeURIComponent(searchQuery)}`,
         );
       } else {
-        // Search by provider and username (OBPv5.1.0)
+        // Search by provider and username (OBPv6.0.0)
         if (!selectedProvider) {
           console.error("Provider is required for username search");
           searchResults = [];
@@ -121,7 +121,7 @@
           return;
         }
         response = await fetch(
-          `/api/users/search-by-provider-username?provider=${encodeURIComponent(selectedProvider)}&username=${encodeURIComponent(searchQuery)}`,
+          `/proxy/obp/v6.0.0/users/provider/${encodeURIComponent(selectedProvider)}/username/${encodeURIComponent(searchQuery)}`,
         );
       }
 
@@ -134,11 +134,11 @@
       }
 
       if (result.users) {
-        // Multiple results (email search)
+        // Multiple results (email search, username search)
         searchResults = result.users;
-      } else if (result.user) {
-        // Single result (user ID or username search)
-        searchResults = [result.user];
+      } else if (result.user_id) {
+        // Single user object returned directly by OBP (user ID or provider/username search)
+        searchResults = [result];
       } else {
         searchResults = [];
       }

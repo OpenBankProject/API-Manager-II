@@ -51,7 +51,7 @@
     try {
       // Create the product with all core fields in the PUT body
       const productResponse = await trackedFetch(
-        `/api/products/${selectedBankId}/${formData.productCode}`,
+        `/proxy/obp/v6.0.0/banks/${selectedBankId}/api-products/${formData.productCode}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -77,7 +77,7 @@
 
       if (!productResponse.ok) {
         const errorData = await productResponse.json();
-        throw new Error(errorData.error || "Failed to create product");
+        throw new Error(errorData.message);
       }
 
       // Create custom attributes (if any)
@@ -86,7 +86,7 @@
       for (const attr of formData.customAttributes) {
         try {
           const attrResponse = await trackedFetch(
-            `/api/products/${selectedBankId}/${formData.productCode}/attribute`,
+            `/proxy/obp/v6.0.0/banks/${selectedBankId}/api-products/${formData.productCode}/attribute`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },

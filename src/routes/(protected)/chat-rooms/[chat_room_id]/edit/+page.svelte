@@ -21,7 +21,7 @@
     try {
       const bankParam = bankId ? `?bank_id=${encodeURIComponent(bankId)}` : "";
       const res = await trackedFetch(
-        `/api/obp/chat-rooms/${encodeURIComponent(chatRoomId)}${bankParam}`,
+        `/proxy/obp/v6.0.0/chat-rooms/${encodeURIComponent(chatRoomId)}${bankParam}`,
       );
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -45,8 +45,8 @@
     try {
       const endpoint =
         level === "bank" && bankId
-          ? `/api/obp/banks/${encodeURIComponent(bankId)}/chat-rooms/${encodeURIComponent(chatRoomId)}/open-room`
-          : `/api/obp/chat-rooms/${encodeURIComponent(chatRoomId)}/open-room`;
+          ? `/proxy/obp/v6.0.0/banks/${encodeURIComponent(bankId)}/chat-rooms/${encodeURIComponent(chatRoomId)}/open-room`
+          : `/proxy/obp/v6.0.0/chat-rooms/${encodeURIComponent(chatRoomId)}/open-room`;
       const res = await trackedFetch(endpoint, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },

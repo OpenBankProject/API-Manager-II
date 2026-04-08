@@ -81,7 +81,7 @@
         requestBody.bank_id = bankId.trim();
       }
 
-      const response = await trackedFetch("/api/rbac/groups", {
+      const response = await trackedFetch("/backend/rbac/groups", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

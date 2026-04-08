@@ -92,7 +92,7 @@
         swagger_string: swagger,
       };
 
-      const response = await fetch(`/api/dynamic-endpoints/system/create`, {
+      const response = await fetch(`/proxy/obp/v6.0.0/management/dynamic-endpoints`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

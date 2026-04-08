@@ -22,17 +22,13 @@
       isLoading = true;
       error = null;
 
-      const params = new URLSearchParams();
-      if (logLevel) {
-        params.append("log_level", logLevel);
-      }
-
-      const url = `/api/devops/log-cache${params.toString() ? `?${params.toString()}` : ""}`;
+      const level = encodeURIComponent((logLevel || "ALL").toLowerCase());
+      const url = `/proxy/obp/v6.0.0/system/log-cache/${level}`;
       const response = await fetch(url);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const errorMsg = errorData.error || response.statusText;
+        const errorMsg = errorData.message;
         throw new Error(
           `Failed to fetch logs (${response.status}): ${errorMsg}`,
         );
@@ -40,8 +36,8 @@
 
       const data = await response.json();
 
-      if (data.error) {
-        throw new Error(data.error);
+      if (data.message) {
+        throw new Error(data.message);
       }
 
       // Handle both array response and object with entries property

@@ -41,7 +41,7 @@
     for (let i = 0; i < roles.length; i++) {
       const role = roles[i];
       try {
-        const res = await trackedFetch("/api/rbac/entitlements", {
+        const res = await trackedFetch("/backend/rbac/entitlements", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

@@ -37,7 +37,7 @@
       };
 
       const response = await trackedFetch(
-        `/api/api-collections/${collection.api_collection_id}`,
+        `/backend/api-collections/${collection.api_collection_id}`,
         {
           method: "PUT",
           headers: {

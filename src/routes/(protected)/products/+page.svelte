@@ -35,7 +35,7 @@
     loadError = "";
 
     try {
-      const response = await trackedFetch(`/api/products/${bankId}`);
+      const response = await trackedFetch(`/proxy/obp/v6.0.0/banks/${bankId}/api-products`);
 
       if (!response.ok) {
         const errorDetails = await extractErrorFromResponse(
@@ -49,7 +49,7 @@
       }
 
       const data = await response.json();
-      products = data.products || [];
+      products = data.api_products || [];
     } catch (err) {
       console.error("Error loading products:", err);
       loadError = err instanceof Error ? err.message : "Failed to load products";

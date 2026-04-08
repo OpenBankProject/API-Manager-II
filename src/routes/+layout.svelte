@@ -115,12 +115,12 @@
     if (!isAuthenticated) return;
 
     try {
-      const response = await fetch("/api/dynamic-entities/system/list", {
+      const response = await fetch("/proxy/obp/v6.0.0/management/system-dynamic-entities", {
         credentials: "include",
       });
       if (response.ok) {
         const data = await response.json();
-        systemDynamicEntities = data.entities || [];
+        systemDynamicEntities = data.dynamic_entities || [];
         logger.info(
           `✅ Loaded ${systemDynamicEntities.length} system dynamic entities`,
         );

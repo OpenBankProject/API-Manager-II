@@ -46,7 +46,7 @@
       error = null;
 
       const queryParams = viewMode === "active" ? "?active=true" : "";
-      const response = await fetch(`/api/integration/method-routings${queryParams}`);
+      const response = await fetch(`/backend/integration/method-routings${queryParams}`);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -77,11 +77,11 @@
     try {
       isLoadingMethodNames = true;
 
-      const response = await fetch("/api/devops/connector-method-names");
+      const response = await fetch("/proxy/obp/v6.0.0/system/connector-method-names");
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const errorMsg = errorData.error || response.statusText;
+        const errorMsg = errorData.message;
         throw new Error(
           `Failed to fetch method names (${response.status}): ${errorMsg}`,
         );
@@ -103,7 +103,7 @@
     try {
       isLoadingConnectors = true;
 
-      const response = await fetch("/api/system/connectors");
+      const response = await fetch("/backend/system/connectors");
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -126,7 +126,7 @@
 
   async function fetchBankIds() {
     try {
-      const response = await fetch("/api/banks");
+      const response = await fetch("/proxy/obp/v6.0.0/banks");
 
       if (!response.ok) {
         console.error(`Failed to fetch banks (${response.status})`);
@@ -152,7 +152,7 @@
       error = null;
       successMessage = null;
 
-      const response = await fetch("/api/integration/method-routings", {
+      const response = await fetch("/backend/integration/method-routings", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -184,7 +184,7 @@
       error = null;
       successMessage = null;
 
-      const response = await fetch("/api/integration/method-routings", {
+      const response = await fetch("/backend/integration/method-routings", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

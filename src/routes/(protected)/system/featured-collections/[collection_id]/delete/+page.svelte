@@ -20,7 +20,7 @@
 
     try {
       const response = await trackedFetch(
-        `/api/featured-collections/${featured.api_collection_id}`,
+        `/backend/featured-collections/${featured.api_collection_id}`,
         {
           method: "DELETE",
         },

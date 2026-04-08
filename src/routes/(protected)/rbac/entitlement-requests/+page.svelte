@@ -140,7 +140,7 @@
     try {
       console.log("Creating entitlement...");
       // Step 1: Create the entitlement
-      const createResponse = await trackedFetch("/api/rbac/entitlements", {
+      const createResponse = await trackedFetch("/backend/rbac/entitlements", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -168,7 +168,7 @@
             "✅ OBP-30216 detected! Entitlement already exists. Attempting to delete request...",
           );
           const deleteResponse = await trackedFetch(
-            `/api/rbac/entitlement-requests/${requestId}`,
+            `/proxy/obp/v6.0.0/entitlement-requests/${requestId}`,
             {
               method: "DELETE",
             },
@@ -182,7 +182,7 @@
             console.log("Delete error data:", deleteErrorData);
             processErrors = new Map(processErrors).set(
               requestId,
-              deleteErrorData.error || "Failed to delete entitlement request",
+              deleteErrorData.message,
             );
             return;
           }
@@ -213,7 +213,7 @@
 
       // Step 2: Delete the entitlement request
       const deleteResponse = await trackedFetch(
-        `/api/rbac/entitlement-requests/${requestId}`,
+        `/proxy/obp/v6.0.0/entitlement-requests/${requestId}`,
         {
           method: "DELETE",
         },
@@ -223,7 +223,7 @@
         const errorData = await deleteResponse.json();
         processErrors = new Map(processErrors).set(
           requestId,
-          errorData.error || "Failed to delete entitlement request",
+          errorData.message,
         );
         return;
       }
@@ -260,7 +260,7 @@
 
     try {
       const response = await trackedFetch(
-        `/api/rbac/entitlement-requests/${requestId}`,
+        `/proxy/obp/v6.0.0/entitlement-requests/${requestId}`,
         {
           method: "DELETE",
         },
@@ -270,7 +270,7 @@
         const errorData = await response.json();
         processErrors = new Map(processErrors).set(
           requestId,
-          errorData.error || "Failed to delete entitlement request",
+          errorData.message,
         );
         return;
       }

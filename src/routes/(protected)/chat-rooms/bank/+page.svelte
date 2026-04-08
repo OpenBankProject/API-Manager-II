@@ -34,7 +34,7 @@
     error = null;
     try {
       const res = await trackedFetch(
-        `/api/obp/banks/${encodeURIComponent(bankId)}/chat-rooms`,
+        `/proxy/obp/v6.0.0/banks/${encodeURIComponent(bankId)}/chat-rooms`,
       );
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -59,7 +59,7 @@
     successMessage = null;
     try {
       const res = await trackedFetch(
-        `/api/obp/banks/${encodeURIComponent(currentBank.bankId)}/chat-rooms`,
+        `/proxy/obp/v6.0.0/banks/${encodeURIComponent(currentBank.bankId)}/chat-rooms`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -86,7 +86,7 @@
     successMessage = null;
     try {
       const res = await trackedFetch(
-        `/api/obp/banks/${encodeURIComponent(currentBank.bankId)}/chat-rooms?chat_room_id=${encodeURIComponent(chatRoomId)}`,
+        `/proxy/obp/v6.0.0/banks/${encodeURIComponent(currentBank.bankId)}/chat-rooms/${encodeURIComponent(chatRoomId)}`,
         { method: "DELETE" },
       );
       if (!res.ok) {

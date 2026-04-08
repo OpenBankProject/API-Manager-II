@@ -33,7 +33,7 @@
         is_sharable: isSharable,
       };
 
-      const response = await trackedFetch("/api/api-collections", {
+      const response = await trackedFetch("/backend/api-collections", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

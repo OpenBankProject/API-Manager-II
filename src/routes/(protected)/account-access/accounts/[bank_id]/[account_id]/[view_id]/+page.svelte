@@ -92,7 +92,7 @@
     accessCheckDone = false;
     try {
       const res = await trackedFetch(
-        `/api/obp/banks/${encodeURIComponent(bankId)}/accounts/${encodeURIComponent(accountId)}/views/${encodeURIComponent(viewId)}/has-account-access`
+        `/proxy/obp/v6.0.0/banks/${encodeURIComponent(bankId)}/accounts/${encodeURIComponent(accountId)}/views/${encodeURIComponent(viewId)}/has-account-access`
       );
       if (res.ok) {
         const data = await res.json();
@@ -118,7 +118,7 @@
     error = null;
     try {
       const res = await trackedFetch(
-        `/api/obp/banks/${encodeURIComponent(bankId)}/accounts/${encodeURIComponent(accountId)}/${encodeURIComponent(viewId)}/account`
+        `/proxy/obp/v6.0.0/banks/${encodeURIComponent(bankId)}/accounts/${encodeURIComponent(accountId)}/${encodeURIComponent(viewId)}/account`
       );
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -143,7 +143,7 @@
       views.map(async (view) => {
         const vid = viewId_(view);
         const res = await trackedFetch(
-          `/api/obp/banks/${encodeURIComponent(bankId)}/accounts/${encodeURIComponent(accountId)}/views/${encodeURIComponent(vid)}/users-with-access`
+          `/proxy/obp/v6.0.0/banks/${encodeURIComponent(bankId)}/accounts/${encodeURIComponent(accountId)}/views/${encodeURIComponent(vid)}/users-with-access`
         );
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
@@ -217,7 +217,7 @@
     customerAccountLinksError = null;
     try {
       const res = await trackedFetch(
-        `/api/obp/banks/${encodeURIComponent(bankId)}/accounts/${encodeURIComponent(accountId)}/customer-account-links`
+        `/backend/obp/banks/${encodeURIComponent(bankId)}/accounts/${encodeURIComponent(accountId)}/customer-account-links`
       );
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -250,7 +250,7 @@
 
     try {
       const res = await trackedFetch(
-        `/api/obp/banks/${encodeURIComponent(bankId)}/accounts/${encodeURIComponent(accountId)}/products/${encodeURIComponent(productCode)}/attribute`,
+        `/proxy/obp/v3.1.0/banks/${encodeURIComponent(bankId)}/accounts/${encodeURIComponent(accountId)}/products/${encodeURIComponent(productCode)}/attribute`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

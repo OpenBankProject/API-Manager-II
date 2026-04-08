@@ -63,11 +63,11 @@
       error = null;
       secondsUntilRefresh = AUTO_REFRESH_SECONDS;
 
-      const response = await fetch("/api/signal/channels");
+      const response = await fetch("/proxy/obp/v6.0.0/signal/channels");
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const errorMsg = errorData.error || response.statusText;
+        const errorMsg = errorData.message;
         throw new Error(
           `Failed to fetch signal channels (${response.status}): ${errorMsg}`,
         );
@@ -75,8 +75,8 @@
 
       const data = await response.json();
 
-      if (data.error) {
-        throw new Error(data.error);
+      if (data.message) {
+        throw new Error(data.message);
       }
 
       channels = data.channels || [];
@@ -100,12 +100,12 @@
       messagesError = null;
 
       const response = await fetch(
-        `/api/signal/channels/${encodeURIComponent(channelName)}/messages?limit=50`,
+        `/proxy/obp/v6.0.0/signal/channels/${encodeURIComponent(channelName)}/messages?limit=50`,
       );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const errorMsg = errorData.error || response.statusText;
+        const errorMsg = errorData.message;
         throw new Error(
           `Failed to fetch messages (${response.status}): ${errorMsg}`,
         );
@@ -113,8 +113,8 @@
 
       const data = await response.json();
 
-      if (data.error) {
-        throw new Error(data.error);
+      if (data.message) {
+        throw new Error(data.message);
       }
 
       channelMessages = data.messages || [];
@@ -143,13 +143,13 @@
       deleteSuccess = null;
 
       const response = await fetch(
-        `/api/signal/channels/${encodeURIComponent(channelName)}`,
+        `/proxy/obp/v6.0.0/signal/channels/${encodeURIComponent(channelName)}`,
         { method: "DELETE" },
       );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const errorMsg = errorData.error || response.statusText;
+        const errorMsg = errorData.message;
         throw new Error(
           `Failed to delete channel (${response.status}): ${errorMsg}`,
         );

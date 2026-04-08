@@ -74,7 +74,7 @@
     error = null;
     try {
       const res = await trackedFetch(
-        `/api/obp/banks/${encodeURIComponent(bankId)}/customers/${encodeURIComponent(customerId)}`
+        `/proxy/obp/v6.0.0/banks/${encodeURIComponent(bankId)}/customers/${encodeURIComponent(customerId)}`
       );
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -99,7 +99,7 @@
     accountLinksError = null;
     try {
       const res = await trackedFetch(
-        `/api/obp/banks/${encodeURIComponent(bankId)}/customers/${encodeURIComponent(customerId)}/customer-account-links`
+        `/backend/obp/banks/${encodeURIComponent(bankId)}/customers/${encodeURIComponent(customerId)}/customer-account-links`
       );
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
@@ -131,7 +131,7 @@
 
     try {
       const res = await trackedFetch(
-        `/api/obp/banks/${encodeURIComponent(bankId)}/customers/${encodeURIComponent(customerId)}/attribute`,
+        `/proxy/obp/v4.0.0/banks/${encodeURIComponent(bankId)}/customers/${encodeURIComponent(customerId)}/attribute`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

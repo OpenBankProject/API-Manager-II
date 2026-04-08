@@ -60,7 +60,7 @@
         sort_order: sortOrder,
       };
 
-      const response = await trackedFetch("/api/featured-collections", {
+      const response = await trackedFetch("/backend/featured-collections", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

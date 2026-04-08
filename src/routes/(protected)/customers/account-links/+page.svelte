@@ -55,7 +55,7 @@
     links = [];
     try {
       const res = await trackedFetch(
-        `/api/obp/banks/${encodeURIComponent(bankId)}/retail-customers?limit=200`,
+        `/proxy/obp/v6.0.0/banks/${encodeURIComponent(bankId)}/retail-customers?limit=200`,
       );
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -82,7 +82,7 @@
     searchQuery = "";
     try {
       const res = await trackedFetch(
-        `/api/obp/banks/${encodeURIComponent(bankId)}/customers/${encodeURIComponent(customerId)}/customer-account-links`,
+        `/backend/obp/banks/${encodeURIComponent(bankId)}/customers/${encodeURIComponent(customerId)}/customer-account-links`,
       );
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));

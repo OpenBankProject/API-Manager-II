@@ -53,7 +53,7 @@
     try {
       // Update the product with all core fields in the PUT body
       const productResponse = await trackedFetch(
-        `/api/products/${bankId}/${encodeURIComponent(productCode)}`,
+        `/proxy/obp/v6.0.0/banks/${bankId}/api-products/${encodeURIComponent(productCode)}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -79,7 +79,7 @@
 
       if (!productResponse.ok) {
         const errorData = await productResponse.json();
-        throw new Error(errorData.error || "Failed to update product");
+        throw new Error(errorData.message);
       }
 
       // Create/update custom attributes only
@@ -88,7 +88,7 @@
       for (const attr of formData.customAttributes) {
         try {
           const attrResponse = await trackedFetch(
-            `/api/products/${bankId}/${encodeURIComponent(productCode)}/attribute`,
+            `/proxy/obp/v6.0.0/banks/${bankId}/api-products/${encodeURIComponent(productCode)}/attribute`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },

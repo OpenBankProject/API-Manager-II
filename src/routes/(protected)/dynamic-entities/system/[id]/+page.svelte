@@ -99,7 +99,7 @@
         bank_id: "", // System-wide roles use empty string
       };
 
-      const response = await trackedFetch("/api/rbac/entitlement-requests", {
+      const response = await trackedFetch("/backend/rbac/entitlement-requests", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -137,7 +137,7 @@
 
     try {
       const response = await fetch(
-        `/api/dynamic-entities/${entity.dynamic_entity_id}`,
+        `/backend/dynamic-entities/${entity.dynamic_entity_id}`,
         {
           method: "DELETE",
         },
@@ -201,7 +201,7 @@
 
     try {
       const response = await fetch(
-        `/api/dynamic-entities/${entity.dynamic_entity_id}/backup`,
+        `/backend/dynamic-entities/${entity.dynamic_entity_id}/backup`,
         { method: "POST" },
       );
 

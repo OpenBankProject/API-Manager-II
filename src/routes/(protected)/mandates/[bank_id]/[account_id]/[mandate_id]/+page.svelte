@@ -61,7 +61,7 @@
     mandateError = null;
     try {
       const res = await trackedFetch(
-        `/api/obp/banks/${encodeURIComponent(bId)}/accounts/${encodeURIComponent(aId)}/mandates/${encodeURIComponent(mId)}`
+        `/proxy/obp/v6.0.0/banks/${encodeURIComponent(bId)}/accounts/${encodeURIComponent(aId)}/mandates/${encodeURIComponent(mId)}`
       );
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -82,7 +82,7 @@
     panelsError = null;
     try {
       const res = await trackedFetch(
-        `/api/obp/banks/${encodeURIComponent(bId)}/mandates/${encodeURIComponent(mId)}/signatory-panels`
+        `/proxy/obp/v6.0.0/banks/${encodeURIComponent(bId)}/mandates/${encodeURIComponent(mId)}/signatory-panels`
       );
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -102,7 +102,7 @@
     provisionsError = null;
     try {
       const res = await trackedFetch(
-        `/api/obp/banks/${encodeURIComponent(bId)}/mandates/${encodeURIComponent(mId)}/provisions`
+        `/proxy/obp/v6.0.0/banks/${encodeURIComponent(bId)}/mandates/${encodeURIComponent(mId)}/provisions`
       );
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -123,7 +123,7 @@
     try {
       const userIds = newPanelUserIds.split(",").map((s) => s.trim()).filter(Boolean);
       const res = await trackedFetch(
-        `/api/obp/banks/${encodeURIComponent(bankId)}/mandates/${encodeURIComponent(mandateId)}/signatory-panels`,
+        `/proxy/obp/v6.0.0/banks/${encodeURIComponent(bankId)}/mandates/${encodeURIComponent(mandateId)}/signatory-panels`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -156,7 +156,7 @@
     addProvisionError = null;
     try {
       const res = await trackedFetch(
-        `/api/obp/banks/${encodeURIComponent(bankId)}/mandates/${encodeURIComponent(mandateId)}/provisions`,
+        `/proxy/obp/v6.0.0/banks/${encodeURIComponent(bankId)}/mandates/${encodeURIComponent(mandateId)}/provisions`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

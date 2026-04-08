@@ -47,7 +47,7 @@
     entitlements = [];
 
     try {
-      const res = await trackedFetch(`/api/rbac/entitlements/by-user/${encodeURIComponent(uid)}`);
+      const res = await trackedFetch(`/proxy/obp/v6.0.0/users/${encodeURIComponent(uid)}/entitlements`);
       if (res.ok) {
         const data = await res.json();
         entitlements = data.list || [];
@@ -83,7 +83,7 @@
           results[i] = { role: ent.role_name, entitlement_id: "", status: "skipped", message: "No entitlement_id — likely a scope on the consumer, not a user entitlement" };
           continue;
         }
-        const res = await trackedFetch(`/api/rbac/entitlements/${encodeURIComponent(ent.entitlement_id)}`, {
+        const res = await trackedFetch(`/backend/rbac/entitlements/${encodeURIComponent(ent.entitlement_id)}`, {
           method: "DELETE",
         });
 

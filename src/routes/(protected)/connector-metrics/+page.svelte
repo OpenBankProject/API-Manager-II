@@ -107,7 +107,7 @@
     timestampColorIndex = (timestampColorIndex + 1) % 2;
 
     try {
-      const response = await trackedFetch(`/api/connector-metrics?${currentQueryString}`);
+      const response = await trackedFetch(`/backend/connector-metrics?${currentQueryString}`);
       const responseData = await response.json();
       lastCorrelationId = responseData.correlation_id || "N/A";
 

@@ -52,7 +52,7 @@
   async function fetchProviders() {
     isLoadingProviders = true;
     try {
-      const response = await trackedFetch("/api/users/providers");
+      const response = await trackedFetch("/backend/users/providers");
       if (response.ok) {
         const data = await response.json();
         providers = data.providers || [];
@@ -107,15 +107,15 @@
       let url: string;
       let usesProviderEndpoint = false;
       if (type === "email") {
-        url = `/api/users/search-by-email?email=${encodeURIComponent(trimmed)}`;
+        url = `/proxy/obp/v4.0.0/users/email/${encodeURIComponent(trimmed)}/terminator`;
       } else if (type === "userid") {
-        url = `/api/users/search-by-userid?user_id=${encodeURIComponent(trimmed)}`;
+        url = `/proxy/obp/v6.0.0/users/user-id/${encodeURIComponent(trimmed)}`;
       } else if (selectedProvider) {
         // Use provider+username endpoint when a provider is selected
-        url = `/api/users/search-by-provider-username?provider=${encodeURIComponent(selectedProvider)}&username=${encodeURIComponent(trimmed)}`;
+        url = `/proxy/obp/v6.0.0/users/provider/${encodeURIComponent(selectedProvider)}/username/${encodeURIComponent(trimmed)}`;
         usesProviderEndpoint = true;
       } else {
-        url = `/api/users/search?q=${encodeURIComponent(trimmed)}`;
+        url = `/proxy/obp/v6.0.0/users?username=${encodeURIComponent(trimmed)}`;
       }
 
       const response = await trackedFetch(url);
@@ -133,10 +133,10 @@
 
       const data = await response.json();
 
-      // Normalize response: provider and userid endpoints return {user: {...}}, others return {users: [...]}
+      // Normalize response: provider and userid OBP endpoints return the user object directly, others return {users: [...]}
       let users: UserResult[];
       if (type === "userid" || usesProviderEndpoint) {
-        users = data.user ? [data.user] : [];
+        users = data.user_id ? [data] : [];
       } else {
         users = data.users || [];
       }

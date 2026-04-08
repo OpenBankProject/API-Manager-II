@@ -40,11 +40,11 @@
       error = null;
       secondsUntilRefresh = AUTO_REFRESH_SECONDS;
 
-      const response = await fetch("/api/signal/channels/stats");
+      const response = await fetch("/proxy/obp/v6.0.0/signal/channels/stats");
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const errorMsg = errorData.error || response.statusText;
+        const errorMsg = errorData.message;
         throw new Error(
           `Failed to fetch signal stats (${response.status}): ${errorMsg}`,
         );
@@ -52,8 +52,8 @@
 
       const data = await response.json();
 
-      if (data.error) {
-        throw new Error(data.error);
+      if (data.message) {
+        throw new Error(data.message);
       }
 
       stats = data;

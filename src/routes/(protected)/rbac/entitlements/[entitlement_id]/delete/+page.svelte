@@ -44,7 +44,7 @@
 
     try {
       const response = await trackedFetch(
-        `/api/rbac/entitlements/${entitlement.entitlement_id}`,
+        `/backend/rbac/entitlements/${entitlement.entitlement_id}`,
         {
           method: "DELETE",
         },

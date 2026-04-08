@@ -48,7 +48,7 @@
           .map((r) => ({ scheme: r.scheme.trim(), address: r.address.trim() })),
       };
 
-      const response = await trackedFetch("/api/banks", {
+      const response = await trackedFetch("/proxy/obp/v6.0.0/banks", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -58,7 +58,7 @@
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create bank");
+        throw new Error(errorData.message);
       }
 
       const created = await response.json();
