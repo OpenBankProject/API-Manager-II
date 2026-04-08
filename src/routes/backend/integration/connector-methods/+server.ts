@@ -1,7 +1,7 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { obp_requests } from "$lib/obp/requests";
-import { extractErrorDetails } from "$lib/obp/errors";
+import { obpErrorResponse } from "$lib/obp/errors";
 import { SessionOAuthHelper } from "$lib/oauth/sessionHelper";
 import { createLogger } from "$lib/utils/logger";
 
@@ -41,15 +41,7 @@ export const GET: RequestHandler = async ({ locals }) => {
   } catch (err) {
     logger.error("ERROR FETCHING CONNECTOR METHODS:", err);
 
-    // Extract full error details - NEVER hide or simplify OBP error messages!
-    const { message, obpErrorCode } = extractErrorDetails(err);
-
-    return json(
-      {
-        error: message,
-        obpErrorCode,
-      },
-      { status: 500 },
-    );
+    const { body, status } = obpErrorResponse(err);
+    return json(body, { status });
   }
 };

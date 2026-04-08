@@ -1,6 +1,7 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { obp_requests } from "$lib/obp/requests";
+import { obpErrorResponse } from "$lib/obp/errors";
 import { checkAPIAuth } from "$lib/utils/apiAuth";
 import { createLogger } from "$lib/utils/logger";
 import { env } from "$env/dynamic/public";
@@ -84,18 +85,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
       `  Error message: ${err instanceof Error ? err.message : String(err)}`,
     );
 
-    return json(
-      {
-        count: 0,
-        average_response_time: 0,
-        minimum_response_time: 0,
-        maximum_response_time: 0,
-        error:
-          err instanceof Error
-            ? err.message
-            : "Failed to fetch aggregate metrics",
-      },
-      { status: 500 },
-    );
+    const { body, status } = obpErrorResponse(err);
+    return json(body, { status });
   }
 };

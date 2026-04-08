@@ -29,7 +29,7 @@
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(
-          errorData.error || "Failed to remove collection from featured",
+          errorData.message,
         );
       }
 

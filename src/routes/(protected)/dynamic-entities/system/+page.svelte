@@ -180,7 +180,7 @@
       const responseData = await response.json();
 
       if (!response.ok) {
-        throw new Error(responseData.error || "Failed to backup entity");
+        throw new Error(responseData.message);
       }
 
       alert(`Backup created: ${responseData.entity_name}`);

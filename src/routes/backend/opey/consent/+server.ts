@@ -3,6 +3,7 @@ const logger = createLogger('OpeyConsentAPI');
 import { json } from '@sveltejs/kit';
 import type { RequestEvent } from './$types';
 import { obp_requests } from '$lib/obp/requests';
+import { obpErrorResponse } from '$lib/obp/errors';
 import { env } from '$env/dynamic/private';
 import { deduplicateRoles, pickConsentRole } from '$lib/opey/utils/roles';
 
@@ -132,8 +133,7 @@ export async function POST(event: RequestEvent) {
 		});
 	} catch (error: any) {
 		logger.error('Failed to create consent:', error);
-		const message = error?.message || 'Failed to create consent';
-		const status = error?.code || 500;
-		return json({ error: message }, { status: typeof status === 'number' ? status : 500 });
+		const { body, status } = obpErrorResponse(error);
+		return json(body, { status });
 	}
 }

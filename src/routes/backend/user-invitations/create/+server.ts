@@ -1,6 +1,7 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { obp_requests } from "$lib/obp/requests";
+import { obpErrorResponse } from "$lib/obp/errors";
 import { SessionOAuthHelper } from "$lib/oauth/sessionHelper";
 import { createLogger } from "$lib/utils/logger";
 
@@ -56,16 +57,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   } catch (err: any) {
     logger.error("Error creating user invitation:", err);
 
-    // Handle specific OBP error codes
-    const errorMessage = err?.message || "Failed to create user invitation";
-    const statusCode = err?.status || 500;
-
-    return json(
-      {
-        error: errorMessage,
-        details: err?.error || err
-      },
-      { status: statusCode }
-    );
+    const { body, status } = obpErrorResponse(err);
+    return json(body, { status });
   }
 };

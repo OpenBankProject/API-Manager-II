@@ -4,6 +4,7 @@ import { extractUsernameFromJWT } from '$lib/utils/jwt';
 import { json } from '@sveltejs/kit';
 import type { RequestEvent } from './$types';
 import { obpIntegrationService } from '$lib/opey/services/OBPIntegrationService';
+import { obpErrorResponse } from '$lib/obp/errors';
 import { env } from '$env/dynamic/private';
 import type { Session } from 'svelte-kit-sessions';
 
@@ -30,7 +31,8 @@ export async function POST(event: RequestEvent) {
 				return await _getAuthenticatedSession(opeyConsumerId, session);
 			} catch (error: any) {
 				logger.info('JWT expired for Opey session - user needs to re-authenticate:', error);
-				return json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+				const { body, status } = obpErrorResponse(error);
+				return json(body, { status });
 			}
 		} else {
 			// ANONYMOUS FLOW - Create anonymous Opey session
@@ -38,7 +40,8 @@ export async function POST(event: RequestEvent) {
 		}
 	} catch (error: any) {
 		logger.error('Opey Auth error:', error);
-		return json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+		const { body, status } = obpErrorResponse(error);
+		return json(body, { status });
 	}
 }
 

@@ -50,7 +50,7 @@
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const errorMsg = errorData.error || response.statusText;
+        const errorMsg = errorData.message;
         throw new Error(
           `Failed to fetch method routings (${response.status}): ${errorMsg}`,
         );
@@ -107,7 +107,7 @@
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const errorMsg = errorData.error || response.statusText;
+        const errorMsg = errorData.message;
         console.error(`Failed to fetch connectors (${response.status}): ${errorMsg}`);
         return;
       }
@@ -162,7 +162,7 @@
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to create method routing");
+        throw new Error(errorData.message);
       }
 
       successMessage = "Method routing created successfully";
@@ -194,7 +194,7 @@
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to update method routing");
+        throw new Error(errorData.message);
       }
 
       successMessage = "Method routing updated successfully";

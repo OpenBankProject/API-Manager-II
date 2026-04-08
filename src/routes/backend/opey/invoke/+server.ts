@@ -2,6 +2,7 @@ import { createLogger } from '$lib/utils/logger';
 const logger = createLogger('OpeyInvokeProxy');
 import { json } from '@sveltejs/kit';
 import type { RequestEvent } from './$types';
+import { obpErrorResponse } from '$lib/obp/errors';
 import { env } from '$env/dynamic/private';
 
 /**
@@ -32,7 +33,7 @@ export async function POST(event: RequestEvent) {
 			const errorText = await opeyResponse.text();
 			logger.warn(`Opey invoke failed: ${opeyResponse.status} ${errorText}`);
 			return json(
-				{ error: errorText },
+				{ message: errorText, code: 'UNKNOWN_ERROR' },
 				{ status: opeyResponse.status }
 			);
 		}
@@ -47,6 +48,7 @@ export async function POST(event: RequestEvent) {
 		return json(result, { headers });
 	} catch (err) {
 		logger.error('Error proxying invoke request:', err);
-		return json({ error: 'Failed to connect to Opey service' }, { status: 502 });
+		const { body, status } = obpErrorResponse(err, 502);
+		return json(body, { status });
 	}
 }

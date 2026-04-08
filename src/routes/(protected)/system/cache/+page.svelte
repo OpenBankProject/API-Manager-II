@@ -98,7 +98,7 @@
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const errorMsg = errorData.error || response.statusText;
+        const errorMsg = errorData.message;
         throw new Error(
           `Failed to invalidate cache (${response.status}): ${errorMsg}`,
         );

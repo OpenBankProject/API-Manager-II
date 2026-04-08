@@ -1,7 +1,7 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { obp_requests } from "$lib/obp/requests";
-import { extractErrorDetails } from "$lib/obp/errors";
+import { obpErrorResponse } from "$lib/obp/errors";
 import { SessionOAuthHelper } from "$lib/oauth/sessionHelper";
 import { createLogger } from "$lib/utils/logger";
 
@@ -61,15 +61,8 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
   } catch (err) {
     logger.error("Error updating featured API collection:", err);
 
-    // Extract full error details - NEVER hide or simplify OBP error messages!
-    const { message, obpErrorCode } = extractErrorDetails(err);
-
-    const errorResponse: any = { error: message };
-    if (obpErrorCode) {
-      errorResponse.obpErrorCode = obpErrorCode;
-    }
-
-    return json(errorResponse, { status: 500 });
+    const { body, status } = obpErrorResponse(err);
+    return json(body, { status });
   }
 };
 
@@ -111,14 +104,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
   } catch (err) {
     logger.error("Error removing featured API collection:", err);
 
-    // Extract full error details - NEVER hide or simplify OBP error messages!
-    const { message, obpErrorCode } = extractErrorDetails(err);
-
-    const errorResponse: any = { error: message };
-    if (obpErrorCode) {
-      errorResponse.obpErrorCode = obpErrorCode;
-    }
-
-    return json(errorResponse, { status: 500 });
+    const { body, status } = obpErrorResponse(err);
+    return json(body, { status });
   }
 };

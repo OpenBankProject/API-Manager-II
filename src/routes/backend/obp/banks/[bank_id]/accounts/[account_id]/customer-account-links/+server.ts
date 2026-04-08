@@ -1,7 +1,7 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { obp_requests } from "$lib/obp/requests";
-import { extractErrorDetails } from "$lib/obp/errors";
+import { obpErrorResponse } from "$lib/obp/errors";
 import { SessionOAuthHelper } from "$lib/oauth/sessionHelper";
 import { createLogger } from "$lib/utils/logger";
 
@@ -64,13 +64,7 @@ export const GET: RequestHandler = async ({ locals, params }) => {
   } catch (err) {
     logger.error("Error fetching customer account links:", err);
 
-    const { message, obpErrorCode } = extractErrorDetails(err);
-
-    const errorResponse: any = { error: message, links: [] };
-    if (obpErrorCode) {
-      errorResponse.obpErrorCode = obpErrorCode;
-    }
-
-    return json(errorResponse, { status: 500 });
+    const { body, status } = obpErrorResponse(err);
+    return json(body, { status });
   }
 };

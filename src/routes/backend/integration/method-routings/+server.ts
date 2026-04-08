@@ -1,6 +1,7 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { obp_requests } from "$lib/obp/requests";
+import { obpErrorResponse } from "$lib/obp/errors";
 import { SessionOAuthHelper } from "$lib/oauth/sessionHelper";
 import { createLogger } from "$lib/utils/logger";
 
@@ -72,15 +73,8 @@ export const GET: RequestHandler = async ({ locals, url }) => {
       logger.error(`  Response body: ${JSON.stringify(err.response.data)}`);
     }
 
-    return json(
-      {
-        error:
-          err instanceof Error
-            ? err.message
-            : "Failed to fetch method routings",
-      },
-      { status: 500 },
-    );
+    const { body, status } = obpErrorResponse(err);
+    return json(body, { status });
   }
 };
 
@@ -190,15 +184,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       `  Error message: ${err instanceof Error ? err.message : String(err)}`,
     );
 
-    return json(
-      {
-        error:
-          err instanceof Error
-            ? err.message
-            : "Failed to create method routing",
-      },
-      { status: 500 },
-    );
+    const { body, status } = obpErrorResponse(err);
+    return json(body, { status });
   }
 };
 
@@ -264,14 +251,7 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
       `  Error message: ${err instanceof Error ? err.message : String(err)}`,
     );
 
-    return json(
-      {
-        error:
-          err instanceof Error
-            ? err.message
-            : "Failed to update method routing",
-      },
-      { status: 500 },
-    );
+    const { body, status } = obpErrorResponse(err);
+    return json(body, { status });
   }
 };

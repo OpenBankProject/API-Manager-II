@@ -1,7 +1,7 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { obp_requests } from "$lib/obp/requests";
-import { extractErrorDetails } from "$lib/obp/errors";
+import { obpErrorResponse } from "$lib/obp/errors";
 import { SessionOAuthHelper } from "$lib/oauth/sessionHelper";
 import { createLogger } from "$lib/utils/logger";
 
@@ -80,23 +80,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
     return json(response);
   } catch (err) {
-    // Extract full error details - NEVER hide or simplify OBP error messages!
-    const { message, obpErrorCode } = extractErrorDetails(err);
+    const { body, status } = obpErrorResponse(err);
 
-    // Pass through the original OBP status code (e.g. 400, 409) instead of always 500
-    const statusCode = (err as any)?.statusCode || 500;
-
-    if (statusCode >= 500) {
+    if (status >= 500) {
       logger.error("Error creating entitlement:", err);
     } else {
-      logger.warn(`Entitlement creation rejected (${statusCode}): ${message}`);
+      logger.warn(`Entitlement creation rejected (${status}): ${body.message}`);
     }
 
-    const errorResponse: any = { error: message };
-    if (obpErrorCode) {
-      errorResponse.obpErrorCode = obpErrorCode;
-    }
-
-    return json(errorResponse, { status: statusCode });
+    return json(body, { status });
   }
 };

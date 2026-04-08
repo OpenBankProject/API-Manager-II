@@ -43,7 +43,7 @@
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create collection");
+        throw new Error(errorData.message);
       }
 
       toast.success(

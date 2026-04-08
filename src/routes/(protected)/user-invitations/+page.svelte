@@ -113,7 +113,7 @@
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create invitation");
+        throw new Error(errorData.message);
       }
 
       const result = await response.json();

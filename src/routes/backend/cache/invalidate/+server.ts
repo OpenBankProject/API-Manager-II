@@ -1,6 +1,7 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { obp_requests } from "$lib/obp/requests";
+import { obpErrorResponse } from "$lib/obp/errors";
 import { checkAPIAuth } from "$lib/utils/apiAuth";
 import { createLogger } from "$lib/utils/logger";
 
@@ -47,12 +48,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       `  Error message: ${err instanceof Error ? err.message : String(err)}`,
     );
 
-    return json(
-      {
-        error:
-          err instanceof Error ? err.message : "Failed to invalidate cache",
-      },
-      { status: 500 },
-    );
+    const { body, status } = obpErrorResponse(err);
+    return json(body, { status });
   }
 };

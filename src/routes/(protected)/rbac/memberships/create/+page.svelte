@@ -86,7 +86,7 @@
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create membership");
+        throw new Error(errorData.message);
       }
 
       const responseData = await response.json();

@@ -55,7 +55,7 @@
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to add endpoint");
+        throw new Error(errorData.message);
       }
 
       toast.success("Endpoint Added", `Added ${newOperationId} to collection`);

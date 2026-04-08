@@ -71,7 +71,7 @@
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(
-          errorData.error || "Failed to add collection to featured",
+          errorData.message,
         );
       }
 

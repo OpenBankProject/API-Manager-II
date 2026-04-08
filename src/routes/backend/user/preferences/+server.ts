@@ -1,6 +1,7 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { obp_requests } from "$lib/obp/requests";
+import { obpErrorResponse } from "$lib/obp/errors";
 import { SessionOAuthHelper } from "$lib/oauth/sessionHelper";
 import { createLogger } from "$lib/utils/logger";
 
@@ -30,8 +31,8 @@ export const GET: RequestHandler = async ({ locals }) => {
     return json({ user_attributes: attributes }, { status: 200 });
   } catch (err) {
     logger.error("Error fetching personal data fields:", err);
-    const message = err instanceof Error ? err.message : "Failed to fetch preferences";
-    return json({ error: message }, { status: 500 });
+    const { body, status } = obpErrorResponse(err);
+    return json(body, { status });
   }
 };
 
@@ -69,8 +70,8 @@ export const POST: RequestHandler = async ({ locals, request }) => {
     return json(response, { status: 201 });
   } catch (err) {
     logger.error("Error creating personal data field:", err);
-    const message = err instanceof Error ? err.message : "Failed to create preference";
-    return json({ error: message }, { status: 500 });
+    const { body, status } = obpErrorResponse(err);
+    return json(body, { status });
   }
 };
 
@@ -108,7 +109,7 @@ export const PUT: RequestHandler = async ({ locals, request }) => {
     return json(response, { status: 200 });
   } catch (err) {
     logger.error("Error updating personal data field:", err);
-    const message = err instanceof Error ? err.message : "Failed to update preference";
-    return json({ error: message }, { status: 500 });
+    const { body, status } = obpErrorResponse(err);
+    return json(body, { status });
   }
 };

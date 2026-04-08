@@ -124,7 +124,7 @@
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(
-          errorData.error || "Failed to submit entitlement request",
+          errorData.message,
         );
       }
 

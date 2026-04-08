@@ -156,14 +156,11 @@
         const errorData = await createResponse.json();
         console.log("Create failed with error:", errorData);
         console.log("Checking if OBP-30216...");
-        console.log("errorData.obpErrorCode:", errorData.obpErrorCode);
-        console.log("errorData.error:", errorData.error);
+        console.log("errorData.code:", errorData.code);
+        console.log("errorData.message:", errorData.message);
 
         // If entitlement already exists, treat as success - just delete the request
-        if (
-          errorData.obpErrorCode === "OBP-30216" ||
-          (errorData.error && errorData.error.includes("OBP-30216"))
-        ) {
+        if (errorData.message && errorData.message.includes("OBP-30216")) {
           console.log(
             "✅ OBP-30216 detected! Entitlement already exists. Attempting to delete request...",
           );
@@ -206,7 +203,7 @@
         // Other error - display inline
         processErrors = new Map(processErrors).set(
           requestId,
-          errorData.error || "Failed to create entitlement",
+          errorData.message,
         );
         return;
       }

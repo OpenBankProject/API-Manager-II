@@ -1,7 +1,7 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { obp_requests } from "$lib/obp/requests";
-import { extractErrorDetails } from "$lib/obp/errors";
+import { obpErrorResponse } from "$lib/obp/errors";
 import { SessionOAuthHelper } from "$lib/oauth/sessionHelper";
 import { createLogger } from "$lib/utils/logger";
 
@@ -60,28 +60,19 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 
     logger.info("Entitlement deleted successfully");
 
-    return json({ success: true }, { status: 200 });
+    return json(response, { status: 200 });
   } catch (err) {
-    // Extract full error details - NEVER hide or simplify OBP error messages!
-    const { message, obpErrorCode } = extractErrorDetails(err);
-
-    // Pass through the original OBP status code (e.g. 400, 403) instead of always 500
-    const statusCode = (err as any)?.statusCode || 500;
+    const { body, status } = obpErrorResponse(err);
 
     logger.error("========================================");
     logger.error(`  FAILED TO DELETE ENTITLEMENT`);
     logger.error(`  Entitlement ID: ${entitlement_id}`);
-    logger.error(`  HTTP Status: ${statusCode}`);
-    logger.error(`  OBP Error Code: ${obpErrorCode || "none"}`);
-    logger.error(`  Message: ${message}`);
+    logger.error(`  HTTP Status: ${status}`);
+    logger.error(`  OBP Error Code: ${body.code || "none"}`);
+    logger.error(`  Message: ${body.message}`);
     logger.error(`  Raw error: ${err instanceof Error ? err.stack || err.message : String(err)}`);
     logger.error("========================================");
 
-    const errorResponse: any = { error: message };
-    if (obpErrorCode) {
-      errorResponse.obpErrorCode = obpErrorCode;
-    }
-
-    return json(errorResponse, { status: statusCode });
+    return json(body, { status });
   }
 };

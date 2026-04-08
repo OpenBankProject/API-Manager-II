@@ -114,8 +114,8 @@
       // Always store the raw response for debugging
       rawResponse = responseData;
 
-      if (responseData.error) {
-        loadError = responseData.error;
+      if (responseData.message) {
+        loadError = responseData.message;
         metrics = [];
         // Increment error count and pause auto-refresh after errors
         consecutiveErrors++;

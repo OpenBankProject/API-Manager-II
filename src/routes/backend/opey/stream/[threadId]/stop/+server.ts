@@ -2,6 +2,7 @@ import { createLogger } from '$lib/utils/logger';
 const logger = createLogger('OpeyStopProxy');
 import { json } from '@sveltejs/kit';
 import type { RequestEvent } from './$types';
+import { obpErrorResponse } from '$lib/obp/errors';
 import { env } from '$env/dynamic/private';
 
 export async function POST(event: RequestEvent) {
@@ -20,6 +21,7 @@ export async function POST(event: RequestEvent) {
 		return json(data, { status: opeyResponse.status });
 	} catch (err) {
 		logger.error('Failed to proxy stop request:', err);
-		return json({ error: 'Failed to stop stream' }, { status: 500 });
+		const { body, status } = obpErrorResponse(err);
+		return json(body, { status });
 	}
 }
