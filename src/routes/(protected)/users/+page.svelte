@@ -1,13 +1,13 @@
 <script lang="ts">
   import { Mail } from "@lucide/svelte";
-  import { goto } from "$app/navigation";
+  import { onMount } from "svelte";
   import { page } from "$app/state";
   import type { PageData } from "./$types";
 
   let { data } = $props<{ data: PageData }>();
 
-  let roleFilter = $state(page.url.searchParams.get("role_name") || "");
-  let bankIdFilter = $state(page.url.searchParams.get("bank_id") || "");
+  let roleFilter = $state(page.url.searchParams.get("role_name") ?? "");
+  let bankIdFilter = $state(page.url.searchParams.get("bank_id") ?? "");
   let roles = $state<string[]>([]);
   let banks = $state<string[]>([]);
 
@@ -39,7 +39,6 @@
     fetchBanks();
   });
 
-  let users = $derived(data.users || []);
   let hasApiAccess = $derived(data.hasApiAccess);
   let error = $derived(data.error);
 
@@ -51,6 +50,8 @@
   let searchError = $state<string | null>(null);
   let isSearching = $state(false);
   let searchType = $state<"email" | "userid" | "username" | "">("");
+  let sortBy = $state("");
+  let sortDirection = $state<"asc" | "desc">("desc");
   let lastSearchCall = $state<{ proxyUrl: string; obpPath: string; status?: number; responseBody?: string } | null>(null);
 
   // Fetch providers on mount
@@ -69,6 +70,22 @@
     fetchProviders();
   });
 
+  // Auto-run search on mount (URL filters if present, else empty search)
+  onMount(() => {
+    handleSearch();
+  });
+
+  function handleClear() {
+    searchQuery = "";
+    selectedProvider = "";
+    roleFilter = "";
+    bankIdFilter = "";
+    sortBy = "";
+    sortDirection = "desc";
+    history.replaceState(null, "", "/users");
+    handleSearch();
+  }
+
   // Detect search type based on input
   function detectSearchType(input: string): "email" | "userid" | "username" {
     // Check if it's an email
@@ -86,30 +103,38 @@
   }
 
   async function handleSearch() {
-    if (!searchQuery.trim()) {
-      searchResults = [];
-      searchError = null;
-      searchType = "";
-      lastSearchedQuery = "";
-      return;
-    }
-
-    const type = detectSearchType(searchQuery.trim());
-    searchType = type;
+    const query = searchQuery.trim();
     isSearching = true;
     searchError = null;
-    lastSearchedQuery = searchQuery.trim();
+    lastSearchedQuery = query;
 
     const params = new URLSearchParams();
-    if (type === "email") {
-      params.set("email", searchQuery);
-    } else if (type === "userid") {
-      params.set("user_id", searchQuery);
-    } else {
-      params.set("username", searchQuery);
-      if (selectedProvider) {
-        params.set("provider", selectedProvider);
+    params.set("limit", "100");
+    if (query) {
+      const type = detectSearchType(query);
+      searchType = type;
+      if (type === "email") {
+        params.set("email", query);
+      } else if (type === "userid") {
+        params.set("user_id", query);
+      } else {
+        params.set("username", query);
       }
+    } else {
+      searchType = "";
+    }
+    if (selectedProvider) {
+      params.set("provider", selectedProvider);
+    }
+    if (roleFilter) {
+      params.set("role_name", roleFilter);
+    }
+    if (bankIdFilter) {
+      params.set("bank_id", bankIdFilter);
+    }
+    if (sortBy) {
+      params.set("sort_by", sortBy);
+      params.set("sort_direction", sortDirection);
     }
     const proxyUrl = `/proxy/obp/v6.0.0/users?${params.toString()}`;
 
@@ -193,7 +218,19 @@
         }}
         class="flex gap-4 items-end flex-wrap"
       >
-        <div style="flex: 0 0 300px;">
+        <div class="flex-1" style="min-width: 240px;">
+          <label for="search-input" class="block text-sm font-medium mb-2"
+            >Search</label
+          >
+          <input
+            type="text"
+            id="search-input"
+            bind:value={searchQuery}
+            placeholder="Enter email, user ID (UUID), or username"
+            class="form-input w-full"
+          />
+        </div>
+        <div style="flex: 0 0 220px;">
           <label for="provider-select" class="block text-sm font-medium mb-2"
             >Provider</label
           >
@@ -208,31 +245,92 @@
             {/each}
           </select>
         </div>
-        <div class="flex-1">
-          <label for="search-input" class="block text-sm font-medium mb-2"
-            >Search</label
+        <div style="flex: 0 0 220px;">
+          <label for="role-input" class="block text-sm font-medium mb-2"
+            >Role</label
           >
-          <input
-            type="text"
-            id="search-input"
-            bind:value={searchQuery}
-            placeholder="Enter email, user ID (UUID), or username"
+          <select
+            id="role-input"
+            bind:value={roleFilter}
             class="form-input w-full"
-          />
+          >
+            <option value="">All roles</option>
+            {#each roles as role}
+              <option value={role}>{role}</option>
+            {/each}
+          </select>
+        </div>
+        <div style="flex: 0 0 220px;">
+          <label for="bank-id-input" class="block text-sm font-medium mb-2"
+            >Bank ID</label
+          >
+          <select
+            id="bank-id-input"
+            bind:value={bankIdFilter}
+            class="form-input w-full"
+          >
+            <option value="">All banks</option>
+            {#each banks as bank}
+              <option value={bank}>{bank}</option>
+            {/each}
+          </select>
+        </div>
+        <div style="flex: 0 0 180px;">
+          <label for="sort-by-input" class="block text-sm font-medium mb-2"
+            >Sort by</label
+          >
+          <select
+            id="sort-by-input"
+            bind:value={sortBy}
+            data-testid="sort-by-input"
+            class="form-input w-full"
+          >
+            <option value="">Default</option>
+            <option value="created_date">Created date</option>
+            <option value="updated_date">Updated date</option>
+            <option value="username">Username</option>
+            <option value="email">Email</option>
+            <option value="user_id">User ID</option>
+            <option value="provider">Provider</option>
+          </select>
+        </div>
+        <div style="flex: 0 0 140px;">
+          <label for="sort-direction-input" class="block text-sm font-medium mb-2"
+            >Direction</label
+          >
+          <select
+            id="sort-direction-input"
+            bind:value={sortDirection}
+            data-testid="sort-direction-input"
+            class="form-input w-full"
+            disabled={!sortBy}
+          >
+            <option value="desc">Descending</option>
+            <option value="asc">Ascending</option>
+          </select>
         </div>
         <button
           type="submit"
           class="btn btn-primary"
-          disabled={isSearching || !searchQuery.trim()}
+          disabled={isSearching}
         >
           {isSearching ? "Searching..." : "Search"}
+        </button>
+        <button
+          type="button"
+          class="btn btn-secondary"
+          onclick={handleClear}
+          disabled={isSearching}
+          data-testid="clear-search"
+        >
+          Clear
         </button>
       </form>
 
       {#snippet technicalDetails()}
         {#if lastSearchCall}
           <details class="search-call-details" data-testid="last-search-call">
-            <summary class="search-call-summary" data-testid="last-search-call-toggle">Query</summary>
+            <summary class="search-call-summary" data-testid="last-search-call-toggle">Debug</summary>
             <div class="search-call-info">
               <div class="search-call-field">
                 <label for="last-search-proxy-url" class="search-call-label">Proxy URL</label>
@@ -281,62 +379,6 @@
           </details>
         {/if}
       {/snippet}
-
-      <form
-        onsubmit={(e) => {
-          e.preventDefault();
-          const params = new URLSearchParams();
-          if (roleFilter.trim()) {
-            params.set("role_name", roleFilter.trim());
-          }
-          if (bankIdFilter.trim()) {
-            params.set("bank_id", bankIdFilter.trim());
-          }
-          const qs = params.toString();
-          goto(qs ? `?${qs}` : "/users", { invalidateAll: true });
-        }}
-        class="flex gap-4 items-end mt-4"
-      >
-        <div class="flex-1">
-          <label for="role-input" class="block text-sm font-medium mb-2"
-            >Role</label
-          >
-          <select
-            id="role-input"
-            bind:value={roleFilter}
-            class="form-input w-full"
-          >
-            <option value="">All roles</option>
-            {#each roles as role}
-              <option value={role}>{role}</option>
-            {/each}
-          </select>
-        </div>
-        <div style="flex: 0 0 300px;">
-          <label for="bank-id-input" class="block text-sm font-medium mb-2"
-            >Bank ID</label
-          >
-          <select
-            id="bank-id-input"
-            bind:value={bankIdFilter}
-            class="form-input w-full"
-          >
-            <option value="">All banks</option>
-            {#each banks as bank}
-              <option value={bank}>{bank}</option>
-            {/each}
-          </select>
-        </div>
-        <button
-          type="submit"
-          class="btn btn-primary"
-        >
-          Filter
-        </button>
-        {#if page.url.searchParams.has("role_name") || page.url.searchParams.has("bank_id")}
-          <a href="/users" class="btn btn-secondary">Clear</a>
-        {/if}
-      </form>
 
       {#if searchResults.length > 0}
         <div class="mt-6">
@@ -392,10 +434,12 @@
           </div>
           <div class="alert alert-error">{searchError}</div>
         </div>
-      {:else if lastSearchedQuery && !isSearching}
+      {:else if lastSearchCall && !isSearching}
         <div class="mt-6">
           <div class="search-results-header mb-3">
-            <span class="text-gray-500">No users found matching "{lastSearchedQuery}"</span>
+            <span class="text-gray-500">
+              No users found{lastSearchedQuery ? ` matching "${lastSearchedQuery}"` : ""}
+            </span>
             {@render technicalDetails()}
           </div>
         </div>
@@ -403,60 +447,6 @@
     </div>
   </div>
 
-  <!-- Users List Panel -->
-  <div class="panel">
-    <div class="panel-header">
-      <h2 class="panel-title">{page.url.searchParams.has("role_name") || page.url.searchParams.has("bank_id") ? `Users${page.url.searchParams.has("role_name") ? ` with Role: ${page.url.searchParams.get("role_name")}` : ""}${page.url.searchParams.has("bank_id") ? ` at Bank: ${page.url.searchParams.get("bank_id")}` : ""}` : "Recent Users"}</h2>
-      <div class="panel-subtitle">{page.url.searchParams.has("role_name") || page.url.searchParams.has("bank_id") ? "Filtered results" : "Most recently created users"} (up to 100)</div>
-    </div>
-    <div class="panel-content">
-      {#if users && users.length > 0}
-        <div class="table-wrapper">
-          <table class="users-table">
-            <thead>
-              <tr>
-                <th>Username</th>
-                <th>Email</th>
-                <th>User ID</th>
-                <th>Provider</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {#each users as user}
-                <tr>
-                  <td class="font-medium">{user.username || "N/A"}</td>
-                  <td>{user.email || "N/A"}</td>
-                  <td class="font-mono text-sm">{user.user_id || "N/A"}</td>
-                  <td>{user.provider || "N/A"}</td>
-                  <td>
-                    {#if user.user_id}
-                      <a
-                        href="/users/{encodeURIComponent(user.user_id)}"
-                        class="text-blue-600 hover:text-blue-800 underline"
-                      >
-                        Details
-                      </a>
-                    {:else}
-                      <span class="text-gray-400">N/A</span>
-                    {/if}
-                  </td>
-                </tr>
-              {/each}
-            </tbody>
-          </table>
-        </div>
-      {:else if hasApiAccess}
-        <div class="empty-state">
-          <p>No users found</p>
-        </div>
-      {:else}
-        <div class="empty-state">
-          <p>Unable to load users. Please check your API access.</p>
-        </div>
-      {/if}
-    </div>
-  </div>
 </div>
 
 <style>
