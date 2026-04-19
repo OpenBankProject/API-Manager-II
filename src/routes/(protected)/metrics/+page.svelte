@@ -537,6 +537,9 @@
                   </tr>
                   <tr class="metric-row-endpoint">
                     <td colspan="7" class="endpoint-cell-full">
+                      <code class="api-instance-id" title="API Instance ID"
+                        >{metric.api_instance_id || "N/A"}</code
+                      >
                       <code class="endpoint-path">{metric.url}</code>
                     </td>
                   </tr>
@@ -1211,6 +1214,22 @@
   :global([data-mode="dark"]) .correlation-id {
     background: var(--color-tertiary-900);
     color: var(--color-tertiary-200);
+  }
+
+  .api-instance-id {
+    margin-right: 0.5rem;
+    background: var(--color-primary-100);
+    color: var(--color-primary-800);
+    padding: 0.125rem 0.375rem;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: help;
+  }
+
+  :global([data-mode="dark"]) .api-instance-id {
+    background: var(--color-primary-900);
+    color: var(--color-primary-200);
   }
 
   .table-wrapper {
