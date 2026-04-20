@@ -39,9 +39,23 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       throw error(404, "Bank dynamic endpoint not found");
     }
 
+    // Fetch all JSON Schema Validations (per-operation_id) — non-fatal
+    let validations: Array<{ operation_id: string; json_schema: any }> = [];
+    try {
+      const resp = await obp_requests.get(
+        `/obp/v4.0.0/management/json-schema-validations`,
+        accessToken,
+      );
+      validations = resp?.json_schema_validations || [];
+      logger.debug(`Retrieved ${validations.length} JSON schema validations`);
+    } catch (e) {
+      logger.warn("Could not fetch JSON schema validations:", e);
+    }
+
     return {
       endpoint: dynamicEndpoint,
       bank_id,
+      validations,
     };
   } catch (err) {
     logger.error("Error fetching bank dynamic endpoint:", err);

@@ -311,6 +311,61 @@ export const SITE_MAP: Record<string, PageRoleConfig> = {
   "/dynamic-entities/diagnostics": {
     required: [{ role: "CanGetSystemLevelDynamicEntities" }],
   },
+
+  // ── Dynamic Endpoints ─────────────────────────────────
+  "/dynamic-endpoints/system": {
+    required: [{ role: "CanGetDynamicEndpoints" }],
+    optional: [
+      { role: "CanCreateDynamicEndpoint" },
+      { role: "CanDeleteDynamicEndpoint" },
+    ],
+  },
+  "/dynamic-endpoints/system/[id]": {
+    required: [{ role: "CanGetDynamicEndpoints" }],
+    optional: [
+      { role: "CanUpdateDynamicEndpoint" },
+      { role: "CanDeleteDynamicEndpoint" },
+      { role: "CanCreateJsonSchemaValidation" },
+      { role: "CanUpdateJsonSchemaValidation" },
+      { role: "CanDeleteJsonSchemaValidation" },
+    ],
+  },
+  "/dynamic-endpoints/system/create": {
+    required: [{ role: "CanCreateDynamicEndpoint" }],
+  },
+  "/dynamic-endpoints/bank": {
+    required: [
+      { role: "CanGetBankLevelDynamicEndpoints", bankScoped: true },
+      { role: "CanGetDynamicEndpoints" },
+    ],
+    optional: [
+      { role: "CanCreateBankLevelDynamicEndpoint", bankScoped: true },
+      { role: "CanCreateDynamicEndpoint" },
+      { role: "CanDeleteBankLevelDynamicEndpoint", bankScoped: true },
+      { role: "CanDeleteDynamicEndpoint" },
+    ],
+  },
+  "/dynamic-endpoints/bank/[bank_id]/[id]": {
+    required: [
+      { role: "CanGetBankLevelDynamicEndpoints", bankScoped: true },
+      { role: "CanGetDynamicEndpoints" },
+    ],
+    optional: [
+      { role: "CanUpdateBankLevelDynamicEndpoint", bankScoped: true },
+      { role: "CanUpdateDynamicEndpoint" },
+      { role: "CanDeleteBankLevelDynamicEndpoint", bankScoped: true },
+      { role: "CanDeleteDynamicEndpoint" },
+      { role: "CanCreateJsonSchemaValidation" },
+      { role: "CanUpdateJsonSchemaValidation" },
+      { role: "CanDeleteJsonSchemaValidation" },
+    ],
+  },
+  "/dynamic-endpoints/bank/[bank_id]/create": {
+    required: [
+      { role: "CanCreateBankLevelDynamicEndpoint", bankScoped: true },
+      { role: "CanCreateDynamicEndpoint" },
+    ],
+  },
 };
 
 
