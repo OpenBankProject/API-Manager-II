@@ -32,6 +32,7 @@
     monthlySubscriptionCurrency: string;
     rateLimits: { perSecond: string; perMinute: string; perHour: string; perDay: string; perWeek: string; perMonth: string };
     customAttributes: Array<{ name: string; type: string; value: string }>;
+    tags: string[];
   }) {
     if (!selectedBankId) {
       toast.error("Validation Error", "Please select a bank in My Account first");
@@ -71,6 +72,7 @@
             per_day_call_limit: Number(formData.rateLimits.perDay) || -1,
             per_week_call_limit: Number(formData.rateLimits.perWeek) || -1,
             per_month_call_limit: Number(formData.rateLimits.perMonth) || -1,
+            tags: formData.tags,
           }),
         },
       );

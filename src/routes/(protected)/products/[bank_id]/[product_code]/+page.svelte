@@ -177,6 +177,18 @@
               Parent Product: <a href="/products/{bankId}/{product.parent_api_product_code}" class="text-blue-600 hover:underline dark:text-blue-400">{product.parent_api_product_code}</a>
             </p>
           {/if}
+          {#if product.tags && product.tags.length > 0}
+            <div class="mt-3 flex flex-wrap gap-1.5" data-testid="api-product-tags">
+              {#each product.tags as tag}
+                <span
+                  class="rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900/30 dark:text-purple-300"
+                  data-testid="api-product-tag-{tag}"
+                >
+                  {tag}
+                </span>
+              {/each}
+            </div>
+          {/if}
         </div>
         <div class="flex gap-2">
           <a

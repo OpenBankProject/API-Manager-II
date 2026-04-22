@@ -24,6 +24,8 @@
   let termsAndConditionsUrl = $state("");
   let originalAttributes = $state<Attribute[]>([]);
   let attributes = $state<Attribute[]>([]);
+  let tagsInput = $state("");
+  let originalTags = $state<string[]>([]);
   let isLoading = $state(true);
   let loadError = $state("");
   let isSubmitting = $state(false);
@@ -58,10 +60,16 @@
     isLoading = true;
     loadError = "";
     try {
-      const response = await trackedFetch(
-        `/proxy/obp/v4.0.0/banks/${bankId}/products/${encodeURIComponent(productCode)}`,
-      );
-      const product = await parseOrThrow(response, "load product");
+      const [productResponse, tagsResponse] = await Promise.all([
+        trackedFetch(
+          `/proxy/obp/v4.0.0/banks/${bankId}/products/${encodeURIComponent(productCode)}`,
+        ),
+        trackedFetch(
+          `/proxy/obp/v6.0.0/banks/${bankId}/products/${encodeURIComponent(productCode)}/tags`,
+        ),
+      ]);
+      const product = await parseOrThrow(productResponse, "load product");
+      const tagsBody = await parseOrThrow(tagsResponse, "load product tags");
 
       name = product.name ?? "";
       parentProductCode = product.parent_product_code ?? "";
@@ -77,11 +85,29 @@
       }));
       originalAttributes = loaded.map((a) => ({ ...a }));
       attributes = loaded;
+
+      const loadedTags: string[] = tagsBody.tags ?? [];
+      originalTags = [...loadedTags];
+      tagsInput = loadedTags.join(", ");
     } catch (err) {
       loadError = err instanceof Error ? err.message : "Failed to load product";
     } finally {
       isLoading = false;
     }
+  }
+
+  function parseTags(input: string): string[] {
+    return input
+      .split(",")
+      .map((t) => t.trim())
+      .filter((t) => t.length > 0);
+  }
+
+  function tagsChanged(current: string[]): boolean {
+    if (current.length !== originalTags.length) return true;
+    const a = [...current].sort();
+    const b = [...originalTags].sort();
+    return a.some((t, i) => t !== b[i]);
   }
 
   function addAttribute() {
@@ -128,6 +154,20 @@
         },
       );
       await parseOrThrow(response, "update product");
+
+      const parsedTags = parseTags(tagsInput);
+      if (tagsChanged(parsedTags)) {
+        const tagsPutResponse = await trackedFetch(
+          `/proxy/obp/v6.0.0/banks/${bankId}/products/${encodeURIComponent(productCode)}/tags`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ tags: parsedTags }),
+          },
+        );
+        await parseOrThrow(tagsPutResponse, "update product tags");
+        originalTags = [...parsedTags];
+      }
 
       const failedAttributes: Array<{ name: string; error: string }> = [];
       for (const attr of attributes) {
@@ -328,6 +368,25 @@
               data-testid="input-terms-url"
               class="mt-2 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400 disabled:opacity-50"
             />
+          </div>
+
+          <div>
+            <label for="tags" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Tags
+            </label>
+            <input
+              id="tags"
+              name="tags"
+              type="text"
+              bind:value={tagsInput}
+              disabled={isSubmitting}
+              placeholder="e.g., featured, new"
+              data-testid="input-tags"
+              class="mt-2 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400 disabled:opacity-50"
+            />
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Comma-separated. Add <code>featured</code> to surface this product in the portal.
+            </p>
           </div>
 
           <div>

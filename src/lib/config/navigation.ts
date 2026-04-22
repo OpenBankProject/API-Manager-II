@@ -533,6 +533,11 @@ function buildFinancialProductsItems(): NavigationItem[] {
       iconComponent: Banknote,
     },
     {
+      href: "/products/financial/all-banks",
+      label: "Financial Products at All Banks",
+      iconComponent: Banknote,
+    },
+    {
       href: "/products/collections",
       label: "Product Collections",
       iconComponent: FolderOpen,

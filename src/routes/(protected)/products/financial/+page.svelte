@@ -339,6 +339,18 @@
                     Parent: <code class="rounded bg-gray-100 px-1 dark:bg-gray-700">{product.parent_product_code}</code>
                   </p>
                 {/if}
+                {#if product.tags && product.tags.length > 0}
+                  <div class="mt-2 flex flex-wrap gap-1" data-testid="financial-product-tags">
+                    {#each product.tags as tag}
+                      <span
+                        class="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900/30 dark:text-purple-300"
+                        data-testid="financial-product-tag-{tag}"
+                      >
+                        {tag}
+                      </span>
+                    {/each}
+                  </div>
+                {/if}
               </div>
               <div class="flex items-center gap-2">
                 <a

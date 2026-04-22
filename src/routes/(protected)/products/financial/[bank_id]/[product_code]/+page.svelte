@@ -13,6 +13,7 @@
   const apiExplorerProductUrl = `${apiExplorerUrl}/resource-docs/OBPv4.0.0?operationid=OBPv4.0.0-getProduct`;
 
   let product = $state<any>(null);
+  let tags = $state<string[]>([]);
   let isLoading = $state(true);
   let loadError = $state("");
 
@@ -20,39 +21,49 @@
     await loadProduct();
   });
 
+  async function parseOrThrow(response: Response) {
+    const bodyText = await response.text();
+    let body: any = null;
+    try {
+      body = bodyText ? JSON.parse(bodyText) : null;
+    } catch {
+      throw new Error(
+        `Unexpected non-JSON response from OBP (HTTP ${response.status}): ${bodyText}`,
+      );
+    }
+    if (!response.ok) {
+      if (!body || typeof body.message !== "string") {
+        throw new Error(
+          `Unexpected error format from OBP (HTTP ${response.status}): ${bodyText}`,
+        );
+      }
+      const code = body.code != null ? String(body.code) : "";
+      throw new Error(code ? `${code}: ${body.message}` : body.message);
+    }
+    return body;
+  }
+
   async function loadProduct() {
     isLoading = true;
     loadError = "";
 
     try {
-      const response = await trackedFetch(
-        `/proxy/obp/v4.0.0/banks/${bankId}/products/${encodeURIComponent(productCode)}`,
-      );
+      const [productResponse, tagsResponse] = await Promise.all([
+        trackedFetch(
+          `/proxy/obp/v4.0.0/banks/${bankId}/products/${encodeURIComponent(productCode)}`,
+        ),
+        trackedFetch(
+          `/proxy/obp/v6.0.0/banks/${bankId}/products/${encodeURIComponent(productCode)}/tags`,
+        ),
+      ]);
 
-      const bodyText = await response.text();
-      let body: any = null;
-      try {
-        body = bodyText ? JSON.parse(bodyText) : null;
-      } catch {
-        throw new Error(
-          `Unexpected non-JSON response from OBP (HTTP ${response.status}): ${bodyText}`,
-        );
-      }
-
-      if (!response.ok) {
-        if (!body || typeof body.message !== "string") {
-          throw new Error(
-            `Unexpected error format from OBP (HTTP ${response.status}): ${bodyText}`,
-          );
-        }
-        const code = body.code != null ? String(body.code) : "";
-        throw new Error(code ? `${code}: ${body.message}` : body.message);
-      }
-
-      product = body;
+      product = await parseOrThrow(productResponse);
+      const tagsBody = await parseOrThrow(tagsResponse);
+      tags = tagsBody.tags ?? [];
     } catch (err) {
       loadError = err instanceof Error ? err.message : "Failed to load product";
       product = null;
+      tags = [];
     } finally {
       isLoading = false;
     }
@@ -128,6 +139,18 @@
                 class="text-blue-600 hover:underline dark:text-blue-400"
               >{product.parent_product_code}</a>
             </p>
+          {/if}
+          {#if tags.length > 0}
+            <div class="mt-3 flex flex-wrap gap-1.5" data-testid="financial-product-tags">
+              {#each tags as tag}
+                <span
+                  class="rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900/30 dark:text-purple-300"
+                  data-testid="financial-product-tag-{tag}"
+                >
+                  {tag}
+                </span>
+              {/each}
+            </div>
           {/if}
         </div>
         <div class="flex gap-2">

@@ -44,6 +44,7 @@
     monthlySubscriptionCurrency: string;
     rateLimits: { perSecond: string; perMinute: string; perHour: string; perDay: string; perWeek: string; perMonth: string };
     customAttributes: Array<{ name: string; type: string; value: string }>;
+    tags: string[];
   }) {
     if (!formData.collectionId) {
       toast.error("Validation Error", "API Collection is required");
@@ -73,6 +74,7 @@
             per_day_call_limit: Number(formData.rateLimits.perDay) || -1,
             per_week_call_limit: Number(formData.rateLimits.perWeek) || -1,
             per_month_call_limit: Number(formData.rateLimits.perMonth) || -1,
+            tags: formData.tags,
           }),
         },
       );
@@ -191,6 +193,7 @@
             perMonth: product.per_month_call_limit || "",
           }}
           {initialCustomAttributes}
+          initialTags={product.tags || []}
           onSubmit={handleSubmit}
           onCancel={handleCancel}
         />

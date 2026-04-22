@@ -149,6 +149,9 @@ export const SITE_MAP: Record<string, PageRoleConfig> = {
   "/products/financial": {
     required: [],
   },
+  "/products/financial/all-banks": {
+    required: [],
+  },
   "/products/financial/create": {
     required: [{ role: "CanCreateProduct", bankScoped: true }],
     optional: [{ role: "CanCreateProductAttribute", bankScoped: true }],
@@ -161,6 +164,8 @@ export const SITE_MAP: Record<string, PageRoleConfig> = {
     optional: [
       { role: "CanCreateProductAttribute", bankScoped: true },
       { role: "CanUpdateProductAttribute", bankScoped: true },
+      { role: "CanUpdateProductTagsAtOneBank", bankScoped: true },
+      { role: "CanUpdateProductTagsAtAnyBank" },
     ],
   },
   "/products/collections": {
