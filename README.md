@@ -1,3 +1,7 @@
+# This repo has moved
+
+Please note! This repository has moved to [OBP Frontend - Manager](https://github.com/OpenBankProject/OBP-Frontend/tree/main/apps/api-manager)
+
 # API Manager II
 
 A modern web application for managing Open Bank Project (OBP) APIs, built with SvelteKit, TypeScript, and Tailwind CSS.
